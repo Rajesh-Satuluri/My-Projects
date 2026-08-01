@@ -26,9 +26,9 @@
       items: [
         { id: 'create-table',  label: 'CREATE TABLE',    icon: 'table-plus',  available: true },
         { id: 'insert',        label: 'INSERT',           icon: 'arrow-down',  available: true },
-        { id: 'update',        label: 'UPDATE',           icon: 'pencil',      available: false },
-        { id: 'delete',        label: 'DELETE',           icon: 'trash',       available: false },
-        { id: 'merge',         label: 'MERGE INTO',       icon: 'merge',       available: false },
+        { id: 'update',        label: 'UPDATE',           icon: 'pencil',      available: true },
+        { id: 'delete',        label: 'DELETE',           icon: 'trash',       available: true },
+        { id: 'merge',         label: 'MERGE INTO',       icon: 'merge',       available: true },
         { id: 'overwrite',     label: 'INSERT OVERWRITE', icon: 'refresh',     available: false },
         { id: 'append',        label: 'APPEND',           icon: 'plus',        available: false },
       ],
@@ -37,10 +37,10 @@
       id: 'read-ops',
       label: 'Read Operations',
       items: [
-        { id: 'read-path',     label: 'Read Path',     icon: 'search',   available: false },
+        { id: 'read-path',     label: 'Read Path',     icon: 'search',   available: true },
         { id: 'write-path',    label: 'Write Path',    icon: 'edit',     available: false },
         { id: 'query-planner', label: 'Query Planner', icon: 'cpu',      available: false },
-        { id: 'time-travel',   label: 'Time Travel',   icon: 'clock',    available: false },
+        { id: 'time-travel',   label: 'Time Travel',   icon: 'clock',    available: true },
       ],
     },
     {
@@ -60,7 +60,7 @@
       label: 'Advanced Topics',
       items: [
         { id: 'concurrency',         label: 'Concurrency',          icon: 'users',    available: false },
-        { id: 'maintenance',         label: 'Maintenance Ops',      icon: 'tool',     available: false },
+        { id: 'maintenance',         label: 'Maintenance Ops',      icon: 'tool',     available: true },
         { id: 'performance',         label: 'Performance Sim',      icon: 'zap',      available: false },
         { id: 'engine-integrations', label: 'Engine Integrations',  icon: 'link',     available: false },
       ],
