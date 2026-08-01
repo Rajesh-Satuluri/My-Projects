@@ -381,16 +381,18 @@ total-records: <span class="hi-num">21,483,725,000</span>  (<span class="hi-num"
   }
 
   /* ── Render ──────────────────────────────────────────────── */
+  let _engine = null;
+
   function _render(container) {
     _injectStyles();
 
-    const engine = IV.AnimationEngine.create({
+    _engine = new IV.AnimationEngine({
       steps: STEPS.map((s, i) => ({
         label: s.label,
         description: s.desc,
         duration: 1800,
         enter(ctx) {
-          const si = ctx.stepIndex;
+          const si = i;
           const el = ctx.el;
           const t = el.querySelector('#ap-step-title');
           const d = el.querySelector('#ap-step-desc');
@@ -449,12 +451,13 @@ total-records: <span class="hi-num">21,483,725,000</span>  (<span class="hi-num"
   </div>
 </div>`;
 
+    _engine.setContext({ el: container });
+
     container.querySelectorAll('.ap-step-item').forEach(el => {
-      el.addEventListener('click', () => engine.goTo(parseInt(el.dataset.step, 10)));
+      el.addEventListener('click', () => _engine.goto(parseInt(el.dataset.step, 10)));
     });
 
-    IV.AnimationControls.attach(engine, container);
-    engine.init(container);
+    IV.AnimationControls.register(_engine);
   }
 
   IV.modules['append'] = {
@@ -462,6 +465,6 @@ total-records: <span class="hi-num">21,483,725,000</span>  (<span class="hi-num"
     title: 'Append',
     group: 'write-ops',
     render: _render,
-    destroy() { IV.AnimationEngine.destroyAll(); },
+    destroy() { if (_engine) { _engine.destroy(); _engine = null; } IV.AnimationControls.hide(); },
   };
 })();

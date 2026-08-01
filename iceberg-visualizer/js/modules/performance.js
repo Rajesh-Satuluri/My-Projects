@@ -321,16 +321,18 @@ Total query time  :       <span class="hi-num">340</span> ms  ✓
   }
 
   /* ── Render ──────────────────────────────────────────────── */
+  let _engine = null;
+
   function _render(container) {
     _injectStyles();
 
-    const engine = IV.AnimationEngine.create({
+    _engine = new IV.AnimationEngine({
       steps: STEPS.map((s, i) => ({
         label: s.label,
         description: s.desc,
         duration: 1800,
         enter(ctx) {
-          const si = ctx.stepIndex;
+          const si = i;
           const el = ctx.el;
           const t = el.querySelector('#pf-step-title');
           const d = el.querySelector('#pf-step-desc');
@@ -414,17 +416,18 @@ Total query time  :       <span class="hi-num">340</span> ms  ✓
   </div>
 </div>`;
 
+    _engine.setContext({ el: container });
+
     container.querySelectorAll('.pf-step-item').forEach(el => {
-      el.addEventListener('click', () => engine.goTo(parseInt(el.dataset.step, 10)));
+      el.addEventListener('click', () => _engine.goto(parseInt(el.dataset.step, 10)));
     });
 
-    engine.on('step', ({ stepIndex }) => {
+    _engine.on('stepchange', (idx) => {
       const ms = container.querySelector('#pf-metrics-section');
-      if (ms) ms.style.display = stepIndex === 6 ? 'block' : 'none';
+      if (ms) ms.style.display = idx === 6 ? 'block' : 'none';
     });
 
-    IV.AnimationControls.attach(engine, container);
-    engine.init(container);
+    IV.AnimationControls.register(_engine);
   }
 
   IV.modules['performance'] = {
@@ -432,6 +435,6 @@ Total query time  :       <span class="hi-num">340</span> ms  ✓
     title: 'Performance Sim',
     group: 'advanced',
     render: _render,
-    destroy() { IV.AnimationEngine.destroyAll(); },
+    destroy() { if (_engine) { _engine.destroy(); _engine = null; } IV.AnimationControls.hide(); },
   };
 })();
