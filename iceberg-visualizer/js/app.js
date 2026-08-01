@@ -30,7 +30,7 @@
         { id: 'delete',        label: 'DELETE',           icon: 'trash',       available: true },
         { id: 'merge',         label: 'MERGE INTO',       icon: 'merge',       available: true },
         { id: 'overwrite',     label: 'INSERT OVERWRITE', icon: 'refresh',     available: true },
-        { id: 'append',        label: 'APPEND',           icon: 'plus',        available: false },
+        { id: 'append',        label: 'APPEND',           icon: 'plus',        available: true },
       ],
     },
     {
@@ -52,7 +52,7 @@
         { id: 'schema-evolution',    label: 'Schema Evolution',    icon: 'columns',    available: true },
         { id: 'hidden-partitioning', label: 'Hidden Partitioning', icon: 'filter',     available: true },
         { id: 'partition-evolution', label: 'Partition Evolution', icon: 'git-branch', available: true },
-        { id: 'catalog-explorer',    label: 'Catalog Explorer',    icon: 'book',       available: false },
+        { id: 'catalog-explorer',    label: 'Catalog Explorer',    icon: 'book',       available: true },
       ],
     },
     {
@@ -61,7 +61,7 @@
       items: [
         { id: 'concurrency',         label: 'Concurrency',          icon: 'users',    available: true },
         { id: 'maintenance',         label: 'Maintenance Ops',      icon: 'tool',     available: true },
-        { id: 'performance',         label: 'Performance Sim',      icon: 'zap',      available: false },
+        { id: 'performance',         label: 'Performance Sim',      icon: 'zap',      available: true },
         { id: 'engine-integrations', label: 'Engine Integrations',  icon: 'link',     available: true },
       ],
     },
@@ -69,9 +69,9 @@
       id: 'learn',
       label: 'Learning',
       items: [
-        { id: 'interview',  label: 'Interview Mode', icon: 'message-square', available: false },
-        { id: 'quiz',       label: 'Quiz Mode',      icon: 'check-square',   available: false },
-        { id: 'cheatsheet', label: 'Cheat Sheets',   icon: 'file-text',      available: false },
+        { id: 'interview',  label: 'Interview Mode', icon: 'message-square', available: true },
+        { id: 'quiz',       label: 'Quiz Mode',      icon: 'check-square',   available: true },
+        { id: 'cheatsheet', label: 'Cheat Sheets',   icon: 'file-text',      available: true },
       ],
     },
   ];
