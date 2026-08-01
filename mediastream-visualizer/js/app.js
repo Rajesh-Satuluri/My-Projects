@@ -37,10 +37,10 @@
       id: 'write-ops',
       label: 'Write Operations',
       items: [
-        { id: 'streaming-ingest',   label: 'Streaming Ingest',    icon: 'arrow-down',  available: false },
+        { id: 'streaming-ingest',   label: 'Streaming Ingest',    icon: 'arrow-down',  available: true  },
         { id: 'batch-write',        label: 'Batch Write',         icon: 'upload',      available: false },
-        { id: 'upsert-merge',       label: 'MERGE (Upsert)',      icon: 'merge',       available: false },
-        { id: 'delete-ops',         label: 'DELETE',              icon: 'trash',       available: false },
+        { id: 'upsert-merge',       label: 'MERGE (Upsert)',      icon: 'merge',       available: true  },
+        { id: 'delete-ops',         label: 'DELETE',              icon: 'trash',       available: true  },
         { id: 'checkpoint',         label: 'Checkpoint',          icon: 'save',        available: false },
       ],
     },
@@ -48,7 +48,7 @@
       id: 'read-ops',
       label: 'Read Operations',
       items: [
-        { id: 'read-path',          label: 'Read Path',           icon: 'search',      available: false },
+        { id: 'read-path',          label: 'Read Path',           icon: 'search',      available: true  },
         { id: 'predicate-pushdown', label: 'Predicate Pushdown',  icon: 'filter',      available: false },
         { id: 'column-stats',       label: 'Column Statistics',   icon: 'bar-chart',   available: false },
         { id: 'snapshot-isolation', label: 'Snapshot Isolation',  icon: 'camera',      available: false },
