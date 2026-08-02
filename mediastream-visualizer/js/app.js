@@ -72,12 +72,12 @@
       id: 'dlt-pipelines',
       label: 'DLT Pipelines',
       items: [
-        { id: 'dlt-architecture',   label: 'DLT Architecture',    icon: 'cpu',         available: false },
-        { id: 'bronze-silver',      label: 'Bronze → Silver',     icon: 'arrow-down',  available: false },
-        { id: 'silver-gold',        label: 'Silver → Gold',       icon: 'star',        available: false },
-        { id: 'ml-features',        label: 'ML Feature Store',    icon: 'zap',         available: false },
-        { id: 'recommendation',     label: 'Recommendation Engine', icon: 'target',    available: false },
-        { id: 'pipeline-monitoring', label: 'Pipeline Monitoring', icon: 'activity',   available: false },
+        { id: 'dlt-architecture',   label: 'DLT Architecture',    icon: 'cpu',         available: true  },
+        { id: 'bronze-silver',      label: 'Bronze → Silver',     icon: 'arrow-down',  available: true  },
+        { id: 'silver-gold',        label: 'Silver → Gold',       icon: 'star',        available: true  },
+        { id: 'ml-features',        label: 'ML Feature Store',    icon: 'zap',         available: true  },
+        { id: 'recommendation',     label: 'Recommendation Engine', icon: 'target',    available: true  },
+        { id: 'pipeline-monitoring', label: 'Pipeline Monitoring', icon: 'activity',   available: true  },
       ],
     },
     {
