@@ -121,7 +121,7 @@
       <!-- Note -->
       <rect x="16" y="252" width="448" height="28" rx="4" fill="#1e293b" stroke="#ef4444" stroke-width="1"/>
       <text x="240" y="262" text-anchor="middle" fill="#ef4444" font-size="7">All 14 masked with UC column masks — zero PII exposed to analysts without explicit GRANT</text>
-      <text x="240" y="276" text-anchor="middle" fill="#64748b" font-size="7">Engineers with `pii-access` group: see real values · Analysts: always masked</text>
+      <text x="240" y="276" text-anchor="middle" fill="#64748b" font-size="7">Engineers with 'pii-access' group: see real values · Analysts: always masked</text>
     </svg>`,
 
     // Step 2: CREATE COLUMN MASK

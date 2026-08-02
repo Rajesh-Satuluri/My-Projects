@@ -1064,3 +1064,18 @@
 }
 
 .tree-children.collapsed { display: none; }
+
+/* Fix SVG visibility in Group C diagram areas — override weak max-width/max-height */
+#module-container .wd-diagram-area > div,
+#module-container .at-diagram-area > div,
+#module-container .tv-diagram-area > div {
+  width: 100%;
+}
+
+#module-container .wd-diagram-area svg,
+#module-container .at-diagram-area svg,
+#module-container .tv-diagram-area svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
