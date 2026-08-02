@@ -28,9 +28,9 @@
         { id: 'time-travel',        label: 'Time Travel',         icon: 'clock',       available: true  },
         { id: 'schema-evolution',   label: 'Schema Evolution',    icon: 'columns',     available: true  },
         { id: 'data-skipping',      label: 'Data Skipping',       icon: 'filter',      available: true  },
-        { id: 'liquid-clustering',  label: 'Liquid Clustering',   icon: 'zap',         available: false },
-        { id: 'cdf',                label: 'Change Data Feed',    icon: 'radio',       available: false },
-        { id: 'constraints',        label: 'Constraints & Check', icon: 'check',       available: false },
+        { id: 'liquid-clustering',  label: 'Liquid Clustering',   icon: 'zap',         available: true  },
+        { id: 'cdf',                label: 'Change Data Feed',    icon: 'radio',       available: true  },
+        { id: 'constraints',        label: 'Constraints & Check', icon: 'check',       available: true  },
       ],
     },
     {
@@ -38,10 +38,10 @@
       label: 'Write Operations',
       items: [
         { id: 'streaming-ingest',   label: 'Streaming Ingest',    icon: 'arrow-down',  available: true  },
-        { id: 'batch-write',        label: 'Batch Write',         icon: 'upload',      available: false },
+        { id: 'batch-write',        label: 'Batch Write',         icon: 'upload',      available: true  },
         { id: 'upsert-merge',       label: 'MERGE (Upsert)',      icon: 'merge',       available: true  },
         { id: 'delete-ops',         label: 'DELETE',              icon: 'trash',       available: true  },
-        { id: 'checkpoint',         label: 'Checkpoint',          icon: 'save',        available: false },
+        { id: 'checkpoint',         label: 'Checkpoint',          icon: 'save',        available: true  },
       ],
     },
     {
@@ -49,9 +49,9 @@
       label: 'Read Operations',
       items: [
         { id: 'read-path',          label: 'Read Path',           icon: 'search',      available: true  },
-        { id: 'predicate-pushdown', label: 'Predicate Pushdown',  icon: 'filter',      available: false },
-        { id: 'column-stats',       label: 'Column Statistics',   icon: 'bar-chart',   available: false },
-        { id: 'snapshot-isolation', label: 'Snapshot Isolation',  icon: 'camera',      available: false },
+        { id: 'predicate-pushdown', label: 'Predicate Pushdown',  icon: 'filter',      available: true  },
+        { id: 'column-stats',       label: 'Column Statistics',   icon: 'bar-chart',   available: true  },
+        { id: 'snapshot-isolation', label: 'Snapshot Isolation',  icon: 'camera',      available: true  },
       ],
     },
     {
