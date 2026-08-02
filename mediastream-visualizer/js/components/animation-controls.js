@@ -44,6 +44,10 @@
       this._engine = engine;
       this._attach();
       this._bar?.classList.add('visible');
+      // Auto-show first step for modules that don't call goto(0) themselves
+      if (engine.currentStep === -1 && engine.totalSteps > 0) {
+        engine.goto(0);
+      }
       this._sync();
     },
 
