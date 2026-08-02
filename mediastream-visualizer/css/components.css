@@ -960,6 +960,18 @@
   box-sizing: border-box;
 }
 
+/* Group C modules own their full-height grid layout — cancel page-enter overrides */
+.wd-page.page-enter,
+.at-page.page-enter,
+.tv-page.page-enter,
+.ma-page.page-enter,
+.dl-page.page-enter,
+.home-page.page-enter {
+  padding: 0;
+  gap: 0;
+  min-height: 0;
+}
+
 /* ── Module header ───────────────────────────────────────────── */
 .module-header {
   display: flex;
