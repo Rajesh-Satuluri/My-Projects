@@ -95,9 +95,9 @@
       id: 'learn',
       label: 'Learning',
       items: [
-        { id: 'interview',          label: 'Interview Mode',      icon: 'message-square', available: false },
-        { id: 'quiz',               label: 'Quiz Mode',           icon: 'check-square',   available: false },
-        { id: 'cheatsheet',         label: 'Cheat Sheets',        icon: 'file-text',      available: false },
+        { id: 'interview',          label: 'Interview Mode',      icon: 'message-square', available: true  },
+        { id: 'quiz',               label: 'Quiz Mode',           icon: 'check-square',   available: true  },
+        { id: 'cheatsheet',         label: 'Cheat Sheets',        icon: 'file-text',      available: true  },
       ],
     },
   ];
