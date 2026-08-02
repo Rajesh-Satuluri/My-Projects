@@ -84,11 +84,11 @@
       id: 'advanced',
       label: 'Advanced Topics',
       items: [
-        { id: 'vacuum',             label: 'VACUUM & Retention',  icon: 'tool',        available: false },
-        { id: 'optimize',           label: 'OPTIMIZE & Z-Order',  icon: 'zap',         available: false },
-        { id: 'concurrent-writes',  label: 'Concurrent Writes',   icon: 'users',       available: false },
-        { id: 'partition-strategy', label: 'Partition Strategy',  icon: 'git-branch',  available: false },
-        { id: 'version-history',    label: 'Version History',     icon: 'clock',       available: false },
+        { id: 'vacuum',             label: 'VACUUM & Retention',  icon: 'tool',        available: true  },
+        { id: 'optimize',           label: 'OPTIMIZE & Z-Order',  icon: 'zap',         available: true  },
+        { id: 'concurrent-writes',  label: 'Concurrent Writes',   icon: 'users',       available: true  },
+        { id: 'partition-strategy', label: 'Partition Strategy',  icon: 'git-branch',  available: true  },
+        { id: 'version-history',    label: 'Version History',     icon: 'clock',       available: true  },
       ],
     },
     {
