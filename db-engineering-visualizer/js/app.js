@@ -23,7 +23,7 @@
       label: 'DB Design',
       items: [
         { id: 'database-design',       label: 'Database Design',         icon: 'layers',     available: false },
-        { id: 'keys',                  label: 'Keys',                    icon: 'key',        available: false },
+        { id: 'keys',                  label: 'Keys',                    icon: 'key',        available: true  },
         { id: 'relationships',         label: 'Relationships',           icon: 'git-branch', available: false },
         { id: 'normalization',         label: 'Normalization',           icon: 'filter',     available: false },
       ],
@@ -261,6 +261,7 @@
 
     _currentModuleId = id;
     _currentModuleInstance = mod;
+    if (IV.Progress && id !== 'home') IV.Progress.markVisited(id);
     _setActiveNav(id);
     _setBreadcrumb(id);
 
