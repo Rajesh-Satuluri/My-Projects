@@ -24,7 +24,7 @@
       items: [
         { id: 'database-design',       label: 'Database Design',         icon: 'layers',     available: false },
         { id: 'keys',                  label: 'Keys',                    icon: 'key',        available: true  },
-        { id: 'relationships',         label: 'Relationships',           icon: 'git-branch', available: false },
+        { id: 'relationships',         label: 'Relationships',           icon: 'git-branch', available: true  },
         { id: 'normalization',         label: 'Normalization',           icon: 'filter',     available: false },
       ],
     },
