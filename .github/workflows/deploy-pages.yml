@@ -16,9 +16,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Stage site
+        run: |
+          mkdir -p /tmp/site
+          cp -r iceberg-visualizer/. /tmp/site/
+          cp -r python-companion /tmp/site/
+
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
-          exclude_assets: '.github,.git,*.md,*.ipynb'
+          publish_dir: /tmp/site
