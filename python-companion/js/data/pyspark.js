@@ -384,6 +384,116 @@ df.rdd.getNumPartitions()`,
         mistakes:['Forgetting to unpersist() — cached DataFrames consume executor memory for the entire session.'],
         notes:['Spark 3.0+ AQE can auto-coalesce shuffle partitions — set spark.sql.adaptive.enabled=true.']
       },
+      {
+        id:'spark-array-struct', name:'F.array / F.struct / F.explode', purpose:'Create, transform, and unnest complex nested column types',
+        badge:['pyspark'], snippet:'df.withColumn("skill", F.explode("skills"))\ndf.groupBy("id").agg(F.collect_list("item"))',
+        sig:'F.array(*cols)  F.struct(*cols)  F.explode(col)  F.collect_list(col)  F.array_contains(col, val)',
+        meta:{ ret:'Column expression', mut:false, time:'O(n) — explode increases row count proportionally', space:'O(n × avg_array_len)' },
+        params:[],
+        code:
+`from pyspark.sql import functions as F
+
+df = spark.createDataFrame([
+    (1, "Alice", ["Python","Spark","SQL"]),
+    (2, "Bob",   ["Java","Scala"]),
+], ["id","name","skills"])
+
+# explode — one row per array element
+df.withColumn("skill", F.explode("skills"))
+# Alice → 3 rows, Bob → 2 rows
+
+# explode_outer — keeps rows with null/empty arrays (explode drops them)
+df.withColumn("skill", F.explode_outer("skills"))
+
+# posexplode — includes array index
+df.withColumn("pos_skill", F.posexplode("skills"))
+# (pos=0, skill='Python'), (pos=1, skill='Spark'), ...
+
+# collect_list / collect_set — inverse of explode: rows → array per group
+orders = spark.table("orders")
+orders.groupBy("customer_id") \\
+      .agg(F.collect_list("item").alias("items"),
+           F.collect_set("category").alias("categories"))
+
+# Array manipulation functions
+F.array_contains(F.col("skills"), "Spark")  # boolean
+F.array_size(F.col("skills"))               # length of array
+F.array_distinct(F.col("skills"))           # deduplicate
+F.sort_array(F.col("skills"))               # sorted copy
+
+# struct — nest multiple columns into one struct column
+df.withColumn("info", F.struct("id","name"))
+# info = {id:1, name:'Alice'}   → access as df["info"]["id"]
+
+# split string → array
+F.split(F.col("csv_tags"), ",")   # "a,b,c" → ["a","b","c"]`,
+        related:['F.explode()','F.collect_list()','F.from_json()','spark-schema'],
+        tags:['pyspark','array','struct','explode','collect_list','nested data','complex types'],
+        interview:[
+          'explode is the inverse of collect_list — it unnests an array column into one row per element',
+          'explode_outer preserves rows with null/empty arrays; plain explode silently drops them',
+          'collect_list preserves duplicates; collect_set deduplicates — both produce ArrayType columns',
+        ],
+        mistakes:['explode on large arrays can massively inflate row count — watch for shuffle cost downstream.'],
+        notes:['For JSON columns, use F.from_json(col, schema) to parse into a struct, then access nested fields with dot notation.']
+      },
+      {
+        id:'spark-schema', name:'StructType / from_json / schema_of_json', purpose:'Define explicit schemas and parse JSON string columns into queryable structs',
+        badge:['pyspark'], snippet:'schema = StructType([StructField("id", IntegerType(), True)])\ndf.withColumn("geo", F.from_json("geo_json", schema))',
+        sig:'StructType([StructField(name, dataType, nullable)])   F.from_json(col, schema)   F.to_json(col)',
+        meta:{ ret:'StructType | Column', mut:false, time:'O(1) schema definition, O(n) JSON parsing', space:'O(n)' },
+        params:[
+          { name:'name', type:'str', req:true, desc:'Column field name.' },
+          { name:'dataType', type:'DataType', req:true, desc:'StringType, IntegerType, DoubleType, ArrayType, MapType, StructType, TimestampType...' },
+          { name:'nullable', type:'bool', default:'True', desc:'Whether the field can contain null.' }
+        ],
+        code:
+`from pyspark.sql.types import (
+    StructType, StructField,
+    StringType, IntegerType, DoubleType,
+    ArrayType, MapType, TimestampType
+)
+from pyspark.sql import functions as F
+
+# Explicit schema — faster than inferSchema for large files
+schema = StructType([
+    StructField("order_id",  IntegerType(), False),
+    StructField("customer",  StringType(),  True),
+    StructField("amount",    DoubleType(),  True),
+    StructField("tags",      ArrayType(StringType()), True),
+])
+df = spark.read.schema(schema).json("/path/orders.json")
+
+# DDL string — concise equivalent to StructType
+ddl = "order_id INT NOT NULL, customer STRING, amount DOUBLE"
+spark.read.schema(ddl).csv("/path/data.csv")
+
+# Parse JSON string column → struct
+geo_schema = StructType([
+    StructField("lat", DoubleType(), True),
+    StructField("lng", DoubleType(), True),
+])
+df.withColumn("geo", F.from_json(F.col("geo_json"), geo_schema)) \\
+  .select("geo.lat", "geo.lng")
+
+# Infer schema from a sample — handy for exploration
+sample = '{"event":"click","user_id":42,"ts":"2024-01"}'
+inferred = spark.range(1) \\
+    .select(F.schema_of_json(F.lit(sample)).alias("s")) \\
+    .collect()[0]["s"]  # → "STRUCT<event: STRING, ts: STRING, user_id: BIGINT>"
+
+# Convert struct/array back to JSON string
+df.withColumn("json_out", F.to_json(F.col("geo")))`,
+        related:['spark.read()','F.from_json()','F.schema_of_json()','df.printSchema()'],
+        tags:['pyspark','schema','StructType','StructField','from_json','JSON parsing','DDL'],
+        interview:[
+          'Always provide schema= instead of inferSchema=True in production — avoids a full scan to infer types',
+          'from_json() + StructType parses a JSON string column into queryable struct fields (col.field notation)',
+          'DDL string schema ("id INT, name STRING") is equivalent to StructType and far more readable',
+        ],
+        mistakes:['inferSchema=True reads the entire dataset twice — expensive at scale; never use in production pipelines.'],
+        notes:['spark.read.json() infers schema by default; always pass schema= to avoid the extra scan and type surprises.']
+      },
       ]
     },
     {
@@ -422,6 +532,71 @@ df.write.format("delta").saveAsTable("my_catalog.schema.orders")`,
         ],
         mistakes:['mode("overwrite") with partitionBy only overwrites matching partitions if you use dynamic partition overwrite config.'],
         notes:['Delta format recommended over plain Parquet on Databricks — adds Z-ordering, liquid clustering, CDC support.']
+      },
+      {
+        id:'spark-delta-merge', name:'DeltaTable.merge() / MERGE INTO', purpose:'Upsert rows into a Delta table — update matched rows, insert new ones atomically',
+        badge:['pyspark'], snippet:'DeltaTable.forPath(spark, path).alias("t")\n  .merge(updates.alias("u"), "t.id=u.id")\n  .whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()',
+        sig:'DeltaTable.merge(source, condition).whenMatched[Update|Delete](...).whenNotMatched[Insert](...).execute()',
+        meta:{ ret:'None (side-effect write)', mut:true, time:'O(n) — rewrites affected files', space:'O(n)' },
+        params:[
+          { name:'source', type:'DataFrame', req:true, desc:'DataFrame containing new and updated rows.' },
+          { name:'condition', type:'str | Column', req:true, desc:'JOIN predicate between target alias and source alias.' }
+        ],
+        code:
+`from delta.tables import DeltaTable
+from pyspark.sql import functions as F
+
+target_path = "/mnt/delta/customers"
+dt = DeltaTable.forPath(spark, target_path)
+
+updates = spark.table("customer_updates")   # source DataFrame
+
+# --- Simple upsert: update matches, insert new ---
+dt.alias("t") \\
+  .merge(
+      updates.alias("u"),
+      "t.customer_id = u.customer_id"
+  ) \\
+  .whenMatchedUpdateAll() \\
+  .whenNotMatchedInsertAll() \\
+  .execute()
+
+# --- Selective: soft-delete matched + conditional insert ---
+dt.alias("t") \\
+  .merge(updates.alias("u"), "t.id = u.id") \\
+  .whenMatchedUpdate(
+      condition = "u.status = 'DELETED'",
+      set       = {"is_active": F.lit(False), "updated_at": F.col("u.updated_at")}
+  ) \\
+  .whenMatchedUpdate(
+      set = {"name": "u.name", "email": "u.email", "updated_at": "u.updated_at"}
+  ) \\
+  .whenNotMatchedInsert(
+      values = {"id":"u.id","name":"u.name","email":"u.email","is_active":"true"}
+  ) \\
+  .execute()
+
+# --- SQL equivalent ---
+spark.sql("""
+    MERGE INTO customers AS t
+    USING customer_updates AS u
+       ON t.customer_id = u.customer_id
+    WHEN MATCHED THEN UPDATE SET *
+    WHEN NOT MATCHED THEN INSERT *
+""")
+
+# --- Check history after merge ---
+dt.history(3).select("version","timestamp","operation").show()`,
+        related:['DeltaTable.forPath()','spark.read.format("delta")','df.write.format("delta")'],
+        tags:['pyspark','delta lake','MERGE','upsert','SCD','DeltaTable','ACID'],
+        interview:[
+          'MERGE is the lakehouse upsert primitive — one atomic operation replaces separate read-modify-write jobs',
+          'whenMatchedUpdateAll()/whenNotMatchedInsertAll() with * matches all source columns automatically',
+          'Delta MERGE is ACID — concurrent readers always see a consistent snapshot during the write',
+          'SCD Type 1: whenMatchedUpdateAll(). SCD Type 2: insert new row with version flag in whenMatched too.',
+        ],
+        mistakes:['MERGE without partitioning source similarly to target — triggers a full target table scan on every run.'],
+        notes:['dt.history() shows full audit trail; dt.restoreToVersion(n) rolls back — Time Travel is built into Delta.']
       },
       ]
     },
