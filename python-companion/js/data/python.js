@@ -1086,6 +1086,130 @@ random.random()   # always same value`,
   ] // end math-random.fns
 }, // end math-random cat
 
+{
+  key:'json-module', label:'json',
+  fns:[
+  {
+    id:'json-basics', name:'json.dumps / json.loads', purpose:'Serialize Python objects to JSON strings and deserialize back',
+    badge:['python'], snippet:'import json\njson.dumps(data, indent=2)   json.loads(text)',
+    sig:'json.dumps(obj, indent=None, sort_keys=False, ensure_ascii=True, default=None)\njson.loads(s)',
+    meta:{ ret:'str | Any', mut:false, time:'O(n)', space:'O(n)' },
+    params:[
+      { name:'indent', type:'int | None', default:'None', desc:'Pretty-print with this many spaces. None produces compact one-line output.' },
+      { name:'sort_keys', type:'bool', default:'False', desc:'Sort dictionary keys alphabetically — useful for reproducible output.' },
+      { name:'default', type:'Callable | None', default:'None', desc:'Called for non-serializable objects; return a serializable substitute.' }
+    ],
+    code:
+`import json
+
+data = {"name":"Alice","age":30,"scores":[95,82,91],"active":True}
+
+# Serialize: Python → JSON string
+s = json.dumps(data)                      # compact single line
+s = json.dumps(data, indent=2)            # pretty-printed
+s = json.dumps(data, sort_keys=True)      # sorted keys
+
+# Deserialize: JSON string → Python
+obj = json.loads(s)    # dict/list/str/int/float/bool/None
+obj["name"]            # "Alice"
+
+# File I/O
+with open("data.json","w") as f:
+    json.dump(data, f, indent=2)          # write to file
+
+with open("data.json") as f:
+    obj = json.load(f)                    # read from file
+
+# Custom serializer for non-JSON types (datetime, Decimal, etc.)
+from datetime import datetime
+import decimal
+
+def custom_default(obj):
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    if isinstance(obj, decimal.Decimal):
+        return float(obj)
+    raise TypeError(f"Object {type(obj)} not serializable")
+
+json.dumps({"ts": datetime.now()}, default=custom_default)
+
+# Error handling
+try:
+    json.loads("not: valid json")
+except json.JSONDecodeError as e:
+    print(e.msg, e.lineno, e.colno)   # detailed error location`,
+    related:['pathlib.Path.read_text()','collections.OrderedDict'],
+    tags:['python','json','serialization','file I/O','stdlib'],
+    interview:[
+      'json.dumps (with s) → string; json.dump (no s) → file — same for loads/load',
+      'Use indent=2 for human-readable output; omit for compact wire/storage format',
+      'default= hook handles non-serializable types: datetime, Decimal, custom classes',
+    ],
+    mistakes:['json.dump() writes to a file object; json.dumps() returns a string — the s stands for "string".'],
+    notes:['json.JSONDecodeError subclasses ValueError — catchable with either. e.lineno/e.colno pinpoints parse failures.']
+  },
+  ] // end json-module.fns
+}, // end json-module cat
+
+{
+  key:'os-sys', label:'os / sys',
+  fns:[
+  {
+    id:'os-sys-basics', name:'os / sys', purpose:'File system operations, environment variables, and interpreter introspection',
+    badge:['python'], snippet:'import os, sys\nos.environ.get("HOME")\nsys.argv[1:]',
+    sig:'os.path.*   os.environ   os.makedirs   sys.argv   sys.exit   sys.path',
+    meta:{ ret:'varies', mut:false, time:'O(1) to O(n)', space:'O(n)' },
+    params:[],
+    code:
+`import os, sys
+
+# --- Environment variables ---
+home = os.environ.get("HOME", "/tmp")  # safe: returns default, no error
+db   = os.environ["DATABASE_URL"]      # raises KeyError if missing
+os.environ["MY_VAR"] = "value"         # set for current process only
+
+# --- os.path — path manipulation (prefer pathlib.Path in new code) ---
+p = "/home/user/data/file.csv"
+os.path.exists(p)                       # True / False
+os.path.dirname(p)                      # "/home/user/data"
+os.path.basename(p)                     # "file.csv"
+os.path.splitext(p)                     # ("/home/user/data/file", ".csv")
+os.path.join("data","2024","jan.csv")   # "data/2024/jan.csv"
+os.path.abspath(".")                    # absolute path of cwd
+
+# --- Directory operations ---
+os.getcwd()                             # current working directory
+os.listdir(".")                         # list entries (unsorted)
+os.makedirs("a/b/c", exist_ok=True)     # create nested dirs safely
+os.rename("old.txt","new.txt")
+os.remove("file.txt")                   # delete a file
+
+# --- sys — interpreter info ---
+sys.argv        # command-line args; sys.argv[0] = script name
+sys.argv[1:]    # user-supplied args
+
+sys.exit(0)     # exit: 0 = success, non-zero = error
+sys.path        # import search path (list of directories)
+sys.version     # Python version string
+sys.platform    # 'linux', 'darwin', 'win32'
+
+# --- Walk a directory tree recursively ---
+for root, dirs, files in os.walk("./data"):
+    for fname in files:
+        print(os.path.join(root, fname))`,
+    related:['pathlib.Path','subprocess','shutil'],
+    tags:['python','os','sys','environment','file system','CLI','stdlib'],
+    interview:[
+      'os.environ.get("KEY","default") is safer than os.environ["KEY"] — no KeyError on missing var',
+      'Prefer pathlib.Path over os.path for new code — cleaner, chainable with the / operator',
+      'sys.argv[1:] is how CLI scripts receive arguments; use argparse for structured arg parsing',
+    ],
+    mistakes:['os.makedirs without exist_ok=True raises FileExistsError if the directory already exists.'],
+    notes:['shutil.copytree/shutil.rmtree for recursive copy/delete; shutil.which("cmd") to find executables on PATH.']
+  },
+  ] // end os-sys.fns
+}, // end os-sys cat
+
   ] // end Standard Library cats
 }, // end Standard Library group
 
@@ -2546,6 +2670,279 @@ for csv in Path("data").rglob("*.csv"):
 
   ] // end Patterns & Tools cats
 }, // end Patterns & Tools group
+
+/* ══════════════════════════════════════════════════════════════
+   GROUP 5 · INTERVIEW PATTERNS
+══════════════════════════════════════════════════════════════ */
+{
+  label: 'Interview Patterns',
+  cats:[
+  {
+    key:'two-pointers', label:'Two Pointers & Sliding Window',
+    fns:[
+    {
+      id:'two-pointers', name:'Two Pointers', purpose:'Scan arrays with opposite-end or same-direction pointers — O(n) vs O(n²) brute force',
+      badge:['python'], snippet:'l, r = 0, len(arr)-1\nwhile l < r:\n    ...',
+      sig:'Opposite ends: l,r → center   Same direction: slow/fast   Sliding window: l expands right, shrinks from left',
+      meta:{ ret:'varies', mut:false, time:'O(n)', space:'O(1)' },
+      params:[],
+      code:
+`# Pattern 1: Opposite ends — sorted array problems
+# Two Sum II, container with most water
+
+def two_sum_sorted(nums, target):
+    l, r = 0, len(nums) - 1
+    while l < r:
+        s = nums[l] + nums[r]
+        if s == target:  return [l, r]
+        elif s < target: l += 1
+        else:            r -= 1
+    return []
+
+# Pattern 2: Same direction — remove duplicates in-place
+
+def remove_duplicates(nums):
+    slow = 0
+    for fast in range(1, len(nums)):
+        if nums[fast] != nums[slow]:
+            slow += 1
+            nums[slow] = nums[fast]
+    return slow + 1   # new length
+
+# Pattern 3: Fixed-size sliding window
+# Max sum subarray of length k
+
+def max_sum_window(nums, k):
+    win = sum(nums[:k])
+    best = win
+    for i in range(k, len(nums)):
+        win += nums[i] - nums[i - k]
+        best = max(best, win)
+    return best
+
+# Pattern 4: Variable-size sliding window
+# Longest substring without repeating characters
+
+def longest_no_repeat(s):
+    seen = {}
+    l = best = 0
+    for r, ch in enumerate(s):
+        if ch in seen and seen[ch] >= l:
+            l = seen[ch] + 1   # shrink window past last occurrence
+        seen[ch] = r
+        best = max(best, r - l + 1)
+    return best`,
+      related:['bisect','bfs-dfs-basics','dp-basics'],
+      tags:['python','two pointers','sliding window','interview','arrays','O(n)'],
+      interview:[
+        'Two pointers work on SORTED arrays (opposite ends) or any array (same direction / sliding window)',
+        'Variable window: "longest/max" → expand right greedily; "shortest/min" → shrink left aggressively',
+        'Fixed window: slide by adding new element and subtracting element that falls out — O(1) per step',
+      ],
+      mistakes:['Forgetting to check l < r in opposite-end pattern — loop runs past crossing point.'],
+      notes:['Sliding window replaces O(n²) nested loops — the left pointer never resets, so total moves = O(n).']
+    },
+    ] // end two-pointers.fns
+  }, // end two-pointers cat
+  {
+    key:'bfs-dfs', label:'BFS & DFS',
+    fns:[
+    {
+      id:'bfs-dfs-basics', name:'BFS / DFS', purpose:'Traverse graphs and trees — BFS for shortest paths, DFS for connectivity and backtracking',
+      badge:['python'], snippet:'from collections import deque\nq = deque([start])\nvisited = {start}',
+      sig:'BFS: deque + visited set (O(V+E))   DFS: recursion or explicit stack (O(V+E))',
+      meta:{ ret:'varies', mut:false, time:'O(V + E)', space:'O(V)' },
+      params:[],
+      code:
+`from collections import deque
+
+# --- BFS — shortest path in unweighted graph ---
+def bfs(graph, start, target):
+    q = deque([(start, [start])])   # (node, path so far)
+    visited = {start}
+    while q:
+        node, path = q.popleft()
+        if node == target:
+            return path
+        for nb in graph[node]:
+            if nb not in visited:
+                visited.add(nb)     # mark WHEN ENQUEUING — not dequeuing
+                q.append((nb, path + [nb]))
+    return None
+
+# --- DFS — recursive ---
+def dfs(graph, node, visited=None):
+    if visited is None: visited = set()
+    visited.add(node)
+    for nb in graph[node]:
+        if nb not in visited:
+            dfs(graph, nb, visited)
+    return visited
+
+# --- DFS — iterative (explicit stack) ---
+def dfs_iter(graph, start):
+    stack, visited = [start], {start}
+    while stack:
+        node = stack.pop()          # LIFO = depth first
+        for nb in graph[node]:
+            if nb not in visited:
+                visited.add(nb)
+                stack.append(nb)
+
+# --- Binary tree BFS — level order ---
+def level_order(root):
+    if not root: return []
+    q, result = deque([root]), []
+    while q:
+        level_vals = []
+        for _ in range(len(q)):     # snapshot length = one level
+            node = q.popleft()
+            level_vals.append(node.val)
+            if node.left:  q.append(node.left)
+            if node.right: q.append(node.right)
+        result.append(level_vals)
+    return result`,
+      related:['collections.deque','two-pointers','dp-basics'],
+      tags:['python','BFS','DFS','graph','tree','interview','traversal'],
+      interview:[
+        'BFS uses a queue (deque) — guarantees shortest path in unweighted graphs',
+        'DFS uses a stack (recursion or explicit) — better for connectivity, topo sort, backtracking',
+        'Mark visited WHEN ENQUEUING (BFS) — marking when dequeuing allows duplicates into the queue',
+        'Trees never need a visited set (no cycles); graphs always do',
+      ],
+      mistakes:['For BFS, adding to visited when dequeuing (not enqueuing) causes the same node to be queued multiple times.'],
+      notes:['For weighted shortest paths use heapq (Dijkstra); topological sort is DFS with a post-order stack.']
+    },
+    ] // end bfs-dfs.fns
+  }, // end bfs-dfs cat
+  {
+    key:'dp-memoize', label:'Dynamic Programming',
+    fns:[
+    {
+      id:'dp-basics', name:'Memoization & Tabulation', purpose:'Cache overlapping subproblems — top-down with @cache, bottom-up with a DP table',
+      badge:['python'], snippet:'@lru_cache(maxsize=None)\ndef fib(n): return fib(n-1)+fib(n-2) if n>1 else n',
+      sig:'Top-down: @functools.cache   Bottom-up: fill 1D/2D array in dependency order',
+      meta:{ ret:'varies', mut:false, time:'O(states × transition)', space:'O(states)' },
+      params:[],
+      code:
+`from functools import lru_cache
+
+# --- Top-down memoization with @lru_cache ---
+@lru_cache(maxsize=None)   # or @functools.cache (Python 3.9+)
+def fib(n):
+    if n <= 1: return n
+    return fib(n-1) + fib(n-2)
+
+fib(50)   # O(n) — each subproblem solved once, cached after
+
+# --- Bottom-up tabulation ---
+def fib_tab(n):
+    if n <= 1: return n
+    dp = [0] * (n + 1)
+    dp[1] = 1
+    for i in range(2, n + 1):
+        dp[i] = dp[i-1] + dp[i-2]
+    return dp[n]
+
+# Space-optimised: O(1) — only last two values needed
+def fib_opt(n):
+    a, b = 0, 1
+    for _ in range(n): a, b = b, a + b
+    return a
+
+# --- 0/1 Knapsack — 2D DP ---
+def knapsack(weights, values, cap):
+    n = len(weights)
+    dp = [[0] * (cap + 1) for _ in range(n + 1)]
+    for i in range(1, n + 1):
+        for w in range(cap + 1):
+            dp[i][w] = dp[i-1][w]              # skip item i
+            if weights[i-1] <= w:
+                dp[i][w] = max(dp[i][w],
+                    dp[i-1][w - weights[i-1]] + values[i-1])
+    return dp[n][cap]
+
+# --- Coin change — unbounded, 1D DP ---
+def coin_change(coins, amount):
+    dp = [float('inf')] * (amount + 1)
+    dp[0] = 0
+    for coin in coins:
+        for x in range(coin, amount + 1):
+            dp[x] = min(dp[x], dp[x - coin] + 1)
+    return dp[amount] if dp[amount] != float('inf') else -1`,
+      related:['functools.lru_cache','two-pointers','bfs-dfs-basics'],
+      tags:['python','dynamic programming','memoization','lru_cache','tabulation','interview'],
+      interview:[
+        '@lru_cache converts any recursive solution to memoized DP instantly — no manual cache dict needed',
+        'Top-down: recurse from goal to base cases. Bottom-up: iterate from base cases up to goal.',
+        'DP applies when: optimal substructure (optimal solution uses optimal sub-solutions) + overlapping subproblems',
+        '2D DP for 2 changing variables: dp[i][w] = knapsack, dp[i][j] = edit distance / LCS',
+      ],
+      mistakes:['Mutable arguments (lists, dicts) break @lru_cache — convert to tuple before calling the cached function.'],
+      notes:['Many 2D DP tables compress to 1D by iterating in the right direction — cuts space from O(n²) to O(n).']
+    },
+    ] // end dp-memoize.fns
+  }, // end dp-memoize cat
+  {
+    key:'bit-tricks', label:'Bit Manipulation',
+    fns:[
+    {
+      id:'bit-ops', name:'Bit Manipulation', purpose:'Integer-level operations — O(1) tricks that eliminate branches and extra memory',
+      badge:['python'], snippet:'n & (n-1)   # clear lowest set bit\nn & (-n)    # isolate lowest set bit\na ^ a == 0  # XOR self-cancels',
+      sig:'& | ^ ~ << >>  plus standard bit idioms',
+      meta:{ ret:'int', mut:false, time:'O(1)', space:'O(1)' },
+      params:[],
+      code:
+`a, b = 0b1010, 0b1100    # 10, 12
+
+a & b    # 0b1000 =  8   AND — bits set in BOTH
+a | b    # 0b1110 = 14   OR  — bits set in EITHER
+a ^ b    # 0b0110 =  6   XOR — bits set in EXACTLY ONE
+~a       # -11           NOT — flip all bits (two's complement)
+a << 1   # 20            left shift  = × 2
+a >> 1   #  5            right shift = // 2
+
+n = 12   # 0b1100
+
+# Is n a power of 2?  (exactly one bit set)
+is_pow2 = n > 0 and (n & (n - 1)) == 0   # True for 1,2,4,8,...
+
+# Count set bits (popcount)
+bin(n).count('1')   # 2
+n.bit_count()       # 2  — Python 3.10+
+
+# Isolate lowest set bit
+n & (-n)            # 4  (0b0100)
+
+# Clear lowest set bit
+n & (n - 1)         # 8  (0b1000)
+
+# Get / set / clear bit at position k
+k = 2
+(n >> k) & 1        # get bit k   → 1
+n |  (1 << k)       # set bit k
+n & ~(1 << k)       # clear bit k
+
+# XOR trick: find single non-duplicate (a^a=0, a^0=a)
+from functools import reduce
+import operator
+nums = [4, 1, 2, 1, 2]
+reduce(operator.xor, nums)   # 4 — pairs cancel, unique remains`,
+      related:['functools.reduce','math-basics'],
+      tags:['python','bitwise','bit manipulation','interview','XOR','tricks'],
+      interview:[
+        'n & (n-1) clears the lowest set bit — count how many times until 0 gives popcount',
+        'n & (-n) isolates the lowest set bit — used in Fenwick/BIT trees',
+        'XOR identity: a^a=0, a^0=a — find the unique element in O(n) time, O(1) space',
+        'Left shift by k = multiply by 2^k; right shift by k = floor-divide by 2^k',
+      ],
+      mistakes:['Python\'s ~ returns -(n+1) due to arbitrary-precision two\'s complement — mask with & 0xFF etc if you need unsigned.'],
+      notes:['Python integers are arbitrary precision — bit_length() gives number of bits needed; bit_count() (3.10+) is popcount.']
+    },
+    ] // end bit-tricks.fns
+  }, // end bit-tricks cat
+  ] // end Interview Patterns cats
+}, // end Interview Patterns group
 
   ] // end groups
 }; // end PYREF_PYTHON
