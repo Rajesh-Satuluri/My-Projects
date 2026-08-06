@@ -155,6 +155,131 @@ df['a'] + df['b']    # faster than apply(sum, axis=1)`,
         notes:['For simple arithmetic and string ops, pandas has built-in methods: .str.upper(), .dt.year, etc.']
       },
       {
+        id:'pd-missing', name:'fillna / dropna / isna', purpose:'Handle missing values (NaN) in DataFrames',
+        badge:['pandas'], snippet:'df.isna().sum()   df.fillna(0)   df.dropna(subset=["col"])',
+        sig:'df.fillna(value | method)   df.dropna(axis=0, how="any", subset=None)   df.isna()',
+        meta:{ ret:'DataFrame', mut:false, time:'O(n)', space:'O(n)' },
+        params:[
+          { name:'value', type:'scalar | dict | Series', req:false, desc:'Fill NaN with this value. Dict fills per-column.' },
+          { name:'method', type:'"ffill"|"bfill"', req:false, desc:'Forward-fill or backward-fill from adjacent values.' },
+          { name:'how', type:'"any"|"all"', default:'"any"', desc:'Drop row if any NaN ("any") or only all NaN ("all").' },
+          { name:'subset', type:'list[str]', req:false, desc:'Only consider these columns when deciding to drop rows.' }
+        ],
+        code:
+`df = pd.DataFrame({'a':[1,None,3],'b':[None,2,3],'c':['x',None,'z']})
+
+# Detect
+df.isna().sum()            # count NaN per column
+df.isna().any().any()      # True if any NaN anywhere
+
+# Fill
+df.fillna(0)               # fill all NaN with 0
+df.fillna({'a':0,'c':'unknown'})           # per-column
+df['a'].fillna(df['a'].mean())             # fill with column mean
+df.fillna(method='ffill')  # forward-fill (last known value)
+df.fillna(method='bfill')  # backward-fill
+
+# Drop rows
+df.dropna()                    # drop rows with any NaN
+df.dropna(how='all')           # drop rows where ALL are NaN
+df.dropna(subset=['a','b'])    # drop only if NaN in these cols
+df.dropna(thresh=2)            # keep rows with ≥ 2 non-NaN`,
+        related:['df.interpolate()','df.astype()','pd.isna()'],
+        tags:['pandas','missing values','NaN','data cleaning'],
+        interview:[
+          'fillna(method="ffill") for time-series gaps — carry last known value forward',
+          'Never compare to NaN with == — use df.isna() or pd.isna(val)',
+          'After merge, NaN in a column typically means no match — signals join type choice',
+        ],
+        mistakes:['df.fillna(inplace=True) modifies df but returns None — cannot chain with other operations.'],
+        notes:['In pandas, None and np.nan are both treated as missing in numeric columns.']
+      },
+      {
+        id:'pd-pivot', name:'pivot_table / melt', purpose:'Reshape DataFrames: wide ↔ long format',
+        badge:['pandas'], snippet:'df.pivot_table(values="v", index="r", columns="c", aggfunc="sum")',
+        sig:'pivot_table(values, index, columns, aggfunc)   melt(id_vars, value_vars)',
+        meta:{ ret:'DataFrame', mut:false, time:'O(n log n)', space:'O(n)' },
+        params:[
+          { name:'values', type:'str | list', req:true, desc:'Column(s) to aggregate.' },
+          { name:'index', type:'str | list', req:true, desc:'Row grouping keys.' },
+          { name:'columns', type:'str | list', req:true, desc:'Column grouping keys — unique values become columns.' },
+          { name:'aggfunc', type:'str | func', default:'"mean"', desc:'"sum","mean","count","max","min" or custom function.' }
+        ],
+        code:
+`df = pd.DataFrame({
+    'date':   ['2024-01','2024-01','2024-02','2024-02'],
+    'region': ['East',  'West',  'East',  'West'],
+    'sales':  [100,     200,     150,     250],
+})
+
+# pivot_table — like Excel pivot: rows × columns → aggregated cells
+pt = df.pivot_table(
+    values='sales',
+    index='date',
+    columns='region',
+    aggfunc='sum',
+    fill_value=0
+)
+#         East  West
+# 2024-01  100   200
+# 2024-02  150   250
+
+# melt — wide to long (inverse of pivot)
+wide = pd.DataFrame({'id':[1,2],'Jan':[100,90],'Feb':[200,180]})
+pd.melt(wide, id_vars='id', var_name='month', value_name='sales')
+#    id month  sales
+# 0   1   Jan    100
+# 1   2   Jan     90  ...`,
+        related:['df.groupby()','df.stack()','df.unstack()'],
+        tags:['pandas','reshape','pivot','melt','wide-to-long'],
+        interview:[
+          'pivot_table is like SQL crosstab — rows × columns → aggregated cells',
+          'melt is the inverse of pivot: wide format → long format',
+          'stack/unstack operate on index hierarchy; pivot/melt operate on column values',
+        ],
+        mistakes:['pivot (not pivot_table) raises on duplicate index/column pairs — always use pivot_table.'],
+        notes:['pd.crosstab is a convenience wrapper around pivot_table for frequency tables.']
+      },
+      {
+        id:'pd-datetime', name:'pd.to_datetime / .dt accessor', purpose:'Parse dates and extract datetime components',
+        badge:['pandas'], snippet:'df["dt"] = pd.to_datetime(df["date_str"])\ndf["year"] = df["dt"].dt.year',
+        sig:'pd.to_datetime(arg, format=None, errors="raise")   Series.dt.<component>',
+        meta:{ ret:'datetime64 Series', mut:false, time:'O(n)', space:'O(n)' },
+        params:[
+          { name:'format', type:'str | None', default:'None', desc:'strptime format string. Providing it is much faster than auto-parsing.' },
+          { name:'errors', type:'"raise"|"coerce"|"ignore"', default:'"raise"', desc:'"coerce" sets invalid dates to NaT.' }
+        ],
+        code:
+`df = pd.DataFrame({'date_str':['2024-01-15','2024-02-20','2024-03-10']})
+
+# Parse string column to datetime
+df['date'] = pd.to_datetime(df['date_str'])
+
+# Extract components via .dt accessor
+df['year']    = df['date'].dt.year
+df['month']   = df['date'].dt.month
+df['day']     = df['date'].dt.day
+df['weekday'] = df['date'].dt.dayofweek  # Mon=0, Sun=6
+df['quarter'] = df['date'].dt.quarter
+
+# Date arithmetic
+df['date'] + pd.Timedelta(days=30)
+(df['end'] - df['start']).dt.days    # duration in days
+
+# Resample — requires datetime index
+df.set_index('date').resample('M')['value'].sum()    # monthly totals
+df.set_index('date').resample('W')['value'].mean()   # weekly average`,
+        related:['df.groupby()','pd.Timedelta','df.resample()'],
+        tags:['pandas','datetime','time series','dt accessor','resample'],
+        interview:[
+          'Always provide format= for large DataFrames — 10x faster than auto-inference',
+          'errors="coerce" turns unparseable dates to NaT — use .isna() to find them',
+          '.dt.to_period("M") converts to Period — easier for month/quarter grouping',
+        ],
+        mistakes:['String comparison on date columns works alphabetically but is fragile — convert to datetime first.'],
+        notes:['pd.DateOffset for calendar-aware offsets (business days, month ends); pd.Timedelta for fixed durations.']
+      },
+      {
         id:'pd-merge', name:'merge() / join() / concat()', purpose:'Combine DataFrames by rows or columns',
         badge:['pandas'], snippet:'pd.merge(df1, df2, on="key", how="left")',
         sig:'pd.merge(left, right, how="inner", on=None, left_on=None, right_on=None)',

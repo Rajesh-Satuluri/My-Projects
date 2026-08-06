@@ -108,6 +108,134 @@ a[:, [0,2]]               # cols 0 and 2`,
         notes:['Fancy indexing (integer array indexing) returns a copy, not a view.']
       },
       {
+        id:'np-where', name:'np.where / np.select / np.clip', purpose:'Conditional element selection and value bounding',
+        badge:['numpy'], snippet:'np.where(condition, x, y)',
+        sig:'np.where(condition[, x, y])  np.select(conditions, choices)  np.clip(a, a_min, a_max)',
+        meta:{ ret:'ndarray', mut:false, time:'O(n)', space:'O(n)' },
+        params:[
+          { name:'condition', type:'array_like bool', req:true, desc:'Boolean array mask.' },
+          { name:'x', type:'array_like', req:true, desc:'Values where condition is True.' },
+          { name:'y', type:'array_like', req:true, desc:'Values where condition is False.' }
+        ],
+        code:
+`import numpy as np
+
+a = np.array([1, -2, 3, -4, 5])
+
+# np.where(cond, true_val, false_val)
+np.where(a > 0, a, 0)        # [1, 0, 3, 0, 5] — ReLU
+np.where(a > 0, 1, -1)       # [1,-1, 1,-1, 1] — sign
+
+# Multiple conditions — np.select
+conditions = [a < 0, a == 0, a > 0]
+choices    = [-1,    0,       1]
+np.select(conditions, choices, default=0)   # sign function
+
+# np.clip — bound values to a range
+np.clip(a, 0, None)     # [1, 0, 3, 0, 5] — clip to [0, ∞)
+np.clip(a, -1, 3)       # [1,-1, 3,-1, 3]
+
+# One-arg where: return indices of True
+np.where(a > 0)         # (array([0,2,4]),) — index with [0]`,
+        related:['np.nonzero()','np.argmax()','np.select()'],
+        tags:['numpy','conditional','clip','masking'],
+        interview:[
+          'np.where(cond, x, y) is a vectorized ternary — replaces Python loops',
+          'ReLU: np.where(a > 0, a, 0) or equivalently np.clip(a, 0, None)',
+          'np.where(cond) with one arg returns indices of True values — same as np.nonzero()',
+        ],
+        mistakes:['np.where(cond) returns a tuple of arrays (one per dimension) — index with [0] for 1D.'],
+        notes:['np.where evaluates both x and y branches fully before applying condition — avoid expensive side effects.']
+      },
+      {
+        id:'np-sort', name:'sort / argsort / unique', purpose:'Sort arrays and find unique values with counts',
+        badge:['numpy'], snippet:'np.sort(arr)   np.argsort(arr)   np.unique(arr, return_counts=True)',
+        sig:'np.sort(a, axis=-1)  np.argsort(a)  np.unique(a, return_counts=False)',
+        meta:{ ret:'ndarray', mut:false, time:'O(n log n)', space:'O(n)' },
+        params:[
+          { name:'a', type:'ndarray', req:true, desc:'Input array.' },
+          { name:'axis', type:'int | None', default:'-1', desc:'Sort along this axis. None flattens first.' }
+        ],
+        code:
+`import numpy as np
+
+a = np.array([3, 1, 4, 1, 5, 9, 2, 6])
+
+np.sort(a)           # [1,1,2,3,4,5,6,9] — new array
+a.sort()             # in-place, no return value
+
+# argsort — indices that would sort the array
+idx = np.argsort(a)  # [1,3,6,0,2,4,7,5]
+a[idx]               # same as np.sort(a)
+
+# Sort descending
+np.sort(a)[::-1]                   # reverse sorted copy
+a[np.argsort(a)[::-1]]             # via argsort
+
+# unique
+vals = np.array([1,2,2,3,3,3])
+np.unique(vals)                            # [1,2,3]
+np.unique(vals, return_counts=True)        # ([1,2,3], [1,2,3])
+np.unique(vals, return_index=True)         # ([1,2,3], [0,1,3])
+
+# 2D: sort each row
+m = np.array([[3,1],[4,1]])
+np.sort(m, axis=1)   # [[1,3],[1,4]]`,
+        related:['np.argmax()','np.partition()'],
+        tags:['numpy','sorting','unique','argsort'],
+        interview:[
+          'argsort gives the permutation that sorts — reorder multiple arrays consistently',
+          'Top-k indices: <code>np.argsort(a)[-k:]</code> is O(n log n); <code>np.argpartition(a,-k)[-k:]</code> is O(n)',
+          'np.unique(a, return_counts=True) is a fast frequency counter for numeric arrays',
+        ],
+        mistakes:['np.sort returns a new array; a.sort() modifies in-place — unlike Python list which also returns None.'],
+        notes:['For partial sort (top k only), np.argpartition is O(n) vs O(n log n) for full sort.']
+      },
+      {
+        id:'np-linalg', name:'dot / matmul / linalg', purpose:'Matrix multiplication and linear algebra essentials',
+        badge:['numpy'], snippet:'C = A @ B   np.linalg.norm(v)',
+        sig:'np.dot(a, b)   np.matmul(a, b)   a @ b   np.linalg.norm/solve/eig/inv',
+        meta:{ ret:'ndarray', mut:false, time:'O(n³) matmul', space:'O(n²)' },
+        params:[],
+        code:
+`import numpy as np
+
+v = np.array([3, 4])
+A = np.array([[1,2],[3,4]])
+B = np.array([[5,6],[7,8]])
+
+# Dot product (vectors) — scalar
+np.dot(v, v)          # 25  (3²+4²)
+
+# Matrix multiplication — @ operator (Python 3.5+)
+A @ B                 # [[19,22],[43,50]]
+np.matmul(A, B)       # same
+
+# Element-wise multiply (NOT matrix multiply)
+A * B                 # [[5,12],[21,32]]
+
+# Linear algebra
+np.linalg.norm(v)          # 5.0  (Euclidean / L2 norm)
+np.linalg.norm(v, ord=1)   # 7.0  (L1 norm)
+
+np.linalg.det(A)           # -2.0
+np.linalg.inv(A)           # matrix inverse
+
+# Solve Ax = b — more stable than inv(A) @ b
+np.linalg.solve(A, v)
+
+vals, vecs = np.linalg.eig(A)   # eigenvalues, eigenvectors`,
+        related:['np.vectorize()','np.dot()'],
+        tags:['numpy','linear algebra','matrix multiplication','dot product'],
+        interview:[
+          'Use @ operator for matrix multiplication — cleaner than np.matmul',
+          'Never compute np.linalg.inv(A) @ b — use np.linalg.solve(A, b) instead (more stable, faster)',
+          'Cosine similarity: <code>np.dot(a,b) / (np.linalg.norm(a)*np.linalg.norm(b))</code>',
+        ],
+        mistakes:['A * B is element-wise Hadamard product, NOT matrix multiplication — use A @ B for matmul.'],
+        notes:['np.einsum is the most general way to express tensor contractions and reductions in one expression.']
+      },
+      {
         id:'np-vectorize', name:'Vectorized Operations', purpose:'Element-wise math without Python loops',
         badge:['numpy','on'], snippet:'result = a + b   np.sum(arr, axis=0)',
         sig:'np.sum/mean/std/max/min(arr, axis=None)',

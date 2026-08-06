@@ -246,6 +246,147 @@ df.withColumn("prev_amount", F.lag("amount", 1).over(w_order)) \\
       ]
     },
     {
+      key:'spark-advanced', label:'Advanced Transformations',
+      fns:[
+      {
+        id:'spark-when', name:'F.when() / F.otherwise()', purpose:'Conditional column values — vectorized CASE WHEN in PySpark',
+        badge:['pyspark'], snippet:'F.when(condition, value).when(...).otherwise(default)',
+        sig:'F.when(condition, value).when(c2, v2).otherwise(default)',
+        meta:{ ret:'Column expression', mut:false, time:'O(1) — lazy', space:'O(1)' },
+        params:[
+          { name:'condition', type:'Column (bool)', req:true, desc:'Boolean column expression.' },
+          { name:'value', type:'Column | scalar', req:true, desc:'Value to use when condition is True.' }
+        ],
+        code:
+`from pyspark.sql import functions as F
+
+df = spark.table("orders")
+
+# Simple conditional column
+df.withColumn("size_label",
+    F.when(F.col("amount") < 100, "small")
+     .when(F.col("amount") < 1000, "medium")
+     .otherwise("large")
+)
+
+# Null-safe conditional
+df.withColumn("status_clean",
+    F.when(F.col("status").isNull(), "UNKNOWN")
+     .otherwise(F.col("status"))
+)
+
+# Equivalent SQL: CASE WHEN amount < 100 THEN 'small' ...
+
+# Conditional aggregation
+df.agg(
+    F.sum(
+        F.when(F.col("status") == "COMPLETED", F.col("amount"))
+         .otherwise(0)
+    ).alias("completed_revenue")
+)
+
+# F.coalesce: first non-null value
+F.coalesce(F.col("amount"), F.lit(0))`,
+        related:['F.col()','df.withColumn()','F.coalesce()'],
+        tags:['pyspark','conditional','case when','coalesce'],
+        interview:[
+          'F.when is Spark\'s CASE WHEN — chain .when() for elif branches, always end with .otherwise()',
+          'F.coalesce(col1, col2, ...) returns first non-null — null-handling without when',
+          'F.nullif(col, value) returns null if col equals value — inverse of coalesce',
+        ],
+        mistakes:['Omitting .otherwise() — unmatched rows become null, which is often unexpected.'],
+        notes:['F.when chains are lazy — they build a Column expression; data moves only when an action runs.']
+      },
+      {
+        id:'spark-udf', name:'UDFs / pandas_udf', purpose:'Apply custom Python functions to Spark columns',
+        badge:['pyspark'], snippet:'@udf(returnType=StringType())\ndef my_fn(col): ...',
+        sig:'@udf(returnType)   @pandas_udf(returnType)',
+        meta:{ ret:'Column expression', mut:false, time:'O(n) — slow row-UDF, faster pandas_udf', space:'O(batch)' },
+        params:[
+          { name:'returnType', type:'DataType', req:true, desc:'Spark return type: StringType(), IntegerType(), ArrayType(StringType()), etc.' }
+        ],
+        code:
+`from pyspark.sql.types import StringType, DoubleType
+from pyspark.sql.functions import udf, pandas_udf
+import pandas as pd
+
+# Row-level UDF — slow: serializes every row Python↔JVM
+@udf(returnType=StringType())
+def extract_domain(email):
+    if email is None: return None
+    return email.split("@")[-1]
+
+df.withColumn("domain", extract_domain("email"))
+
+# pandas UDF (vectorized) — fast: whole batches as pd.Series
+@pandas_udf(DoubleType())
+def normalize(col: pd.Series) -> pd.Series:
+    return (col - col.mean()) / col.std()
+
+df.withColumn("norm_amount", normalize("amount"))
+
+# Register for SQL
+spark.udf.register("extract_domain", extract_domain)
+spark.sql("SELECT extract_domain(email) FROM users")`,
+        related:['F.when()','F.expr()','df.withColumn()'],
+        tags:['pyspark','UDF','pandas_udf','custom functions'],
+        interview:[
+          'Row UDF: data serialized Python↔JVM per row — 10–100x slower than built-in functions',
+          'pandas_udf: operates on batches as pandas Series — vectorized, much faster',
+          'Always prefer built-in F.* functions over UDFs — check the docs before writing a UDF',
+          'UDF return type must match the declared returnType — mismatches cause runtime errors',
+        ],
+        mistakes:['Using a row-level UDF for something a built-in Spark function can do — always check F.* first.'],
+        notes:['mapInPandas / mapInArrow for complex transformations requiring schema flexibility.']
+      },
+      {
+        id:'spark-perf', name:'cache() / persist() / repartition()', purpose:'Control memory, persistence, and partition count for performance tuning',
+        badge:['pyspark'], snippet:'df.cache()   df.persist(StorageLevel.MEMORY_AND_DISK)',
+        sig:'df.cache()   df.persist(storageLevel)   df.repartition(n)   df.coalesce(n)',
+        meta:{ ret:'DataFrame', mut:false, time:'O(n) on first action after cache', space:'O(n) in memory' },
+        params:[
+          { name:'storageLevel', type:'StorageLevel', default:'MEMORY_AND_DISK', desc:'MEMORY_ONLY, MEMORY_AND_DISK, DISK_ONLY.' },
+          { name:'n', type:'int', req:true, desc:'Target partition count for repartition/coalesce.' }
+        ],
+        code:
+`from pyspark import StorageLevel
+
+df = spark.table("large_events")
+
+# cache() — shortcut for MEMORY_AND_DISK
+df_filtered = df.filter(F.col("date") == "2024-01-01").cache()
+df_filtered.count()             # first action: materializes cache
+df_filtered.groupBy(...).agg(...)  # hits cache — fast
+
+# persist() — explicit storage level
+df.persist(StorageLevel.MEMORY_AND_DISK)
+
+# Unpersist when done — free executor memory
+df_filtered.unpersist()
+
+# Repartition — full shuffle, choose count or column
+df.repartition(200)                    # 200 even partitions
+df.repartition("year", "month")        # partition by column
+
+# Coalesce — reduce partitions WITHOUT shuffle
+df.repartition(500).coalesce(100)      # merge 500 → 100
+
+# Check partition count
+df.rdd.getNumPartitions()`,
+        related:['df.write()','F.broadcast()','spark.conf.set()'],
+        tags:['pyspark','cache','persist','partitioning','performance tuning'],
+        interview:[
+          'Cache only when a DataFrame is reused multiple times — materializes on first action',
+          'repartition shuffles data (expensive); coalesce only merges adjacent partitions (no shuffle)',
+          'Too few partitions: underutilizes cores. Too many: per-task overhead. Target ~128–256 MB/partition.',
+          'AQE (Spark 3.0+) can dynamically coalesce shuffle partitions — enable with adaptive.enabled=true',
+        ],
+        mistakes:['Forgetting to unpersist() — cached DataFrames consume executor memory for the entire session.'],
+        notes:['Spark 3.0+ AQE can auto-coalesce shuffle partitions — set spark.sql.adaptive.enabled=true.']
+      },
+      ]
+    },
+    {
       key:'spark-io', label:'Read & Write',
       fns:[
       {

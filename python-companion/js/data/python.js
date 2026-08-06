@@ -770,8 +770,321 @@ list(combinations_with_replacement([1,2], 2))
   notes:['Count without materializing: C(n,r) = math.comb(n,r); P(n,r) = math.perm(n,r)']
 },
 
+
+{
+  id:'itertools-islice', name:'islice()', purpose:'Slice an iterator without materializing it — O(1) memory',
+  badge:['lazy'], snippet:'from itertools import islice\nfirst10 = list(islice(gen, 10))',
+  sig:'itertools.islice(iterable, stop)   islice(iterable, start, stop[, step])',
+  meta:{ ret:'islice iterator', mut:false, time:'O(stop)', space:'O(1)' },
+  params:[
+    { name:'iterable', type:'Iterable', req:true, desc:'Any iterable, including infinite generators.' },
+    { name:'stop', type:'int', req:true, desc:'Stop index (exclusive). Like range(stop).' },
+    { name:'start', type:'int', default:'0', desc:'Start index.' },
+    { name:'step', type:'int', default:'1', desc:'Step size.' }
+  ],
+  code:
+`from itertools import islice, count
+
+# Slice a generator — no materialization
+gen = (x**2 for x in count())  # infinite: 0, 1, 4, 9, ...
+first5 = list(islice(gen, 5))  # [0, 1, 4, 9, 16]
+
+# Skip first 3, take next 5
+list(islice(range(100), 3, 8)) # [3, 4, 5, 6, 7]
+
+# Every other element
+list(islice(range(10), 0, 10, 2))  # [0, 2, 4, 6, 8]
+
+# Read first N lines of a file efficiently
+with open('large_file.txt') as f:
+    first_10 = list(islice(f, 10))`,
+  related:['itertools.chain()','itertools.dropwhile()'],
+  tags:['slicing','lazy','generators','memory-efficient'],
+  interview:[
+    'Use islice to consume the first N items of an infinite generator without creating a list',
+    'Pagination pattern: <code>islice(items, page*size, (page+1)*size)</code>',
+    'Cannot use negative indices — unlike list slicing',
+  ],
+  mistakes:['islice consumes the iterator — each call starts where the last left off if the same iterator is passed.'],
+  notes:['Unlike list slicing, islice does not support negative indices and does not accept slice objects.']
+},
+
+{
+  id:'itertools-groupby', name:'groupby()', purpose:'Groups consecutive elements by a key — requires sorting first',
+  badge:['lazy'], snippet:'from itertools import groupby\nfor key, grp in groupby(sorted_data, key=fn):',
+  sig:'itertools.groupby(iterable, key=None)',
+  meta:{ ret:'(key, group_iterator) pairs', mut:false, time:'O(n)', space:'O(1)' },
+  params:[
+    { name:'iterable', type:'Iterable', req:true, desc:'Input data. MUST be sorted by the same key first.' },
+    { name:'key', type:'Callable | None', default:'None', desc:'Function to extract group key. None = identity.' }
+  ],
+  code:
+`from itertools import groupby
+
+data = [
+    {'dept':'Eng', 'name':'Alice'},
+    {'dept':'Eng', 'name':'Bob'},
+    {'dept':'HR',  'name':'Carol'},
+]
+
+# MUST sort first — groupby only groups consecutive equal keys
+data.sort(key=lambda x: x['dept'])
+
+for dept, members in groupby(data, key=lambda x: x['dept']):
+    names = [m['name'] for m in members]
+    print(f"{dept}: {names}")
+# Eng: ['Alice','Bob']   HR: ['Carol']
+
+# Run-length encoding
+s = "aaabbbccddddee"
+rle = [(k, len(list(g))) for k, g in groupby(s)]
+# [('a',3),('b',3),('c',2),('d',4),('e',2)]`,
+  related:['sorted()','collections.defaultdict'],
+  tags:['grouping','run-length encoding','consecutive'],
+  interview:[
+    'Unlike SQL GROUP BY, groupby only groups CONSECUTIVE equal keys — sort first or use defaultdict',
+    'Run-length encoding: <code>[(k, sum(1 for _ in g)) for k, g in groupby(s)]</code>',
+    'The group iterator is consumed — convert to list immediately if needed twice',
+  ],
+  mistakes:['Calling groupby on unsorted data silently gives wrong groups — each new key change starts a new group.'],
+  notes:['For non-consecutive grouping (like SQL), use defaultdict(list) instead.']
+},
+
   ] // end itertools.fns
 }, // end itertools cat
+
+/* ── heapq ────────────────────────────────────────────────── */
+{
+  key:'heapq', label:'heapq',
+  fns:[
+{
+  id:'heapq-basics', name:'heapq', purpose:'Min-heap operations — efficient smallest-element access in O(log n)',
+  badge:['builtin'], snippet:'import heapq\nheapq.heappush(h, item)\nheapq.heappop(h)',
+  sig:'heapq.heappush(heap, item)   heapq.heappop(heap)   heapq.heapify(list)',
+  meta:{ ret:'item (heappop)', mut:true, time:'O(log n) push/pop, O(n) heapify', space:'O(n)' },
+  params:[],
+  code:
+`import heapq
+
+h = []
+heapq.heappush(h, 5)
+heapq.heappush(h, 2)
+heapq.heappush(h, 8)
+heapq.heappush(h, 1)
+heapq.heappop(h)   # 1 — smallest always first
+
+# heapify in-place — O(n)
+nums = [5, 2, 8, 1, 9]
+heapq.heapify(nums)
+heapq.heappop(nums)   # 1
+
+# K largest / K smallest
+scores = [88, 72, 95, 61, 79, 100]
+heapq.nlargest(3, scores)   # [100, 95, 88]
+heapq.nsmallest(3, scores)  # [61, 72, 79]
+
+# Max-heap workaround: negate values
+heapq.heappush(h, -priority)
+priority = -heapq.heappop(h)
+
+# Priority queue with (priority, item) tuples
+tasks = []
+heapq.heappush(tasks, (3, 'low-priority'))
+heapq.heappush(tasks, (1, 'urgent'))
+heapq.heappop(tasks)   # (1, 'urgent')`,
+  ba:{
+    before:{ label:'Push: 5, 2, 8, 1', rows:['unordered list'] },
+    after:{ label:'heappop sequence', rows:['1','2','5','8'] }
+  },
+  related:['sorted()','collections.deque'],
+  tags:['heap','priority queue','O(log n)','k-largest'],
+  interview:[
+    'K largest elements: <code>heapq.nlargest(k, lst)</code> — O(n log k), better than full sort for small k',
+    'K smallest elements: <code>heapq.nsmallest(k, lst)</code>',
+    'Python has no max-heap — negate values: push <code>-x</code>, pop and negate result',
+    'Running median: use two heaps — max-heap for lower half, min-heap for upper half',
+    'Merge K sorted lists: <code>heapq.merge(*lists)</code> — lazy, O(n log k)',
+  ],
+  mistakes:['heapq is a min-heap only — negate values for max-heap behavior.'],
+  notes:['heapq.merge(*iterables) lazily merges K sorted iterables without loading all into memory.']
+},
+  ] // end heapq.fns
+}, // end heapq cat
+
+/* ── functools ────────────────────────────────────────────── */
+{
+  key:'functools', label:'functools',
+  fns:[
+{
+  id:'functools-lru-cache', name:'@lru_cache / @cache', purpose:'Memoize function results — cache expensive calls keyed by arguments',
+  badge:['builtin'], snippet:'from functools import lru_cache\n@lru_cache(maxsize=None)\ndef fib(n): ...',
+  sig:'@functools.lru_cache(maxsize=128)   @functools.cache  (Python 3.9+)',
+  meta:{ ret:'wrapped function', mut:false, time:'O(1) cached, O(f(n)) miss', space:'O(maxsize)' },
+  params:[
+    { name:'maxsize', type:'int | None', default:'128', desc:'Max cache size. None = unbounded. Set to power of 2 for efficiency.' }
+  ],
+  code:
+`from functools import lru_cache, cache
+
+# Classic Fibonacci — exponential without cache, O(n) with
+@lru_cache(maxsize=None)
+def fib(n):
+    if n < 2: return n
+    return fib(n-1) + fib(n-2)
+
+fib(100)   # instant, no stack overflow
+
+# @cache is shorthand for lru_cache(maxsize=None) in 3.9+
+@cache
+def costly(n):
+    return sum(range(n))
+
+# Inspect cache
+fib.cache_info()
+# CacheInfo(hits=98, misses=101, maxsize=None, currsize=101)
+fib.cache_clear()  # reset cache`,
+  related:['functools.partial()','functools.reduce()'],
+  tags:['memoization','cache','dynamic programming','performance'],
+  interview:[
+    'Turn exponential recursion into O(n) with one decorator — fib, coin change, climbing stairs',
+    'Arguments must be hashable — lists, dicts, sets cannot be cache keys',
+    'cache_clear() is essential in tests — cached state bleeds between test cases',
+    '@cache (3.9+) is marginally faster than lru_cache(None) — prefer it for new code',
+  ],
+  mistakes:['Using lru_cache on a method with self as arg caches self and prevents GC — use a cache dict instead.'],
+  notes:['lru_cache is thread-safe — safe to use in multithreaded code.']
+},
+
+{
+  id:'functools-partial', name:'partial() / reduce()', purpose:'Freeze function arguments; fold a sequence to a single value',
+  badge:['builtin'], snippet:'from functools import partial\ndouble = partial(operator.mul, 2)',
+  sig:'partial(func, *args, **kwargs)   reduce(func, iterable[, initializer])',
+  meta:{ ret:'partial object / single value', mut:false, time:'O(1) partial, O(n) reduce', space:'O(1)' },
+  params:[
+    { name:'func', type:'Callable', req:true, desc:'Function to partially apply or fold.' },
+    { name:'*args/**kwargs', type:'any', req:false, desc:'Arguments to pre-fill.' }
+  ],
+  code:
+`from functools import partial, reduce
+import operator
+
+# partial — freeze some arguments
+def power(base, exp):
+    return base ** exp
+
+square = partial(power, exp=2)
+cube   = partial(power, exp=3)
+square(4)   # 16
+cube(3)     # 27
+
+# Useful with map
+double = partial(operator.mul, 2)
+list(map(double, [1,2,3,4]))   # [2,4,6,8]
+
+# reduce — fold left (like accumulate with final value only)
+reduce(operator.add, [1,2,3,4,5])         # 15
+reduce(operator.mul, [1,2,3,4], 1)        # 24 (with initializer)
+reduce(lambda a,b: a if a>b else b, [3,1,4,1,5])  # 5 (max)`,
+  related:['lambda','map()','functools.lru_cache()'],
+  tags:['functional','higher-order','partial application'],
+  interview:[
+    'partial creates specialized functions without subclassing or lambda boilerplate',
+    'reduce(operator.add, lst) is the functional fold — equivalent to sum(lst)',
+    'operator module has efficient C implementations: add, mul, lt, itemgetter, attrgetter',
+  ],
+  mistakes:['reduce with an empty iterable raises TypeError — always pass an initializer for safety.'],
+  notes:['operator.attrgetter and operator.itemgetter are faster than lambdas for sorting keys.']
+},
+  ] // end functools.fns
+}, // end functools cat
+
+/* ── math & random ────────────────────────────────────────── */
+{
+  key:'math-random', label:'math & random',
+  fns:[
+{
+  id:'math-basics', name:'math module', purpose:'Mathematical constants and functions — floor, ceil, sqrt, log, gcd, factorial',
+  badge:['builtin'], snippet:'import math\nmath.sqrt(x)  math.gcd(a,b)  math.log(x,base)',
+  sig:'math.floor/ceil/sqrt/log/gcd/lcm/factorial/comb/perm',
+  meta:{ ret:'int or float', mut:false, time:'O(1) most ops', space:'O(1)' },
+  params:[],
+  code:
+`import math
+
+math.floor(3.7)      # 3  ← rounds toward -∞
+math.ceil(3.2)       # 4  ← rounds toward +∞
+math.trunc(3.9)      # 3  ← rounds toward 0
+
+math.sqrt(16)        # 4.0
+math.isqrt(17)       # 4  ← integer sqrt, no float issues (3.8+)
+
+math.log(100, 10)    # 2.0
+math.log2(8)         # 3.0
+math.log10(1000)     # 3.0
+
+math.gcd(12, 8)      # 4
+math.lcm(4, 6)       # 12  (3.9+)
+math.factorial(5)    # 120
+
+# Combinatorics
+math.comb(10, 3)     # 120 = C(10,3)
+math.perm(10, 3)     # 720 = P(10,3)
+
+math.pi              # 3.14159...
+math.e               # 2.71828...
+math.inf             # float infinity
+math.isnan(float('nan'))   # True`,
+  related:['random','functools.reduce()','numpy'],
+  tags:['math','arithmetic','combinatorics','constants'],
+  interview:[
+    'Integer sqrt: <code>math.isqrt(n)</code> — exact, no float precision issues',
+    'Check perfect square: <code>math.isqrt(n)**2 == n</code>',
+    'LCM of a list: <code>functools.reduce(math.lcm, lst)</code>',
+    'C(n,r) without materializing: <code>math.comb(n, r)</code>',
+  ],
+  mistakes:['math.sqrt returns float — use math.isqrt for integer square root without float precision issues.'],
+  notes:['math functions only handle real numbers — use cmath for complex numbers.']
+},
+
+{
+  id:'random-basics', name:'random module', purpose:'Pseudo-random numbers, choices, shuffles, and samples',
+  badge:['builtin'], snippet:'import random\nrandom.choice(lst)  random.sample(lst, k)',
+  sig:'random.random()  randint(a,b)  choice(seq)  choices(seq,k=1)  sample(seq,k)  shuffle(lst)',
+  meta:{ ret:'varies', mut:false, time:'O(1) single, O(k) sample', space:'O(k)' },
+  params:[],
+  code:
+`import random
+
+random.random()              # float in [0.0, 1.0)
+random.uniform(1.5, 3.5)    # float in [a, b]
+random.randint(1, 10)        # int in [a, b] — inclusive on both ends
+random.randrange(0, 10, 2)   # even int from 0, 2, 4, 6, 8
+
+lst = ['a', 'b', 'c', 'd']
+random.choice(lst)            # single random element
+random.choices(lst, k=3)      # 3 elements WITH replacement
+random.sample(lst, k=3)       # 3 elements WITHOUT replacement
+random.shuffle(lst)            # in-place, returns None
+
+# Weighted random choice
+random.choices(['red','blue','green'], weights=[70,20,10], k=5)
+
+# Reproducibility — same seed → same sequence
+random.seed(42)
+random.random()   # always same value`,
+  related:['math','secrets'],
+  tags:['random','sampling','simulation','reproducibility'],
+  interview:[
+    '<code>random.sample</code>: no replacement; <code>random.choices</code>: with replacement',
+    'Use <code>random.seed(n)</code> in tests for reproducibility',
+    'For cryptographic randomness use <code>secrets</code> module — random is NOT cryptographically secure',
+    'Random shuffle implements Fisher-Yates — uniform, O(n)',
+  ],
+  mistakes:['random.randint(a,b) is inclusive on both ends — unlike range(a,b) which excludes b.'],
+  notes:['secrets.choice/token_bytes/token_hex for security-sensitive code — never use random for passwords/tokens.']
+},
+  ] // end math-random.fns
+}, // end math-random cat
 
   ] // end Standard Library cats
 }, // end Standard Library group
@@ -1636,6 +1949,167 @@ print(p)    # (1, 2)  ← calls __str__`,
   ],
   mistakes:['Defining __eq__ without __hash__ makes instances unhashable — they cannot be used in sets or as dict keys.'],
   notes:['If __str__ not defined, Python falls back to __repr__.']
+},
+
+
+{
+  id:'class-dataclass', name:'@dataclass', purpose:'Auto-generate __init__, __repr__, __eq__ for data classes',
+  badge:['method'], snippet:'from dataclasses import dataclass\n@dataclass\nclass Point:\n    x: float\n    y: float',
+  sig:'@dataclass(*, init=True, repr=True, eq=True, order=False, frozen=False)',
+  meta:{ ret:'class', mut:true, time:'O(1)', space:'O(1)' },
+  params:[
+    { name:'frozen', type:'bool', default:'False', desc:'Make instances immutable and hashable.' },
+    { name:'order', type:'bool', default:'False', desc:'Generate __lt__, __le__, __gt__, __ge__ for comparison.' }
+  ],
+  code:
+`from dataclasses import dataclass, field
+
+@dataclass
+class Point:
+    x: float
+    y: float = 0.0   # default value
+
+p = Point(1.0, 2.0)
+p             # Point(x=1.0, y=2.0)  — __repr__ auto-generated
+p == Point(1.0, 2.0)  # True  — __eq__ auto-generated
+
+# Mutable default MUST use field(default_factory=...)
+@dataclass
+class Config:
+    name: str
+    tags: list = field(default_factory=list)  # NOT tags: list = []
+    debug: bool = False
+
+# frozen=True → immutable and hashable
+@dataclass(frozen=True)
+class Coord:
+    lat: float
+    lon: float
+
+c = Coord(40.7, -74.0)
+hash(c)  # works — frozen classes are hashable`,
+  related:['class-basics','class-property','typing.NamedTuple'],
+  tags:['OOP','dataclass','boilerplate reduction','immutable'],
+  interview:[
+    '@dataclass replaces ~10 lines of __init__/__repr__/__eq__ boilerplate',
+    'frozen=True for immutable value objects — also makes them hashable (usable as dict keys)',
+    'Use field(default_factory=list) for mutable defaults — a direct list default is shared across instances',
+    'order=True adds comparison operators based on field declaration order',
+  ],
+  mistakes:['@dataclass class Foo:\n    items: list = []  — DO NOT DO THIS — same list shared across all instances.'],
+  notes:['Python 3.10+ adds @dataclass(slots=True) which uses __slots__ for memory efficiency.']
+},
+
+{
+  id:'class-property', name:'@property / @classmethod / @staticmethod', purpose:'Control attribute access and define class-level and utility methods',
+  badge:['method'], snippet:'@property\ndef area(self):\n    return math.pi * self._r**2',
+  sig:'@property / @name.setter / @name.deleter / @classmethod / @staticmethod',
+  meta:{ ret:'varies', mut:false, time:'O(1)', space:'O(1)' },
+  params:[],
+  code:
+`class Circle:
+    def __init__(self, radius):
+        self._radius = radius
+
+    @property
+    def radius(self):               # getter
+        return self._radius
+
+    @radius.setter
+    def radius(self, value):        # setter with validation
+        if value < 0:
+            raise ValueError("Radius must be non-negative")
+        self._radius = value
+
+    @property
+    def area(self):                 # read-only computed property
+        return 3.14159 * self._radius ** 2
+
+    @classmethod
+    def from_diameter(cls, d):      # factory — cls not self
+        return cls(d / 2)
+
+    @staticmethod
+    def is_valid_radius(r):         # utility — no cls or self
+        return r >= 0
+
+c = Circle(5)
+c.radius          # 5 (calls getter)
+c.radius = 10     # calls setter
+c.area            # 314.159 (read-only computed)
+Circle.from_diameter(20)   # Circle(radius=10)`,
+  related:['class-basics','class-dataclass'],
+  tags:['OOP','property','classmethod','staticmethod','decorator'],
+  interview:[
+    '@property: add validation/computation without changing call syntax',
+    '@classmethod: factory constructors — use cls so subclasses return the right type',
+    '@staticmethod: utility attached to class; needs no instance or class state',
+    'Difference: classmethod gets cls, staticmethod gets nothing, regular method gets self',
+  ],
+  mistakes:['Defining a setter requires @name.setter — writing @property twice creates a second property, not a setter.'],
+  notes:['@property is the Pythonic way to add attribute validation without breaking existing API.']
+},
+
+{
+  id:'class-inheritance', name:'Inheritance / ABC', purpose:'Extend classes and define interfaces with abstract base classes',
+  badge:['method'], snippet:'class Child(Parent):\n    def method(self):\n        super().method()',
+  sig:'class Child(Parent):   from abc import ABC, abstractmethod',
+  meta:{ ret:'class', mut:true, time:'O(1)', space:'O(1)' },
+  params:[],
+  code:
+`# Single inheritance
+class Animal:
+    def __init__(self, name):
+        self.name = name
+
+    def speak(self):
+        return f"{self.name} makes a sound"
+
+class Dog(Animal):
+    def speak(self):                        # override
+        return f"{self.name} barks"
+
+    def fetch(self, item):
+        return f"{self.name} fetches {item}"
+
+d = Dog("Rex")
+d.speak()        # "Rex barks"
+isinstance(d, Animal)    # True
+isinstance(d, Dog)       # True
+
+# super() — call parent method
+class Cat(Animal):
+    def speak(self):
+        base = super().speak()
+        return f"{base} (meow)"
+
+# Abstract Base Class — enforce interface
+from abc import ABC, abstractmethod
+
+class Shape(ABC):
+    @abstractmethod
+    def area(self) -> float: ...
+
+    @abstractmethod
+    def perimeter(self) -> float: ...
+
+class Square(Shape):
+    def __init__(self, side):
+        self.side = side
+    def area(self):
+        return self.side ** 2
+    def perimeter(self):
+        return 4 * self.side`,
+  related:['class-basics','class-property','class-dataclass'],
+  tags:['OOP','inheritance','ABC','super','interface'],
+  interview:[
+    'Use super() instead of Parent.method(self) — works correctly with multiple inheritance and MRO',
+    'ABC prevents instantiation of the base class — enforces that subclasses implement all abstract methods',
+    'Python MRO (Method Resolution Order) follows C3 linearization — check with ClassName.__mro__',
+    'isinstance(obj, ABC) checks if obj implements the interface',
+  ],
+  mistakes:['Forgetting to call super().__init__() in the child class — parent\'s initialization is skipped.'],
+  notes:['Python supports multiple inheritance: class C(A, B): — MRO determines which parent method runs.']
 },
 
   ] // end classes.fns
