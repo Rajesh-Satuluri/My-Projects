@@ -2118,5 +2118,434 @@ class Square(Shape):
   ] // end Functions & OOP cats
 }, // end Functions & OOP group
 
+/* ══════════════════════════════════════════════════════════════
+   GROUP 4 · PATTERNS & TOOLS
+══════════════════════════════════════════════════════════════ */
+{
+  label: 'Patterns & Tools',
+  cats: [
+
+/* ── Algorithms ───────────────────────────────────────────── */
+{
+  key:'algorithms', label:'Algorithms',
+  fns:[
+
+{
+  id:'bisect', name:'bisect', purpose:'Binary search and sorted insertion in O(log n)',
+  badge:['builtin'], snippet:'import bisect\nbisect.bisect_left(sorted_list, target)',
+  sig:'bisect.bisect_left(a, x)   bisect_right(a, x)   insort(a, x)',
+  meta:{ ret:'int (index)', mut:false, time:'O(log n)', space:'O(1)' },
+  params:[
+    { name:'a', type:'list', req:true, desc:'A sorted list. Must be sorted — no check is performed.' },
+    { name:'x', type:'any', req:true, desc:'Value to search for or insert.' }
+  ],
+  code:
+`import bisect
+
+nums = [1, 3, 5, 7, 9, 11]
+
+# bisect_left: insertion point BEFORE any existing equal elements
+bisect.bisect_left(nums, 7)   # 3 — index where 7 is
+bisect.bisect_left(nums, 6)   # 3 — where 6 would go
+
+# bisect_right: insertion point AFTER equal elements
+bisect.bisect_right(nums, 7)  # 4
+
+# insort: insert while maintaining sort order — O(n) due to shift
+bisect.insort(nums, 6)         # [1,3,5,6,7,9,11]
+
+# Binary search pattern: is x in the sorted list?
+def contains(a, x):
+    i = bisect.bisect_left(a, x)
+    return i < len(a) and a[i] == x
+
+# Count elements in range [lo, hi]
+def count_range(a, lo, hi):
+    return bisect.bisect_right(a, hi) - bisect.bisect_left(a, lo)
+
+count_range(nums, 3, 7)  # 3 → (3,5,6,7) ... wait, counts 3,5,7 = 3
+
+# Grade assignment using bisect_right as lookup table
+breakpoints = [60, 70, 80, 90]
+grades      = 'FDCBA'
+def grade(score):
+    return grades[bisect.bisect_right(breakpoints, score)]
+
+grade(85)  # 'B'
+grade(59)  # 'F'`,
+  ba:{
+    before:{ label:'sorted list', rows:['[1, 3, 5, 7, 9, 11]'] },
+    after:{ label:'bisect_left(list, 6) → 3', rows:['index 3 = insertion point before 7'] }
+  },
+  related:['sorted()','heapq','list.sort()'],
+  tags:['binary search','sorted list','O(log n)','intervals'],
+  interview:[
+    'bisect_left returns the LEFTMOST index where x can be inserted to keep a sorted; use for lower bound',
+    'bisect_right (= bisect): returns RIGHTMOST index, i.e. after any equal elements; use for upper bound',
+    'Count elements in range [lo, hi]: <code>bisect_right(a,hi) - bisect_left(a,lo)</code>',
+    'Lookup table trick: <code>grades[bisect_right(breakpoints, score)]</code>',
+    'List must be sorted — bisect does NOT verify this; wrong results if unsorted',
+  ],
+  mistakes:['bisect does not confirm the value exists — always check a[i] == x after bisect_left.'],
+  notes:['insort maintains sort order but is O(n) due to list shift — use heapq or SortedList for frequent inserts.']
+},
+
+  ] // end algorithms.fns
+}, // end algorithms cat
+
+/* ── Regex ────────────────────────────────────────────────── */
+{
+  key:'regex', label:'Regular Expressions',
+  fns:[
+
+{
+  id:'re-basics', name:'re module', purpose:'Pattern matching, extraction, and substitution in strings',
+  badge:['builtin'], snippet:'import re\nre.search(pattern, string)',
+  sig:'re.match / search / fullmatch / findall / finditer / sub / split',
+  meta:{ ret:'Match | list | str', mut:false, time:'O(n) typical', space:'O(n)' },
+  params:[
+    { name:'pattern', type:'str', req:true, desc:'Regex pattern string. Use raw strings r"..." to avoid escaping backslashes.' },
+    { name:'string', type:'str', req:true, desc:'Input string to search.' },
+    { name:'flags', type:'re.FLAGS', default:'0', desc:'re.IGNORECASE, re.MULTILINE, re.DOTALL, re.VERBOSE.' }
+  ],
+  code:
+`import re
+
+text = "Order #1042 placed on 2024-03-15 for $199.99"
+
+# search — finds first match anywhere in string
+m = re.search(r'\\d{4}-\\d{2}-\\d{2}', text)
+m.group()     # '2024-03-15'
+m.start()     # 24
+m.end()       # 34
+
+# match — only matches at START of string
+re.match(r'Order', text)          # Match object
+re.match(r'\\d+', text)            # None — doesn't start with digit
+
+# fullmatch — entire string must match
+re.fullmatch(r'\\d{4}-\\d{2}-\\d{2}', '2024-03-15')  # Match
+
+# findall — all matches as a list
+re.findall(r'\\d+', text)          # ['1042','2024','03','15','199','99']
+
+# sub — replace matches
+re.sub(r'\\d+', 'X', text)         # 'Order #X placed on X-X-X for $X.X'
+re.sub(r'(\\d+)', r'[\\1]', text)   # backreference: '[1042]' etc.
+
+# split
+re.split(r'\\s+', 'a  b   c')      # ['a','b','c']`,
+  related:['str.replace()','str.find()','str.startswith()'],
+  tags:['regex','pattern matching','text processing'],
+  interview:[
+    'match() anchors to start; search() scans whole string — usually want search()',
+    'Compile for reuse: <code>pat = re.compile(r"\\d+")</code> — ~20% faster on repeated use',
+    'Use raw strings r"..." for patterns — avoids double-escaping backslashes',
+    'finditer() returns an iterator of Match objects — use when you need position info',
+  ],
+  mistakes:['re.match only matches at position 0 — use re.search or re.fullmatch depending on intent.'],
+  notes:['re.DOTALL makes . match newlines too; re.MULTILINE makes ^ and $ match line boundaries.']
+},
+
+{
+  id:'re-groups', name:'Groups & Named Groups', purpose:'Capture and extract specific parts of a match',
+  badge:['builtin'], snippet:'m = re.search(r"(?P<year>\\d{4})-(?P<month>\\d{2})", s)\nm.group("year")',
+  sig:'(...)  — capture group     (?P<name>...)  — named group     (?:...)  — non-capturing',
+  meta:{ ret:'Match object', mut:false, time:'O(n)', space:'O(k groups)' },
+  params:[],
+  code:
+`import re
+
+log = "2024-03-15 ERROR user@example.com login failed"
+
+# Numbered groups
+m = re.search(r'(\\d{4})-(\\d{2})-(\\d{2})', log)
+m.group(0)   # '2024-03-15'  — full match
+m.group(1)   # '2024'        — group 1
+m.group(2)   # '03'          — group 2
+m.groups()   # ('2024','03','15')
+
+# Named groups — self-documenting and order-independent
+pat = re.compile(
+    r'(?P<year>\\d{4})-(?P<month>\\d{2})-(?P<day>\\d{2})'
+    r'\\s+(?P<level>\\w+)'
+    r'\\s+(?P<email>[\\w.]+@[\\w.]+)'
+)
+m = pat.search(log)
+m.group('year')   # '2024'
+m.group('email')  # 'user@example.com'
+m.groupdict()     # {'year':'2024','month':'03',...}
+
+# findall with groups returns list of tuples
+re.findall(r'(\\d{4})-(\\d{2})', '2024-01 and 2024-02')
+# [('2024','01'),('2024','02')]`,
+  related:['re.match()','re.finditer()','re.sub()'],
+  tags:['regex','groups','extraction','named groups'],
+  interview:[
+    'Named groups make complex patterns maintainable: <code>(?P<name>pattern)</code>',
+    'Non-capturing group <code>(?:...)</code>: group for structure but don\'t capture — keeps group numbers clean',
+    'Lookahead <code>(?=...)</code> / lookbehind <code>(?<=...)</code>: match without consuming characters',
+  ],
+  mistakes:['findall with groups returns list of tuples, not strings — one tuple per match.'],
+  notes:['m.groupdict() returns a dict of named groups — most convenient for structured extraction.']
+},
+
+  ] // end regex.fns
+}, // end regex cat
+
+/* ── Exceptions ───────────────────────────────────────────── */
+{
+  key:'exceptions', label:'Exception Handling',
+  fns:[
+
+{
+  id:'exceptions-basics', name:'try / except / raise', purpose:'Handle, propagate, and define exceptions',
+  badge:['builtin'], snippet:'try:\n    ...\nexcept ValueError as e:\n    ...',
+  sig:'try / except [Type [as e]] / else / finally   raise   raise X from Y',
+  meta:{ ret:'None', mut:false, time:'O(1) overhead', space:'O(1)' },
+  params:[],
+  code:
+`# Full try/except/else/finally
+try:
+    result = int("abc")        # raises ValueError
+except ValueError as e:
+    print(f"Bad value: {e}")   # handle it
+except (TypeError, KeyError):  # multiple types in one clause
+    pass
+else:
+    print("Success:", result)  # runs only if no exception
+finally:
+    print("Always runs")       # cleanup — always executes
+
+# Raise
+def divide(a, b):
+    if b == 0:
+        raise ZeroDivisionError("b must be non-zero")
+    return a / b
+
+# Exception chaining — preserve original context
+try:
+    data = load()
+except FileNotFoundError as e:
+    raise RuntimeError("Config missing") from e
+
+# Suppress specific exceptions
+from contextlib import suppress
+with suppress(FileNotFoundError):
+    os.remove("maybe_exists.txt")  # silently ignored if missing
+
+# Custom exception class
+class ValidationError(ValueError):
+    def __init__(self, field, msg):
+        super().__init__(f"{field}: {msg}")
+        self.field = field`,
+  related:['contextlib.suppress','warnings','logging'],
+  tags:['exceptions','error handling','try/except','raise'],
+  interview:[
+    'else clause runs when no exception was raised — cleaner than a flag variable',
+    'finally always runs — use for cleanup (close file, release lock) even if exception raised',
+    '<code>raise X from Y</code> chains exceptions — preserves original traceback for debugging',
+    'Catch the most specific exception first — more general exceptions go last',
+  ],
+  mistakes:['Bare except: catches everything including KeyboardInterrupt and SystemExit — always specify the type.'],
+  notes:['Use logging.exception() inside except to log the full traceback automatically.']
+},
+
+  ] // end exceptions.fns
+}, // end exceptions cat
+
+/* ── Context Managers ─────────────────────────────────────── */
+{
+  key:'context-managers', label:'Context Managers',
+  fns:[
+
+{
+  id:'context-manager', name:'with / __enter__ / __exit__', purpose:'Guaranteed setup and teardown — even if an exception occurs',
+  badge:['builtin'], snippet:'with open("file.txt") as f:\n    data = f.read()',
+  sig:'with expr [as var]:   |   class CM: __enter__(self)  __exit__(self, exc_type, exc_val, tb)',
+  meta:{ ret:'varies', mut:false, time:'O(1) overhead', space:'O(1)' },
+  params:[],
+  code:
+`# File I/O — auto-closes even on exception
+with open("data.txt", "r") as f:
+    contents = f.read()
+
+# Multiple context managers — one with statement
+with open("in.txt") as src, open("out.txt","w") as dst:
+    dst.write(src.read())
+
+# Custom class-based context manager
+class Timer:
+    def __enter__(self):
+        import time
+        self.start = time.perf_counter()
+        return self                    # bound to 'as' target
+
+    def __exit__(self, exc_type, exc_val, tb):
+        self.elapsed = time.perf_counter() - self.start
+        return False  # False = don't suppress exceptions
+
+with Timer() as t:
+    result = compute()
+print(f"Took {t.elapsed:.3f}s")
+
+# contextlib.contextmanager — generator shortcut
+from contextlib import contextmanager
+
+@contextmanager
+def managed_resource():
+    resource = acquire()    # __enter__ body
+    try:
+        yield resource       # hands control to with-block
+    finally:
+        release(resource)    # __exit__ body (always runs)`,
+  related:['contextlib.suppress','contextlib.ExitStack','open()'],
+  tags:['context manager','with','RAII','cleanup','file I/O'],
+  interview:[
+    '__exit__ returning True suppresses the exception — return False (or None) to let it propagate',
+    '@contextmanager is the simplest way to write a context manager — yield separates enter/exit',
+    'contextlib.ExitStack: dynamic number of context managers — useful in loops',
+    'threading.Lock(), sqlite3.connect(), tempfile.TemporaryDirectory() all support with',
+  ],
+  mistakes:['Forgetting finally in @contextmanager — cleanup code must be in finally to run on exceptions.'],
+  notes:['with does NOT catch exceptions — use try/except inside the with block for that.']
+},
+
+  ] // end context-managers.fns
+}, // end context-managers cat
+
+/* ── Decorators ───────────────────────────────────────────── */
+{
+  key:'decorators', label:'Decorators',
+  fns:[
+
+{
+  id:'decorators-basics', name:'Decorators / @wraps', purpose:'Wrap functions to add behaviour — logging, timing, retry, validation',
+  badge:['builtin'], snippet:'from functools import wraps\ndef decorator(func):\n    @wraps(func)\n    def wrapper(*args, **kwargs): ...',
+  sig:'def decorator(func):  return wrapper    @decorator\ndef my_fn(): ...',
+  meta:{ ret:'wrapped function', mut:false, time:'O(1) overhead', space:'O(1)' },
+  params:[],
+  code:
+`from functools import wraps
+import time
+
+# Basic decorator — add timing to any function
+def timer(func):
+    @wraps(func)          # preserves __name__, __doc__, __annotations__
+    def wrapper(*args, **kwargs):
+        t0 = time.perf_counter()
+        result = func(*args, **kwargs)
+        print(f"{func.__name__} took {time.perf_counter()-t0:.4f}s")
+        return result
+    return wrapper
+
+@timer
+def slow_fn(n):
+    return sum(range(n))
+
+slow_fn(1_000_000)   # prints: slow_fn took 0.0312s
+
+# Decorator with arguments — add a factory layer
+def retry(times=3, delay=1.0):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            for attempt in range(times):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    if attempt == times - 1: raise
+                    time.sleep(delay)
+        return wrapper
+    return decorator
+
+@retry(times=5, delay=0.5)
+def fetch_data(url):
+    ...
+
+# Stacking decorators — applied bottom-up
+@timer
+@retry(times=3)
+def risky_fetch(url):
+    ...`,
+  related:['functools.wraps','functools.lru_cache','class-property'],
+  tags:['decorators','higher-order','wraps','cross-cutting concerns'],
+  interview:[
+    'Always use @wraps(func) inside a decorator — preserves __name__, __doc__, signatures for debuggers',
+    'Decorators with args need three levels: factory(args) → decorator(func) → wrapper(*args)',
+    'Execution order when stacking: @A @B → A(B(func)) — B wraps first, A wraps second',
+    '@staticmethod, @classmethod, @property are all built-in decorators',
+  ],
+  mistakes:['Forgetting @wraps — loses original function name and docstring, breaks introspection tools.'],
+  notes:['Class-based decorators: implement __call__ instead of a nested wrapper function.']
+},
+
+  ] // end decorators.fns
+}, // end decorators cat
+
+/* ── pathlib ──────────────────────────────────────────────── */
+{
+  key:'pathlib', label:'pathlib',
+  fns:[
+
+{
+  id:'pathlib-basics', name:'pathlib.Path', purpose:'Object-oriented file system paths — cleaner than os.path',
+  badge:['builtin'], snippet:'from pathlib import Path\np = Path("data") / "file.csv"',
+  sig:'Path(str)   /   .read_text()  .write_text()  .glob()  .exists()  .stat()',
+  meta:{ ret:'Path | str | bytes', mut:false, time:'O(1) path ops, O(n) I/O', space:'O(1)' },
+  params:[],
+  code:
+`from pathlib import Path
+
+# Construction — / operator joins path parts
+p = Path("data") / "2024" / "orders.csv"
+# PosixPath('data/2024/orders.csv')
+
+# Parts
+p.name          # 'orders.csv'
+p.stem          # 'orders'
+p.suffix        # '.csv'
+p.parent        # Path('data/2024')
+p.parts         # ('data', '2024', 'orders.csv')
+
+# Check & inspect
+p.exists()      # True/False
+p.is_file()     # True/False
+p.is_dir()      # True/False
+p.stat().st_size  # file size in bytes
+
+# Read / write
+text = p.read_text(encoding="utf-8")       # whole file as str
+p.write_text("hello", encoding="utf-8")    # overwrites
+data = p.read_bytes()                      # whole file as bytes
+
+# Create / delete
+p.parent.mkdir(parents=True, exist_ok=True)  # create dirs
+p.unlink(missing_ok=True)                    # delete file
+p.rename(p.with_suffix(".bak"))              # rename
+
+# Glob — find files by pattern
+list(Path(".").glob("*.py"))              # non-recursive
+list(Path(".").rglob("*.csv"))            # recursive
+for csv in Path("data").rglob("*.csv"):
+    print(csv, csv.stat().st_size)`,
+  related:['open()','os.path','shutil'],
+  tags:['pathlib','file I/O','filesystem','paths'],
+  interview:[
+    '/ operator builds paths cross-platform — never use string concatenation for paths',
+    'read_text/write_text: simple whole-file I/O; use open() for streaming large files',
+    'rglob("*.csv") = recursive glob — finds all CSV files in any subdirectory',
+    'always mkdir(parents=True, exist_ok=True) — idempotent, creates all intermediate dirs',
+  ],
+  mistakes:['Path objects are not strings — pass str(p) to libraries that don\'t accept Path objects (rare in modern code).'],
+  notes:['Path is cross-platform — use it instead of os.path.join, os.path.exists, os.makedirs.']
+},
+
+  ] // end pathlib.fns
+}, // end pathlib cat
+
+  ] // end Patterns & Tools cats
+}, // end Patterns & Tools group
+
   ] // end groups
 }; // end PYREF_PYTHON
