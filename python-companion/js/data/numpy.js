@@ -271,6 +271,89 @@ a + np.array([1,2,3])  # adds [1,2,3] to each row`,
         mistakes:['axis=0 for sum gives column sums, NOT row sums — easy to confuse.'],
         notes:['Prefer np.sum() over built-in sum() for NumPy arrays — faster and supports axis argument.']
       },
+      {
+        id:'np-random', name:'np.random', purpose:'Generate random numbers, samples, and shuffled arrays',
+        badge:['numpy'], snippet:'rng = np.random.default_rng(seed=42)\nrng.integers(0, 10, size=5)',
+        sig:'np.random.default_rng(seed)   rng.integers/random/normal/choice/shuffle/permutation',
+        meta:{ ret:'ndarray or scalar', mut:false, time:'O(n)', space:'O(n)' },
+        params:[
+          { name:'seed', type:'int | None', default:'None', desc:'Seed for reproducibility. None uses OS entropy.' },
+          { name:'size', type:'int | tuple', default:'None', desc:'Output shape. None returns a scalar.' }
+        ],
+        code:
+`import numpy as np
+
+# New-style Generator (preferred over legacy np.random.*)
+rng = np.random.default_rng(seed=42)
+
+rng.integers(0, 10, size=5)             # 5 random ints in [0, 10)
+rng.random(size=(3, 3))                 # 3×3 float64 in [0.0, 1.0)
+rng.normal(loc=0, scale=1, size=1000)   # standard normal
+rng.uniform(low=-1, high=1, size=5)     # uniform in [-1, 1)
+
+# Sampling
+arr = np.array([10, 20, 30, 40, 50])
+rng.choice(arr, size=3, replace=False)  # 3 unique samples
+rng.shuffle(arr)                        # in-place shuffle
+rng.permutation(arr)                    # shuffled copy (new array)
+
+# Legacy API (still common in older code)
+np.random.seed(42)
+np.random.rand(3, 3)         # [0,1) uniform
+np.random.randn(3, 3)        # standard normal
+np.random.randint(0, 10, size=5)`,
+        related:['np.random.default_rng()','np.where()','np.unique()'],
+        tags:['numpy','random','sampling','distribution','seed'],
+        interview:[
+          'Use np.random.default_rng(seed) — the new Generator API is faster and more thread-safe than legacy np.random.*',
+          'Set seed for reproducibility in experiments, tests, and reproducible data splits',
+          'rng.choice(arr, replace=False) for sampling without replacement — train/test split indices',
+        ],
+        mistakes:['np.random.seed() sets global state — affects all random calls globally; default_rng() is local and composable.'],
+        notes:['For cryptographic randomness use Python\'s secrets module, not NumPy.']
+      },
+      {
+        id:'np-stack', name:'concatenate / stack / split', purpose:'Join and split arrays along existing or new axes',
+        badge:['numpy'], snippet:'np.vstack([a, b])   np.concatenate([a, b], axis=0)',
+        sig:'np.concatenate(arrays, axis=0)  np.stack(arrays, axis=0)  np.split(a, indices_or_sections)',
+        meta:{ ret:'ndarray', mut:false, time:'O(n)', space:'O(n)' },
+        params:[
+          { name:'arrays', type:'sequence of ndarray', req:true, desc:'Arrays to join. Must have compatible shapes.' },
+          { name:'axis', type:'int', default:'0', desc:'Axis along which to join. stack() creates a NEW axis at this position.' }
+        ],
+        code:
+`import numpy as np
+
+a = np.array([[1, 2], [3, 4]])   # shape (2,2)
+b = np.array([[5, 6], [7, 8]])   # shape (2,2)
+
+# concatenate — join along an EXISTING axis
+np.concatenate([a, b], axis=0)   # shape (4,2) — stack rows
+np.concatenate([a, b], axis=1)   # shape (2,4) — stack cols
+
+# vstack / hstack — convenience wrappers
+np.vstack([a, b])    # same as concat axis=0 → (4,2)
+np.hstack([a, b])    # same as concat axis=1 → (2,4)
+
+# stack — join along a NEW axis (all inputs must have same shape)
+np.stack([a, b], axis=0)    # shape (2,2,2) — new axis at front
+np.stack([a, b], axis=2)    # shape (2,2,2) — new axis at end
+
+# split — divide into sub-arrays
+np.split(np.arange(12), 3)        # 3 equal parts
+np.split(np.arange(10), [3, 7])   # at indices → [0..2],[3..6],[7..9]
+np.vsplit(a, 2)                   # split along rows
+np.hsplit(a, 2)                   # split along cols`,
+        related:['np.array()','np.reshape()','np.tile()','np.repeat()'],
+        tags:['numpy','concatenate','stack','split','joining','batching'],
+        interview:[
+          'concatenate joins on an EXISTING axis; stack creates a NEW axis — know which shape you need',
+          'np.vstack is concat axis=0; np.hstack is concat axis=1 (for 2D arrays)',
+          'Batching images: np.stack([img1, img2, img3], axis=0) → shape (3, H, W, C)',
+        ],
+        mistakes:['np.stack requires all arrays to have the SAME shape; np.concatenate only needs matching non-join axes.'],
+        notes:['np.block() handles block-matrix assembly; np.tile() and np.repeat() replicate arrays.']
+      },
       ]
     },
     ]

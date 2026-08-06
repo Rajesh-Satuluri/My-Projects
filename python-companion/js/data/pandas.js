@@ -314,6 +314,193 @@ pd.concat([df1, df2], axis=1)`,
         mistakes:['merge on columns with NaN — NaN != NaN, so NaN keys never match.'],
         notes:['For time-series data, use pd.merge_asof() for nearest-key (non-exact) matching.']
       },
+      {
+        id:'pd-value-counts', name:'value_counts / unique / nunique', purpose:'Count, list, and count distinct values in a Series',
+        badge:['pandas'], snippet:'df["col"].value_counts()\ndf["col"].nunique()',
+        sig:'Series.value_counts(normalize=False, sort=True, ascending=False, dropna=True)',
+        meta:{ ret:'Series', mut:false, time:'O(n)', space:'O(k)' },
+        params:[
+          { name:'normalize', type:'bool', default:'False', desc:'Return relative frequencies (proportions) instead of raw counts.' },
+          { name:'dropna', type:'bool', default:'True', desc:'Do not include NaN in counts. Set False to count missing values too.' }
+        ],
+        code:
+`df = pd.DataFrame({
+    'dept':  ['Eng','HR','Eng','Eng','HR','Finance'],
+    'grade': ['A',  'B', 'A', None, 'C', 'A']
+})
+
+# Frequency table
+df['dept'].value_counts()
+# Eng      3
+# HR       2
+# Finance  1
+
+# Proportions
+df['dept'].value_counts(normalize=True)
+# Eng      0.500
+# HR       0.333
+# Finance  0.167
+
+# Include NaN in count
+df['grade'].value_counts(dropna=False)
+# A      3
+# NaN    1  ...
+
+# unique — array of distinct values (insertion order)
+df['dept'].unique()     # array(['Eng','HR','Finance'])
+
+# nunique — count distinct values (scalar)
+df['dept'].nunique()    # 3
+df.nunique()            # per-column unique counts
+
+# 2-way frequency table
+pd.crosstab(df['dept'], df['grade'])`,
+        related:['df.groupby()','pd.crosstab()','df.describe()'],
+        tags:['pandas','value_counts','frequency','unique','EDA','categorical'],
+        interview:[
+          'value_counts() is the first EDA step for categorical columns — reveals distribution at a glance',
+          'normalize=True gives proportions; multiply by 100 for percentage breakdown',
+          'df.nunique() across all columns helps distinguish ID-like vs categorical columns',
+        ],
+        mistakes:['value_counts() drops NaN by default — always check dropna=False if missing data is meaningful.'],
+        notes:['pd.crosstab(col1, col2) gives a 2-way frequency table — shorthand for groupby + value_counts.']
+      },
+      {
+        id:'pd-astype', name:'astype / dtype optimization', purpose:'Convert column dtypes and reduce DataFrame memory usage',
+        badge:['pandas'], snippet:'df["col"].astype("int32")\ndf["cat"].astype("category")',
+        sig:'Series.astype(dtype, errors="raise")   DataFrame.astype(dict)',
+        meta:{ ret:'Series or DataFrame', mut:false, time:'O(n)', space:'O(n)' },
+        params:[
+          { name:'dtype', type:'str | dtype | dict', req:true, desc:'Target dtype or dict mapping column names to dtypes.' },
+          { name:'errors', type:'"raise"|"ignore"', default:'"raise"', desc:'"ignore" silently skips columns that cannot be converted.' }
+        ],
+        code:
+`df = pd.DataFrame({
+    'id':    [1, 2, 3],
+    'price': ['9.99', '14.50', '3.25'],
+    'dept':  ['Eng', 'HR', 'Eng']
+})
+
+# Convert string → numeric
+df['price'] = df['price'].astype(float)
+
+# Downcast integer to save memory (int64 → int8 if values fit)
+df['id'] = df['id'].astype('int8')    # range: -128 to 127
+
+# category dtype — huge win for low-cardinality string columns
+df['dept'] = df['dept'].astype('category')
+
+# Convert multiple columns at once
+df = df.astype({'id': 'int32', 'price': 'float32'})
+
+# Inspect memory
+df.info()                     # dtypes + non-null counts + memory
+df.memory_usage(deep=True)    # bytes per column
+
+# Safe numeric coercion for dirty data
+pd.to_numeric(df['price'], errors='coerce')   # bad values → NaN`,
+        related:['pd.to_numeric()','pd.to_datetime()','df.convert_dtypes()'],
+        tags:['pandas','astype','dtype','memory','optimization','category'],
+        interview:[
+          '"category" dtype for repeated string columns (department, country) — 5-10x memory savings',
+          'float32 vs float64: half the memory, sufficient precision for most ML features',
+          'Use df.convert_dtypes() for automatic best-fit dtype inference (pandas 1.0+)',
+        ],
+        mistakes:['astype() raises on unconvertible values — use pd.to_numeric(errors="coerce") for dirty data first.'],
+        notes:['df.memory_usage(deep=True) shows true memory including variable-length object column strings.']
+      },
+      {
+        id:'pd-cut', name:'pd.cut / pd.qcut', purpose:'Bin continuous values into discrete intervals or quantile-based buckets',
+        badge:['pandas'], snippet:'pd.cut(df["age"], bins=[0,18,65,100], labels=["child","adult","senior"])',
+        sig:'pd.cut(x, bins, labels=None, right=True)   pd.qcut(x, q, labels=None)',
+        meta:{ ret:'Categorical Series', mut:false, time:'O(n log n)', space:'O(n)' },
+        params:[
+          { name:'bins', type:'int | list', req:true, desc:'Number of equal-width bins (int) or explicit bin edges (list).' },
+          { name:'q', type:'int | list[float]', req:true, desc:'Number of quantiles or list of quantile probabilities in [0, 1].' },
+          { name:'labels', type:'list | False', default:'None', desc:'Labels for each bin. False returns integer bin codes (0-indexed).' }
+        ],
+        code:
+`import pandas as pd
+
+scores = pd.Series([45, 62, 78, 91, 55, 83, 70, 39])
+
+# pd.cut — fixed-width bins or explicit edges
+pd.cut(scores, bins=3)
+# (38.948, 57.0] / (57.0, 75.0] / (75.0, 91.0]
+
+pd.cut(scores, bins=[0, 60, 75, 100],
+       labels=['Fail', 'Pass', 'Distinction'])
+# 45→Fail, 62→Pass, 83→Distinction
+
+# pd.qcut — equal-frequency (quantile-based) bins
+pd.qcut(scores, q=4,
+        labels=['Q1', 'Q2', 'Q3', 'Q4'])
+# Each quartile contains ~same number of values
+
+# Add bin column to DataFrame
+df = pd.DataFrame({'score': scores})
+df['grade'] = pd.cut(df['score'],
+                     bins=[0, 60, 75, 100],
+                     labels=['F', 'P', 'D'])
+
+df['grade'].value_counts()   # distribution across bins`,
+        related:['df.value_counts()','df.groupby()','df.apply()'],
+        tags:['pandas','binning','cut','qcut','discretize','feature-engineering'],
+        interview:[
+          'cut = fixed-width bins (use when you know domain thresholds); qcut = equal-frequency (distribution-agnostic)',
+          'pd.cut(labels=False) returns integer bin codes — useful for ordinal encoding in ML',
+          'Use pd.cut for age groups, salary bands; pd.qcut for percentile rankings',
+        ],
+        mistakes:['cut with int bins creates equal-WIDTH intervals; qcut creates equal-FREQUENCY intervals — very different for skewed data.'],
+        notes:['Result dtype is Categorical — use .cat.codes for integer representation, .cat.categories for bin labels.']
+      },
+      {
+        id:'pd-assign-pipe', name:'assign() / pipe()', purpose:'Method-chain DataFrame transformations without intermediate variables',
+        badge:['pandas'], snippet:'df.assign(tax=lambda d: d["price"]*0.1).pipe(normalize)',
+        sig:'df.assign(**kwargs)   df.pipe(func, *args, **kwargs)',
+        meta:{ ret:'DataFrame', mut:false, time:'O(n)', space:'O(n)' },
+        params:[
+          { name:'**kwargs', type:'str → scalar | callable', req:true, desc:'Column name = value or lambda df: expression. Lambdas see columns assigned earlier in the same call.' },
+          { name:'func', type:'Callable', req:true, desc:'Function that receives the DataFrame as first argument and returns a DataFrame.' }
+        ],
+        code:
+`df = pd.DataFrame({
+    'price':    [100, 200, 150],
+    'quantity': [3,   1,   2],
+    'discount': [0.1, 0.0, 0.2]
+})
+
+# assign — add/replace columns; lambdas see the in-progress df
+result = (
+    df
+    .assign(revenue = lambda d: d['price'] * d['quantity'])
+    .assign(net_rev = lambda d: d['revenue'] * (1 - d['discount']))
+    .assign(margin  = lambda d: (d['net_rev'] / d['revenue']).round(2))
+)
+
+# pipe — apply an arbitrary function inside a chain
+def add_totals(df):
+    return df.assign(grand_total=df['revenue'].sum())
+
+def top_n(df, n=2):
+    return df.nlargest(n, 'net_rev').reset_index(drop=True)
+
+result = (
+    df
+    .assign(revenue = lambda d: d['price'] * d['quantity'])
+    .pipe(add_totals)
+    .pipe(top_n, n=2)
+)`,
+        related:['df.apply()','df.transform()','df.eval()'],
+        tags:['pandas','assign','pipe','method chaining','functional','pipeline'],
+        interview:[
+          'assign + pipe enables readable top-to-bottom pipelines — no temp variables, easy to reorder steps',
+          'assign lambda receives the CURRENT df, including columns assigned earlier in the same call',
+          'pipe(func) keeps the chain unbroken when a helper function needs the full DataFrame',
+        ],
+        mistakes:['assign() always returns a NEW DataFrame — it never modifies in place; always reassign: df = df.assign(...).'],
+        notes:['df.eval("col = a + b") is another chainable option for simple arithmetic expressions as strings.']
+      },
       ]
     },
     ]
