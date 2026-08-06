@@ -220,6 +220,56 @@
       white-space: nowrap;
     }
     .shortcut-row span { font-size: .8125rem; color: var(--text-secondary); }
+
+    /* ── Shortcuts modal visibility ─────────────────────── */
+    #shortcuts-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: var(--z-modal, 300);
+      background: rgba(0,0,0,.75);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    #shortcuts-modal.visible { display: flex; }
+
+    /* ── Canvas scrolling ───────────────────────────────── */
+    #canvas {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      min-height: 0;
+    }
+
+    /* ── Section typography (used by home.js) ───────────── */
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: .375rem;
+      letter-spacing: -.01em;
+    }
+    .section-sub {
+      font-size: .875rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      line-height: 1.65;
+    }
+
+    /* ── Sidebar footer flex ────────────────────────────── */
+    #sidebar-footer {
+      display: flex;
+      align-items: center;
+      gap: .25rem;
+    }
+    #sidebar-version {
+      font-size: .6875rem;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
   </style>
 </head>
 
@@ -228,8 +278,8 @@
   <div id="app">
 
     <!-- Sidebar -->
-    <aside id="sidebar">
-      <div id="sidebar-header">
+    <aside id="sidebar" class="sidebar">
+      <div id="sidebar-header" class="sidebar-header">
         <!-- Snowflake Crystal Logo -->
         <a href="#home" id="logo-link" style="text-decoration:none;display:flex;align-items:center;gap:.625rem;">
           <svg id="crystal-logo" viewBox="0 0 40 40" width="32" height="32" aria-hidden="true">
@@ -257,17 +307,18 @@
         </a>
       </div>
 
-      <div id="sidebar-search-wrap">
-        <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-          <circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/>
-        </svg>
-        <input id="sidebar-search" type="search" placeholder="Search modules…" autocomplete="off" spellcheck="false" />
-        <kbd>⌃K</kbd>
+      <div id="sidebar-search-wrap" class="sidebar-search">
+        <div class="search-input-wrap">
+          <svg class="search-icon" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/>
+          </svg>
+          <input id="sidebar-search" type="search" placeholder="Search modules…" autocomplete="off" spellcheck="false" />
+        </div>
       </div>
 
-      <nav id="sidebar-nav" aria-label="Module navigation"></nav>
+      <nav id="sidebar-nav" class="sidebar-nav-scroll" aria-label="Module navigation"></nav>
 
-      <div id="sidebar-footer">
+      <div id="sidebar-footer" class="sidebar-footer">
         <button id="theme-toggle" class="btn-icon" title="Toggle theme" aria-label="Toggle light/dark theme">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="5"/>
@@ -292,12 +343,12 @@
     </aside>
 
     <!-- Main area -->
-    <main id="main-area">
-      <header id="top-bar">
+    <main id="main-area" class="main">
+      <header id="top-bar" class="topbar">
         <div id="breadcrumb">
           <span>SnowflakeViz</span>
         </div>
-        <div id="top-bar-right">
+        <div id="top-bar-right" class="topbar-right">
           <a href="https://docs.snowflake.com" target="_blank" rel="noopener" class="btn-icon" title="Snowflake Docs" aria-label="Snowflake documentation">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
@@ -312,7 +363,7 @@
       <div id="canvas" role="main" aria-live="polite"></div>
 
       <!-- Animation controls bar -->
-      <div id="anim-controls-bar" role="toolbar" aria-label="Animation controls">
+      <div id="anim-controls-bar" class="anim-controls-bar" role="toolbar" aria-label="Animation controls">
         <button id="anim-btn-reset"  class="btn-icon anim-btn" title="Reset (R)" aria-label="Reset animation">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="1 4 1 10 7 10"/>
@@ -332,14 +383,14 @@
             <polygon points="5,3 19,12 5,21" transform="scale(-1,1) translate(-24,0)"/>
           </svg>
         </button>
-        <div id="anim-progress-wrap">
-          <div id="anim-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-            <div id="anim-progress-fill"></div>
+        <div id="anim-progress-wrap" class="anim-controls-center">
+          <div id="anim-progress-track" class="anim-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <div id="anim-progress-fill" class="anim-progress-fill"></div>
           </div>
-          <div id="anim-step-label"></div>
+          <div id="anim-step-label" class="anim-step-label"></div>
         </div>
-        <div id="anim-step-counter"></div>
-        <select id="anim-speed" title="Playback speed" aria-label="Playback speed">
+        <div id="anim-step-counter" class="anim-step-counter"></div>
+        <select id="anim-speed" class="anim-speed-select" title="Playback speed" aria-label="Playback speed">
           <option value="0.5">0.5×</option>
           <option value="1" selected>1×</option>
           <option value="1.5">1.5×</option>
@@ -350,10 +401,10 @@
   </div>
 
   <!-- Keyboard shortcuts modal -->
-  <div id="shortcuts-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
-    <div class="modal">
+  <div id="shortcuts-modal" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+    <div class="modal-box" style="max-height:80vh;overflow:hidden;display:flex;flex-direction:column;">
       <div class="modal-header">
-        <h2 class="modal-title">Keyboard Shortcuts</h2>
+        <h2 class="modal-title" style="font-size:1.125rem;font-weight:600;">Keyboard Shortcuts</h2>
         <button id="shortcuts-close" class="btn-icon" aria-label="Close">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"/>
@@ -361,7 +412,7 @@
           </svg>
         </button>
       </div>
-      <div class="shortcuts-grid"></div>
+      <div class="shortcuts-grid" style="overflow-y:auto;"></div>
     </div>
   </div>
 

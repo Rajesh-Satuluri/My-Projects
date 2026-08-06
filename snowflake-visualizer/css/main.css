@@ -136,6 +136,11 @@
   --z-modal: 300;
   --z-tooltip: 400;
   --z-notification: 500;
+
+  /* Shorthand aliases — modules.css uses these */
+  --surface: var(--bg-2);
+  --border:  var(--border-default);
+  --bg:      var(--bg-1);
 }
 
 /* ── Light theme overrides ──────────────────────────────────── */
@@ -156,6 +161,10 @@
   --text-disabled: #afb8c1;
   --text-inverse: #ffffff;
   --shadow-glow: 0 0 20px rgba(41, 181, 232, 0.2);
+
+  --surface: var(--bg-1);
+  --border:  var(--border-default);
+  --bg:      var(--bg-0);
 }
 
 /* ── Reset ──────────────────────────────────────────────────── */

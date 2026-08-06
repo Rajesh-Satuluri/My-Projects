@@ -133,7 +133,7 @@
       grpEl.className = 'nav-group';
 
       const lbl = document.createElement('div');
-      lbl.className = 'nav-group-label';
+      lbl.className = 'nav-group-header';
       lbl.textContent = group.label;
       grpEl.appendChild(lbl);
 
