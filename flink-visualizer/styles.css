@@ -1162,5 +1162,8 @@ svg { display: block; }
   padding:18px 24px;margin:20px 28px 0;
 }
 
+/* ============================================================ MODULE 13 — FAULT TOLERANCE */
+.ft-strategy-picker { display:flex;flex-wrap:wrap;gap:10px;padding:20px 28px 0; }
+
 /* ============================================================ SCROLLBAR GLOBAL */
 * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
