@@ -16,28 +16,15 @@ jobs:
       - name: Checkout source branch
         uses: actions/checkout@v4
 
-      - name: Stage site
+      - name: Stage site at root
         run: |
-          mkdir -p /tmp/site/flink-visualizer
-          cp -r flink-visualizer/. /tmp/site/flink-visualizer/
-          cat > /tmp/site/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="UTF-8">
-            <meta http-equiv="refresh" content="0;url=flink-visualizer/">
-            <title>My Projects</title>
-          </head>
-          <body>
-            <p>Redirecting to <a href="flink-visualizer/">Flink Visualizer</a>…</p>
-          </body>
-          </html>
-          EOF
+          mkdir -p /tmp/site-root
+          cp -r flink-visualizer/. /tmp/site-root/
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: /tmp/site
+          publish_dir: /tmp/site-root
           publish_branch: gh-pages
           force_orphan: true
