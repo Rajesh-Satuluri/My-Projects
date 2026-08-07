@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Engineering Visualizers</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0A0E1A;--bg2:#111827;--bg3:#1E293B;--border:#1E293B;--text:#F1F5F9;--text2:#94A3B8;--text3:#64748B}
+    body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+    header{text-align:center;padding:64px 24px 48px;background:linear-gradient(180deg,#0F172A 0%,var(--bg) 100%);border-bottom:1px solid var(--border)}
+    .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 14px;margin-bottom:20px}
+    h1{font-size:clamp(28px,5vw,48px);font-weight:800;letter-spacing:-.03em;background:linear-gradient(135deg,#F1F5F9 0%,#94A3B8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px}
+    header p{font-size:16px;color:var(--text2);max-width:560px;margin:0 auto;line-height:1.7}
+    .stat-row{display:flex;justify-content:center;gap:32px;margin-top:32px;flex-wrap:wrap}
+    .stat{text-align:center}
+    .stat-num{font-size:28px;font-weight:800;color:var(--text)}
+    .stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+    main{flex:1;max-width:1160px;width:100%;margin:0 auto;padding:48px 24px 72px}
+    .section-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:20px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+    .card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:16px;text-decoration:none;color:inherit;transition:border-color .18s,transform .18s,box-shadow .18s;position:relative;overflow:hidden}
+    .card::before{content:'';position:absolute;inset:0;border-radius:16px;opacity:0;transition:opacity .18s}
+    .card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+    .card[data-color=orange]{--accent:#FF6900}.card[data-color=blue]{--accent:#3B82F6}.card[data-color=cyan]{--accent:#06B6D4}.card[data-color=green]{--accent:#10B981}.card[data-color=yellow]{--accent:#F59E0B}
+    .card:hover{border-color:var(--accent)}
+    .card::before{background:radial-gradient(400px circle at 50% 0%,var(--accent,#fff) 0%,transparent 70%)}
+    .card:hover::before{opacity:.05}
+    .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;background:var(--bg3);flex-shrink:0}
+    .card-tag{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);border-radius:6px;padding:3px 8px}
+    .card-title{font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--text)}
+    .card-subtitle{font-size:12px;color:var(--accent);font-weight:600;margin-top:2px}
+    .card-desc{font-size:13px;color:var(--text2);line-height:1.65;flex:1}
+    .card-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:14px;margin-top:4px}
+    .card-modules{font-size:11px;color:var(--text3)}
+    .card-open{font-size:12px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:5px}
+    .card-open svg{transition:transform .15s}
+    .card:hover .card-open svg{transform:translateX(3px)}
+    footer{text-align:center;padding:24px;border-top:1px solid var(--border);font-size:12px;color:var(--text3)}
+  </style>
+</head>
+<body>
+<header>
+  <div class="badge">Data Engineering Learning Hub</div>
+  <h1>Interactive Visualizers</h1>
+  <p>Animation-driven guides to the modern data stack &mdash; built around Amazon, Netflix, Uber, and Shopify use cases.</p>
+  <div class="stat-row">
+    <div class="stat"><div class="stat-num">7</div><div class="stat-label">Visualizers</div></div>
+    <div class="stat"><div class="stat-num">130+</div><div class="stat-label">Modules</div></div>
+    <div class="stat"><div class="stat-num">300+</div><div class="stat-label">Interview Q&amp;As</div></div>
+  </div>
+</header>
+<main>
+  <div class="section-label">All Visualizers</div>
+  <div class="grid">
+    <a class="card" href="kafka/" data-color="orange">
+      <div class="card-top"><div class="card-icon">&#x1FA84;</div><div class="card-tag">Streaming</div></div>
+      <div><div class="card-title">Apache Kafka</div><div class="card-subtitle">Amazon Edition</div></div>
+      <div class="card-desc">22 modules &mdash; producers, brokers, consumers, Kafka Streams, Connect, MirrorMaker 2, partition reassignment, and the full Amazon order pipeline.</div>
+      <div class="card-footer"><span class="card-modules">22 modules</span><span class="card-open">Open <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></div>
+    </a>
+    <a class="card" href="flink/" data-color="blue">
+      <div class="card-top"><div class="card-icon">&#x26A1;</div><div class="card-tag">Stream Processing</div></div>
+      <div><div class="card-title">Apache Flink</div><div class="card-subtitle">Uber Edition</div></div>
+      <div class="card-desc">Stateful stream processing &mdash; DataStream API, checkpointing, watermarks, windowing, and Uber's real-time analytics pipeline.</div>
+      <div class="card-footer"><span class="card-modules">19 modules</span><span class="card-open">Open <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></div>
+    </a>
+    <a class="card" href="iceberg/" data-color="cyan">
+      <div class="card-top"><div class="card-icon">&#x1F9CA;</div><div class="card-tag">Table Format</div></div>
+      <div><div class="card-title">Apache Iceberg</div><div class="card-subtitle">ShopKart Handbook</div></div>
+      <div class="card-desc">Metadata hierarchy, snapshot isolation, hidden partitioning, schema evolution, time travel &mdash; the complete Iceberg story.</div>
+      <div class="card-footer"><span class="card-modules">28+ modules</span><span class="card-open">Open <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></div>
+    </a>
+    <a class="card" href="snowflake/" data-color="cyan">
+      <div class="card-top"><div class="card-icon">&#x2744;&#xFE0F;</div><div class="card-tag">Cloud DWH</div></div>
+      <div><div class="card-title">Snowflake</div><div class="card-subtitle">Netflix Architecture Handbook</div></div>
+      <div class="card-desc">Virtual warehouses, micro-partitioning, clustering, time travel, data sharing, and Netflix's content analytics pipelines.</div>
+      <div class="card-footer"><span class="card-modules">Multiple modules</span><span class="card-open">Open <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></div>
+    </a>
+    <a class="card" href="dbt/" data-color="green">
+      <div class="card-top"><div class="card-icon">&#x1F527;</div><div class="card-tag">Transformation</div></div>
+      <div><div class="card-title">dbt</div><div class="card-subtitle">Amazon Edition</div></div>
+      <div class="card-desc">Models, tests, snapshots, macros, sources, and the dbt DAG &mdash; from raw S3 data to production-ready dimensional models.</div>
+      <div class="card-footer"><span class="card-modules">16 modules</span><span class="card-open">Open <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></div>
+    </a>
+    <a class="card" href="databricks/" data-color="blue">
+      <div class="card-top"><div class="card-icon">&#x1F9F1;</div><div class="card-tag">Lakehouse</div></div>
+      <div><div class="card-title">DB Engineering</div><div class="card-subtitle">ShopFlow Platform</div></div>
+      <div class="card-desc">Database internals, normalization, indexes, transactions, ACID, data warehouse design, and the Medallion architecture.</div>
+      <div class="card-footer"><span class="card-modules">Multiple modules</span><span class="card-open">Open <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></div>
+    </a>
+    <a class="card" href="python/" data-color="yellow">
+      <div class="card-top"><div class="card-icon">&#x1F40D;</div><div class="card-tag">Language</div></div>
+      <div><div class="card-title">Python &amp; PySpark</div><div class="card-subtitle">Coding Companion</div></div>
+      <div class="card-desc">Python fundamentals, data structures, comprehensions, decorators, async, and PySpark &mdash; interview patterns for data engineering roles.</div>
+      <div class="card-footer"><span class="card-modules">Multiple modules</span><span class="card-open">Open <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></div>
+    </a>
+  </div>
+</main>
+<footer>Built with Claude Code &nbsp;&middot;&nbsp; rajesh-satuluri.github.io/My-Projects</footer>
+</body>
+</html>
