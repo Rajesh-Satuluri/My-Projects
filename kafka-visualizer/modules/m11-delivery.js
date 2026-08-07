@@ -13,14 +13,16 @@ export function mount(container) {
     title: 'Delivery Guarantees',
     subtitle: 'At-most-once, at-least-once, exactly-once — animated 3-lane comparison',
     tabs: [
-      { id: 'lanes', label: '🛡️ 3-Lane Comparison' },
-      { id: 'eos',   label: '⚛️ EOS Deep Dive' },
-      { id: 'iq',    label: '🎯 Interview Q&A' },
+      { id: 'lanes',  label: '🛡️ 3-Lane Comparison' },
+      { id: 'eos',    label: '⚛️ EOS Deep Dive' },
+      { id: 'zombie', label: '🧟 Zombie Fencing' },
+      { id: 'iq',     label: '🎯 Interview Q&A' },
     ]
   });
 
   let cleanup = buildLanes(container);
   buildEOS(container);
+  buildZombie(container);
   container.querySelector('#tab-iq').innerHTML = createIQSection(IQ);
   return cleanup;
 }
@@ -191,5 +193,134 @@ function buildEOS(container) {
 
         <text x="30" y="392" fill="#F59E0B" font-size="10">⚠️ On crash: coordinator aborts after transaction.timeout.ms (default 1min). Consumers never see partial results.</text>
       </svg>
+    </div>`;
+}
+
+function buildZombie(container) {
+  const tab = container.querySelector('#tab-zombie');
+  if (!tab) return;
+  tab.innerHTML = `
+    <div class="svg-wrap">
+      <svg viewBox="0 0 820 500" width="820" height="500" style="font-family:system-ui">
+        <defs>
+          <marker id="aZR" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#EF4444"/>
+          </marker>
+          <marker id="aZG" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#10B981"/>
+          </marker>
+          <marker id="aZO" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#F59E0B"/>
+          </marker>
+        </defs>
+
+        <!-- Title -->
+        <text x="30" y="30" fill="#94A3B8" font-size="13" font-weight="800">Zombie Fencing — How transactional.id + Epoch prevents duplicate writes</text>
+
+        <!-- ── BEFORE FENCING (top half) ── -->
+        <text x="30" y="60" fill="#EF4444" font-size="11" font-weight="700">❌ WITHOUT Fencing — Zombie producer corrupts the topic</text>
+
+        <!-- Producer v1 (zombie) -->
+        <rect x="30" y="75" width="150" height="60" rx="8" fill="#EF444422" stroke="#EF4444" stroke-width="2"/>
+        <text x="105" y="98" text-anchor="middle" fill="#EF4444" font-size="11" font-weight="700">Producer v1 🧟</text>
+        <text x="105" y="114" text-anchor="middle" fill="#94A3B8" font-size="9">transactional.id=</text>
+        <text x="105" y="126" text-anchor="middle" fill="#94A3B8" font-size="9">"order-processor"</text>
+
+        <!-- Producer v2 (legit) -->
+        <rect x="30" y="155" width="150" height="60" rx="8" fill="#10B98122" stroke="#10B981" stroke-width="2"/>
+        <text x="105" y="178" text-anchor="middle" fill="#10B981" font-size="11" font-weight="700">Producer v2 ✅</text>
+        <text x="105" y="194" text-anchor="middle" fill="#94A3B8" font-size="9">transactional.id=</text>
+        <text x="105" y="206" text-anchor="middle" fill="#94A3B8" font-size="9">"order-processor"</text>
+
+        <!-- Broker (no fencing) -->
+        <rect x="260" y="75" width="160" height="140" rx="8" fill="#1E293B" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="340" y="100" text-anchor="middle" fill="#EF4444" font-size="11" font-weight="700">Broker</text>
+        <text x="340" y="118" text-anchor="middle" fill="#94A3B8" font-size="9">No epoch check</text>
+        <text x="340" y="140" text-anchor="middle" fill="#F59E0B" font-size="9">Accepts BOTH producers</text>
+        <rect x="275" y="150" width="130" height="22" rx="4" fill="#EF444433" stroke="#EF4444" stroke-width="1"/>
+        <text x="340" y="165" text-anchor="middle" fill="#EF4444" font-size="9">🧟 stale write accepted!</text>
+        <rect x="275" y="178" width="130" height="22" rx="4" fill="#10B98133" stroke="#10B981" stroke-width="1"/>
+        <text x="340" y="193" text-anchor="middle" fill="#10B981" font-size="9">v2 write accepted</text>
+
+        <line x1="180" y1="105" x2="258" y2="130" stroke="#EF4444" stroke-width="1.5" marker-end="url(#aZR)" stroke-dasharray="4,3"/>
+        <line x1="180" y1="185" x2="258" y2="170" stroke="#10B981" stroke-width="1.5" marker-end="url(#aZG)"/>
+        <text x="195" y="123" fill="#EF4444" font-size="8">stale tx</text>
+        <text x="195" y="162" fill="#10B981" font-size="8">new tx</text>
+
+        <!-- Result: corruption -->
+        <rect x="470" y="95" width="180" height="100" rx="8" fill="#EF444411" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="560" y="118" text-anchor="middle" fill="#EF4444" font-size="11" font-weight="700">Topic: orders</text>
+        <text x="560" y="138" text-anchor="middle" fill="#94A3B8" font-size="9">off:10 → 🧟 stale order (dup!)</text>
+        <text x="560" y="154" text-anchor="middle" fill="#94A3B8" font-size="9">off:11 → ✅ v2 correct order</text>
+        <text x="560" y="174" text-anchor="middle" fill="#EF4444" font-size="9">⚠️ Duplicate charge!</text>
+        <line x1="420" y1="145" x2="468" y2="145" stroke="#EF4444" stroke-width="1.5" marker-end="url(#aZR)"/>
+
+        <!-- ── AFTER FENCING (bottom half) ── -->
+        <text x="30" y="260" fill="#10B981" font-size="11" font-weight="700">✅ WITH Fencing — Epoch bumped, zombie rejected</text>
+
+        <!-- Producer v1 (zombie, fenced) -->
+        <rect x="30" y="275" width="150" height="60" rx="8" fill="#47556911" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <text x="105" y="298" text-anchor="middle" fill="#475569" font-size="11" font-weight="700">Producer v1 🧟</text>
+        <text x="105" y="314" text-anchor="middle" fill="#475569" font-size="9">epoch=0 (old)</text>
+        <text x="105" y="326" text-anchor="middle" fill="#475569" font-size="9">transactional.id=…</text>
+
+        <!-- Producer v2 (new, higher epoch) -->
+        <rect x="30" y="355" width="150" height="60" rx="8" fill="#10B98122" stroke="#10B981" stroke-width="2"/>
+        <text x="105" y="378" text-anchor="middle" fill="#10B981" font-size="11" font-weight="700">Producer v2 ✅</text>
+        <text x="105" y="394" text-anchor="middle" fill="#10B981" font-size="9">epoch=1 (bumped)</text>
+        <text x="105" y="406" text-anchor="middle" fill="#94A3B8" font-size="9">transactional.id=…</text>
+
+        <!-- Broker with fencing -->
+        <rect x="260" y="275" width="160" height="140" rx="8" fill="#1E293B" stroke="#10B981" stroke-width="2"/>
+        <text x="340" y="300" text-anchor="middle" fill="#10B981" font-size="11" font-weight="700">Broker</text>
+        <text x="340" y="318" text-anchor="middle" fill="#94A3B8" font-size="9">epoch check: stored=1</text>
+        <rect x="275" y="328" width="130" height="22" rx="4" fill="#EF444433" stroke="#EF4444" stroke-width="1"/>
+        <text x="340" y="343" text-anchor="middle" fill="#EF4444" font-size="9">epoch=0 &lt; 1 → FENCE! 🚫</text>
+        <rect x="275" y="356" width="130" height="22" rx="4" fill="#10B98133" stroke="#10B981" stroke-width="1"/>
+        <text x="340" y="371" text-anchor="middle" fill="#10B981" font-size="9">epoch=1 = 1 → ACCEPT ✓</text>
+        <rect x="275" y="384" width="130" height="20" rx="4" fill="#1E293B" stroke="#334155"/>
+        <text x="340" y="398" text-anchor="middle" fill="#64748B" font-size="8">ProducerFencedException</text>
+
+        <line x1="180" y1="305" x2="258" y2="330" stroke="#EF4444" stroke-width="1.5" marker-end="url(#aZR)" stroke-dasharray="4,3"/>
+        <line x1="180" y1="385" x2="258" y2="370" stroke="#10B981" stroke-width="1.5" marker-end="url(#aZG)"/>
+
+        <!-- Result: clean -->
+        <rect x="470" y="295" width="180" height="100" rx="8" fill="#10B98111" stroke="#10B981" stroke-width="1.5"/>
+        <text x="560" y="318" text-anchor="middle" fill="#10B981" font-size="11" font-weight="700">Topic: orders</text>
+        <text x="560" y="338" text-anchor="middle" fill="#94A3B8" font-size="9">off:10 → ✅ v2 correct order</text>
+        <text x="560" y="358" text-anchor="middle" fill="#94A3B8" font-size="9">off:11 → ✅ v2 next order</text>
+        <text x="560" y="378" text-anchor="middle" fill="#10B981" font-size="9">No duplicates. No data loss.</text>
+        <line x1="420" y1="345" x2="468" y2="345" stroke="#10B981" stroke-width="1.5" marker-end="url(#aZG)"/>
+
+        <!-- Key insight -->
+        <rect x="680" y="75" width="130" height="320" rx="10" fill="#1E293B" stroke="#F59E0B" stroke-width="1.5"/>
+        <text x="745" y="100" text-anchor="middle" fill="#F59E0B" font-size="10" font-weight="700">How it works</text>
+        <text x="695" y="122" fill="#94A3B8" font-size="9">1. v1 registers with</text>
+        <text x="695" y="136" fill="#94A3B8" font-size="9">   transactional.id</text>
+        <text x="695" y="150" fill="#94A3B8" font-size="9">   → epoch=0</text>
+        <text x="695" y="172" fill="#94A3B8" font-size="9">2. v1 crashes / GC</text>
+        <text x="695" y="186" fill="#94A3B8" font-size="9">   pause / slow</text>
+        <text x="695" y="208" fill="#94A3B8" font-size="9">3. v2 starts, calls</text>
+        <text x="695" y="222" fill="#94A3B8" font-size="9">   initTransactions()</text>
+        <text x="695" y="236" fill="#94A3B8" font-size="9">   → epoch bumped to 1</text>
+        <text x="695" y="258" fill="#94A3B8" font-size="9">4. Broker stores</text>
+        <text x="695" y="272" fill="#94A3B8" font-size="9">   epoch=1 for this</text>
+        <text x="695" y="286" fill="#94A3B8" font-size="9">   transactional.id</text>
+        <text x="695" y="308" fill="#94A3B8" font-size="9">5. v1 wakes up and</text>
+        <text x="695" y="322" fill="#94A3B8" font-size="9">   tries to write</text>
+        <text x="695" y="336" fill="#F59E0B" font-size="9">   epoch=0 &lt; 1 →</text>
+        <text x="695" y="350" fill="#F59E0B" font-size="9">   ProducerFenced</text>
+        <text x="695" y="364" fill="#10B981" font-size="9">   Exception ✓</text>
+      </svg>
+    </div>
+    <div class="scroll-content">
+      <div class="prose">
+        <h3>Why "zombie" producer is dangerous</h3>
+        <p>When a producer process suffers a long GC pause, network partition, or slow restart, a second instance may start under the same <code>transactional.id</code>. The original producer — now a "zombie" — eventually recovers and continues sending stale transactions. Without fencing, both write to the same topic simultaneously, causing <strong>duplicate records and potential double-charges</strong>.</p>
+        <h3>The epoch mechanism</h3>
+        <p>Every call to <code>initTransactions()</code> increments the epoch stored by the transaction coordinator for that <code>transactional.id</code>. Any write arriving with an older epoch is immediately rejected with <code>ProducerFencedException</code> — the zombie is killed at the broker, not at the client. The new producer never even knows the zombie existed.</p>
+        <h3>Amazon payments use case</h3>
+        <p>The Amazon payment processor sets <code>transactional.id = "payment-proc-" + region</code>. On rolling deploy, the new pod calls <code>initTransactions()</code> first — bumping epoch — before the old pod is terminated. This guarantees zero duplicate charges even during deployments where both old and new instances briefly overlap.</p>
+      </div>
     </div>`;
 }

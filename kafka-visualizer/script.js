@@ -27,6 +27,9 @@ const LOADERS = {
   m17: () => import('./modules/m17-performance.js'),
   m18: () => import('./modules/m18-failure.js'),
   m19: () => import('./modules/m19-amazon-pipeline.js'),
+  m20: () => import('./modules/m20-competitors.js'),
+  m21: () => import('./modules/m21-mirrormaker.js'),
+  m22: () => import('./modules/m22-partition-reassignment.js'),
 };
 
 // ── Navigate ───────────────────────────────────────────────────────────────

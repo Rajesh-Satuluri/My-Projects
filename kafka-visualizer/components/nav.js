@@ -18,13 +18,16 @@ export const MODULES = [
   { id:'m12', label:'Kafka Connect',           icon:'🔌', group:'Ecosystem',     desc:'Source & sink connectors, SMT, dead-letter queue' },
   { id:'m13', label:'Kafka Streams',           icon:'🌊', group:'Ecosystem',     desc:'DSL builder — map, filter, aggregate, join, state store' },
   { id:'m14', label:'Schema Registry',         icon:'📋', group:'Ecosystem',     desc:'Avro/Protobuf/JSON, backward/forward/full compatibility' },
+  { id:'m20', label:'Kafka vs Competitors',    icon:'📊', group:'Ecosystem',     desc:'Kinesis, Pub/Sub, Pulsar, RabbitMQ — head-to-head matrix' },
   // ── Operations ───────────────────────────────────────────────────────────
   { id:'m15', label:'Security',                icon:'🔐', group:'Operations',    desc:'TLS handshake, SASL, ACL matrix, encrypted tunnel' },
   { id:'m16', label:'Monitoring',              icon:'📊', group:'Operations',    desc:'Live Grafana-style dashboard — lag, throughput, ISR, disk' },
   { id:'m17', label:'Performance Tuning',      icon:'🚀', group:'Operations',    desc:'Producer/consumer/broker configs with animated impact meters' },
+  { id:'m22', label:'Partition Reassignment',  icon:'🔀', group:'Operations',    desc:'Add brokers, rebalance leaders, decommission nodes safely' },
   // ── Advanced ─────────────────────────────────────────────────────────────
   { id:'m18', label:'Failure Simulation',      icon:'💥', group:'Advanced',      desc:'Kill producers, brokers, leaders — watch recovery cascade' },
   { id:'m19', label:'Amazon Pipeline',         icon:'🛒', group:'Advanced',      desc:'End-to-end: order → Kafka → 8 services → Snowflake → BI' },
+  { id:'m21', label:'MirrorMaker 2',           icon:'🌐', group:'Advanced',      desc:'Cross-cluster replication, active-active DR, offset translation' },
 ];
 
 const GROUP_ORDER = ['Foundation','Core Internals','Consumer Side','Delivery','Ecosystem','Operations','Advanced'];
