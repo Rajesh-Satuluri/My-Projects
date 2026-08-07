@@ -1125,5 +1125,23 @@ svg { display: block; }
   .op-flow-grid { grid-template-columns: 1fr; }
 }
 
+/* ============================================================ MODULE 7 — SOURCES & SINKS */
+.conn-picker { display:flex;flex-wrap:wrap;gap:10px;padding:20px 28px 0; }
+.conn-card { padding:20px 28px 28px; }
+.conn-card-header { display:flex;align-items:center;gap:16px;padding:16px 20px;background:var(--surface);border-radius:10px;border-left:4px solid;margin-bottom:4px; }
+.conn-props-table { border:1px solid var(--border);border-radius:8px;overflow:hidden; }
+.conn-prop-row { display:flex;border-bottom:1px solid var(--border);font-size:12.5px; }
+.conn-prop-row:last-child { border-bottom:none; }
+.conn-prop-key { flex:1;padding:8px 12px;color:var(--text-secondary);font-family:var(--font-mono,monospace);background:var(--surface2); }
+.conn-prop-val { flex:1.2;padding:8px 12px;color:var(--text);font-family:var(--font-mono,monospace); }
+.timeline-steps { padding:4px 0; }
+
+/* ============================================================ MODULE 9 — WATERMARKS */
+.wm-controls { padding:18px 24px;margin:20px 28px 0; }
+.wm-ctrl-row { display:flex;flex-wrap:wrap;align-items:center;gap:20px; }
+.wm-ctrl-group { display:flex;align-items:center;gap:10px; }
+.wm-legend { display:flex;flex-wrap:wrap;gap:16px;padding:12px 28px;font-size:12px;color:var(--text-secondary); }
+.wm-dot { display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px; }
+
 /* ============================================================ SCROLLBAR GLOBAL */
 * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
