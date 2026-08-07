@@ -26,12 +26,14 @@ export function mount(container) {
     tabs: [
       { id: 'concepts', label: '📖 Core Concepts' },
       { id: 'flow',     label: '🔄 Message Journey' },
+      { id: 'design',   label: '⚙️ Design Guide' },
       { id: 'iq',       label: '🎯 Interview Q&A' },
     ]
   });
 
   buildConcepts(container);
   buildFlow(container);
+  buildDesign(container);
   container.querySelector('#tab-iq').innerHTML = createIQSection(IQ);
   return null;
 }
@@ -386,5 +388,383 @@ function buildFlow(container) {
           </table>
         </div>
       </div>
+    </div>`;
+}
+
+function buildDesign(container) {
+  const tab = container.querySelector('#tab-design');
+
+  // Partition-consumer scenario data
+  const scenarios = [
+    {
+      label: '1 Consumer, 3 Partitions',
+      badge: 'UNDER-SCALED',
+      badgeColor: '#EF4444',
+      desc: 'One consumer handles all three partitions alone. Throughput is capped by how fast one instance can process events.',
+      amazon: 'One Fulfillment worker processing every Amazon order — a bottleneck on Prime Day.',
+      consumers: [
+        { id: 'C1', color: '#FF6900', partitions: ['P0','P1','P2'] },
+      ],
+    },
+    {
+      label: '2 Consumers, 3 Partitions',
+      badge: 'UNBALANCED',
+      badgeColor: '#F59E0B',
+      desc: 'C1 owns P0, C2 owns P1 + P2. C2 is the bottleneck — it handles twice the load of C1.',
+      amazon: 'Worker 1 handles US-West orders. Worker 2 handles US-East AND International — overloaded.',
+      consumers: [
+        { id: 'C1', color: '#FF6900', partitions: ['P0'] },
+        { id: 'C2', color: '#3B82F6', partitions: ['P1','P2'] },
+      ],
+    },
+    {
+      label: '3 Consumers, 3 Partitions',
+      badge: 'IDEAL ✓',
+      badgeColor: '#10B981',
+      desc: 'One consumer per partition. Each works independently at full speed. Maximum throughput for this partition count.',
+      amazon: 'Three Fulfillment workers — each owns exactly one region. Linear throughput, no bottleneck.',
+      consumers: [
+        { id: 'C1', color: '#FF6900', partitions: ['P0'] },
+        { id: 'C2', color: '#3B82F6', partitions: ['P1'] },
+        { id: 'C3', color: '#10B981', partitions: ['P2'] },
+      ],
+    },
+    {
+      label: '4 Consumers, 3 Partitions',
+      badge: 'WASTEFUL',
+      badgeColor: '#8B5CF6',
+      desc: 'C4 has no partition to own — it sits completely idle. Adding more consumers beyond the partition count gains nothing.',
+      amazon: 'A fourth Fulfillment worker shows up but all regions are taken — they stand idle all day.',
+      consumers: [
+        { id: 'C1', color: '#FF6900', partitions: ['P0'] },
+        { id: 'C2', color: '#3B82F6', partitions: ['P1'] },
+        { id: 'C3', color: '#10B981', partitions: ['P2'] },
+        { id: 'C4', color: '#475569', partitions: [], idle: true },
+      ],
+    },
+  ];
+
+  const partitionColors = { P0: '#FF6900', P1: '#3B82F6', P2: '#10B981' };
+
+  const scenarioCards = scenarios.map(s => {
+    const allPartitions = ['P0','P1','P2'];
+    const pMap = {};
+    s.consumers.forEach(c => c.partitions.forEach(p => { pMap[p] = c; }));
+
+    const pRows = allPartitions.map(p => {
+      const c = pMap[p];
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <div style="width:32px;height:26px;border-radius:5px;border:1.5px solid ${partitionColors[p]};background:${partitionColors[p]}18;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${partitionColors[p]}">${p}</div>
+        <div style="flex:1;height:2px;background:${c ? c.color : '#334155'}22;position:relative">
+          <div style="position:absolute;top:50%;left:0;right:0;height:1.5px;background:${c ? c.color : '#334155'};transform:translateY(-50%)"></div>
+        </div>
+        <div style="width:32px;height:26px;border-radius:5px;border:1.5px solid ${c ? c.color : '#334155'};background:${c ? c.color : '#334155'}18;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${c ? c.color : '#475569'}">${c ? c.id : '—'}</div>
+      </div>`;
+    }).join('');
+
+    const idleRow = s.consumers.find(c => c.idle) ? `
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+        <div style="width:32px;height:26px;border-radius:5px;border:1.5px dashed #475569;display:flex;align-items:center;justify-content:center;font-size:9px;color:#475569">—</div>
+        <div style="flex:1;height:1.5px;background:#334155;border-top:1.5px dashed #334155"></div>
+        <div style="width:32px;height:26px;border-radius:5px;border:1.5px dashed #475569;background:#47556918;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#475569">C4</div>
+      </div>
+      <div style="margin-top:4px;font-size:10px;color:#EF4444;text-align:right">↑ IDLE — no partition</div>` : '';
+
+    return `
+      <div style="background:#111827;border:1.5px solid #1E293B;border-radius:12px;padding:18px 20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:12px;font-weight:700;color:#F1F5F9">${s.label}</div>
+          <span style="background:${s.badgeColor}22;color:${s.badgeColor};font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;letter-spacing:.06em">${s.badge}</span>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:10px;font-weight:600;color:#475569;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">Partition → Consumer</div>
+          ${pRows}${idleRow}
+        </div>
+        <div style="font-size:11px;color:#94A3B8;line-height:1.6;border-top:1px solid #1E293B;padding-top:10px;margin-top:4px">${s.desc}</div>
+        <div style="margin-top:8px;padding:8px 10px;background:#0A0E1A;border-left:3px solid #FF6900;border-radius:0 5px 5px 0;font-size:11px;color:#94A3B8;line-height:1.5"><span style="color:#FF6900;font-weight:700;font-size:9px;letter-spacing:.06em;text-transform:uppercase">Amazon</span><br>${s.amazon}</div>
+      </div>`;
+  }).join('');
+
+  tab.innerHTML = `
+    <div class="scroll-content" style="max-width:920px;margin:0 auto">
+
+      <!-- ── 1. TOPICS ─────────────────────────────────────────────── -->
+      <div class="design-section" style="margin-bottom:36px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="width:36px;height:36px;border-radius:10px;background:#FF690022;border:1.5px solid #FF6900;display:flex;align-items:center;justify-content:center;font-size:18px">📋</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;color:#F1F5F9">How Topics are decided</div>
+            <div style="font-size:12px;color:#64748B">One topic per event type — never mix different facts in one stream</div>
+          </div>
+        </div>
+
+        <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:18px 22px;margin-bottom:16px">
+          <div style="font-size:13px;font-weight:700;color:#F1F5F9;margin-bottom:10px">The Rule</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:12px">
+            <div style="background:#10B98110;border:1px solid #10B98133;border-radius:8px;padding:12px">
+              <div style="color:#10B981;font-weight:700;margin-bottom:6px">✓ One topic per event type</div>
+              <ul style="color:#94A3B8;padding-left:14px;margin:0;line-height:1.8">
+                <li>Different schema → different topic</li>
+                <li>Different retention needs → different topic</li>
+                <li>Different owning team → different topic</li>
+                <li>Different consumers → usually different topic</li>
+              </ul>
+            </div>
+            <div style="background:#EF444410;border:1px solid #EF444433;border-radius:8px;padding:12px">
+              <div style="color:#EF4444;font-weight:700;margin-bottom:6px">✗ Don't mix event types</div>
+              <ul style="color:#94A3B8;padding-left:14px;margin:0;line-height:1.8">
+                <li>Orders + Payments in one topic — schema chaos</li>
+                <li>Consumers have to filter 90% of irrelevant events</li>
+                <li>One team's retention needs block the other</li>
+                <li>Hard to replay just one type of event</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:10px">Amazon's topic landscape</div>
+        <div style="overflow-x:auto;border-radius:10px;border:1px solid #1E293B">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:620px">
+            <thead><tr style="background:#0F172A;border-bottom:1px solid #1E293B">
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Topic</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Event</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Producer</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Key Consumers</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Retention</th>
+            </tr></thead>
+            <tbody>
+              ${[
+                ['orders','Buy Now clicked','Order Service','Fulfillment, Fraud, Notifications, Analytics','7 days'],
+                ['payments','Card charged / refunded','Payment Service','Finance, Fraud, Notifications','30 days'],
+                ['inventory-updates','Stock level changed','Inventory Service','Order Service, Fulfillment','3 days'],
+                ['click-events','Page / product clicked','Web & App frontend','Recommendations, Analytics','1 day'],
+                ['returns','Return initiated','Returns Service','Fulfillment, Refund Service, Analytics','30 days'],
+                ['shipping-events','Shipped / Out for delivery / Delivered','Logistics Service','Notifications, Analytics','14 days'],
+              ].map(([t,e,p,c,r],i) => `
+                <tr style="border-bottom:1px solid #0F172A;${i%2===0?'':'background:#0A0E1A08'}">
+                  <td style="padding:10px 14px;color:#FF6900;font-family:monospace;font-size:11px">${t}</td>
+                  <td style="padding:10px 14px;color:#F1F5F9">${e}</td>
+                  <td style="padding:10px 14px;color:#94A3B8">${p}</td>
+                  <td style="padding:10px 14px;color:#94A3B8">${c}</td>
+                  <td style="padding:10px 14px;color:#64748B">${r}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── 2. PARTITIONS ────────────────────────────────────────── -->
+      <div class="design-section" style="margin-bottom:36px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="width:36px;height:36px;border-radius:10px;background:#3B82F622;border:1.5px solid #3B82F6;display:flex;align-items:center;justify-content:center;font-size:18px">🗂️</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;color:#F1F5F9">How Partitions are decided</div>
+            <div style="font-size:12px;color:#64748B">Partition count = the maximum consumers you'll ever want in one group</div>
+          </div>
+        </div>
+
+        <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:18px 22px;margin-bottom:16px">
+          <div style="font-size:13px;font-weight:700;color:#F1F5F9;margin-bottom:10px">The Rule</div>
+          <p style="font-size:13px;color:#94A3B8;line-height:1.7;margin-bottom:10px">The partition count is the <strong style="color:#F1F5F9">ceiling on parallelism</strong> for any consumer group. You can never have more active consumers than partitions — the extras sit idle. And you can only <em>increase</em> partition count (never decrease cleanly), so plan ahead.</p>
+          <div style="background:#0A0E1A;border-radius:8px;padding:14px 16px;font-size:12px;color:#94A3B8;line-height:1.8">
+            <strong style="color:#F59E0B">Formula:</strong> &nbsp;partitions ≥ peak_throughput ÷ throughput_per_consumer<br>
+            <strong style="color:#FF6900">Amazon example:</strong> &nbsp;orders topic expects 50,000 events/sec at Prime Day peak. One Fulfillment consumer handles 20,000/sec. → minimum 3 partitions (50k ÷ 20k = 2.5, round up to 3).<br>
+            <strong style="color:#10B981">Tip:</strong> &nbsp;Over-partition slightly (e.g. 6 instead of 3) so you can scale consumers later without repartitioning.
+          </div>
+        </div>
+
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:12px">The 4 scenarios — always 3 partitions, varying consumer count</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px">
+          ${scenarioCards}
+        </div>
+
+        <div style="background:#10B98112;border:1px solid #10B98133;border-radius:10px;padding:14px 18px;font-size:12px;color:#10B981;line-height:1.7">
+          <strong>Golden rule:</strong> Set partition count = the maximum number of consumers you'll ever want reading in parallel. For Amazon's <code style="background:#0A0E1A;padding:1px 4px;border-radius:3px">orders</code> topic in Fulfillment, that's 3 — so 3 partitions. If load grows 10×, increase partitions to 30 and scale consumers to match.
+        </div>
+      </div>
+
+      <!-- ── 3. PARTITION KEY ─────────────────────────────────────────────── -->
+      <div class="design-section" style="margin-bottom:36px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="width:36px;height:36px;border-radius:10px;background:#06B6D422;border:1.5px solid #06B6D4;display:flex;align-items:center;justify-content:center;font-size:18px">🔑</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;color:#F1F5F9">How the Partition Key is chosen</div>
+            <div style="font-size:12px;color:#64748B">Key = the entity for which event order matters</div>
+          </div>
+        </div>
+
+        <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:18px 22px;margin-bottom:16px">
+          <p style="font-size:13px;color:#94A3B8;line-height:1.7;margin-bottom:0">The key is hashed to pick a partition. <strong style="color:#F1F5F9">Same key → always same partition → events for that key are in strict order.</strong> No key → Kafka round-robins → maximum throughput but zero ordering. Choose the key based on what ordering you actually need downstream.</p>
+        </div>
+
+        <div style="overflow-x:auto;border-radius:10px;border:1px solid #1E293B;margin-bottom:14px">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:600px">
+            <thead><tr style="background:#0F172A;border-bottom:1px solid #1E293B">
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Key Choice</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Ordering Guarantee</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Amazon Use Case</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Watch Out</th>
+            </tr></thead>
+            <tbody>
+              ${[
+                ['customer_id','All orders for one customer are in sequence','Fulfillment — customer\'s Order #1 always processed before Order #2','OK cardinality; some high-value customers may be heavy'],
+                ['order_id','All lifecycle events for one order are in sequence','Tracking — Placed → Packed → Shipped → Delivered in order','High cardinality is fine; no per-customer ordering'],
+                ['product_id','All inventory changes for one product are in sequence','Inventory — stock increments and decrements for the same product never race','Hot partition risk if a viral product gets 100× more events'],
+                ['null (no key)','No ordering — pure round-robin across partitions','Click-events — you only care about throughput, not order','Cannot replay in sequence; ordering is undefined'],
+                ['country_code','All events from one country land together','Regional analytics — isolate US vs EU events','⚠️ Hot partition: US → P0 gets 60% of all traffic'],
+              ].map(([k,o,u,w]) => `
+                <tr style="border-bottom:1px solid #0F172A">
+                  <td style="padding:10px 14px;color:#06B6D4;font-family:monospace;font-size:11px">${k}</td>
+                  <td style="padding:10px 14px;color:#F1F5F9">${o}</td>
+                  <td style="padding:10px 14px;color:#94A3B8">${u}</td>
+                  <td style="padding:10px 14px;color:#F59E0B;font-size:11px">${w}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="background:#EF444412;border:1.5px solid #EF444444;border-radius:10px;padding:16px 18px">
+          <div style="font-size:12px;font-weight:700;color:#EF4444;margin-bottom:10px">⚠️ The Hot Partition Trap — avoid low-cardinality keys</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:12px">
+            <div>
+              <div style="color:#EF4444;font-weight:600;margin-bottom:6px">Bad: key = country_code</div>
+              <div style="background:#0A0E1A;border-radius:8px;padding:10px;font-size:11px;color:#94A3B8;line-height:1.9">
+                P0 (US) &nbsp; → <span style="color:#EF4444">████████████ 60%</span> of traffic<br>
+                P1 (EU) &nbsp; → <span style="color:#F59E0B">████ 25%</span> of traffic<br>
+                P2 (APAC) → <span style="color:#94A3B8">███ 15%</span> of traffic<br>
+                <span style="color:#64748B;font-size:10px">Consumer on P0 is 4× busier than P2 — unbalanced</span>
+              </div>
+            </div>
+            <div>
+              <div style="color:#10B981;font-weight:600;margin-bottom:6px">Good: key = customer_id</div>
+              <div style="background:#0A0E1A;border-radius:8px;padding:10px;font-size:11px;color:#94A3B8;line-height:1.9">
+                P0 → <span style="color:#10B981">████ 34%</span> of traffic<br>
+                P1 → <span style="color:#10B981">████ 33%</span> of traffic<br>
+                P2 → <span style="color:#10B981">████ 33%</span> of traffic<br>
+                <span style="color:#64748B;font-size:10px">High cardinality → even hash spread → balanced</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 4. CONSUMER GROUPS ────────────────────────────────────────── -->
+      <div class="design-section" style="margin-bottom:36px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="width:36px;height:36px;border-radius:10px;background:#10B98122;border:1.5px solid #10B981;display:flex;align-items:center;justify-content:center;font-size:18px">👥</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;color:#F1F5F9">How Consumer Groups are decided</div>
+            <div style="font-size:12px;color:#64748B">One group per independent downstream use case</div>
+          </div>
+        </div>
+
+        <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:18px 22px;margin-bottom:16px">
+          <p style="font-size:13px;color:#94A3B8;line-height:1.7;margin-bottom:10px">Ask yourself: <em>"Does this use case need its own independent position in the stream?"</em> If yes → new consumer group. Each group gets its own offset pointer, completely independent of all others. One group crashing, lagging, or replaying <strong style="color:#F1F5F9">never affects any other group.</strong></p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px">
+            <div style="background:#10B98110;border:1px solid #10B98133;border-radius:8px;padding:12px">
+              <div style="color:#10B981;font-weight:700;margin-bottom:6px">✓ Create a new group when</div>
+              <ul style="color:#94A3B8;padding-left:14px;margin:0;line-height:1.8">
+                <li>Different team / different service</li>
+                <li>Different business action on the same event</li>
+                <li>Different processing speed or SLA</li>
+                <li>Need to replay independently of others</li>
+              </ul>
+            </div>
+            <div style="background:#EF444410;border:1px solid #EF444433;border-radius:8px;padding:12px">
+              <div style="color:#EF4444;font-weight:700;margin-bottom:6px">✗ Don't share a group when</div>
+              <ul style="color:#94A3B8;padding-left:14px;margin:0;line-height:1.8">
+                <li>Two services do completely different things</li>
+                <li>One service should not know the other's offset</li>
+                <li>Services have different scaling requirements</li>
+                <li>One replay would block the other's progress</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:18px 22px">
+          <div style="font-size:12px;font-weight:700;color:#F1F5F9;margin-bottom:14px">Amazon's <code style="background:#0A0E1A;color:#FF6900;padding:2px 6px;border-radius:4px">orders</code> topic — 4 consumer groups, all reading the same stream</div>
+
+          <div style="background:#0A0E1A;border:1.5px solid #FF6900;border-radius:8px;padding:10px 16px;text-align:center;margin-bottom:16px;font-size:12px;font-weight:700;color:#FF6900">
+            Topic: orders &nbsp;|&nbsp; 3 partitions &nbsp;|&nbsp; 7-day retention
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+            ${[
+              { color:'#10B981', icon:'🚚', name:'fulfillment', size:'3 consumers', offset:'847,231', action:'Picks item, packs, generates shipping label, schedules UPS pickup' },
+              { color:'#8B5CF6', icon:'🛡️', name:'fraud-detection', size:'2 consumers', offset:'847,198 (lagging)', action:'ML model scores every order — unusual IP? High velocity? New card?' },
+              { color:'#F59E0B', icon:'🔔', name:'notifications', size:'1 consumer', offset:'847,231', action:'Sends Order Confirmed email + push + SMS' },
+              { color:'#06B6D4', icon:'📊', name:'analytics', size:'1 consumer', offset:'312,000 (replaying!)', action:'Joined 3 days later — replaying 7 days of history for dashboards' },
+            ].map(g => `
+              <div style="background:#0A0E1A;border:1px solid ${g.color}33;border-radius:10px;padding:14px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                  <span style="font-size:16px">${g.icon}</span>
+                  <div>
+                    <div style="font-size:11px;font-weight:700;color:${g.color}">${g.name}</div>
+                    <div style="font-size:10px;color:#475569">${g.size}</div>
+                  </div>
+                  <div style="margin-left:auto;font-size:10px;color:#64748B">offset: <span style="color:${g.color}">${g.offset}</span></div>
+                </div>
+                <div style="font-size:11px;color:#94A3B8;line-height:1.6">${g.action}</div>
+              </div>`).join('')}
+          </div>
+
+          <div style="margin-top:14px;background:#06B6D412;border:1px solid #06B6D433;border-radius:8px;padding:12px 14px;font-size:12px;color:#06B6D4;line-height:1.65">
+            💡 <strong>Notice the analytics group:</strong> It started reading 3 days after the others — at offset 312,000 while everyone else is at 847,231. It's catching up. Order Service was never changed. No other group was affected. The event was just sitting in Kafka, waiting.
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 5. CONSUMER COUNT ─────────────────────────────────────────────── -->
+      <div class="design-section" style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="width:36px;height:36px;border-radius:10px;background:#F59E0B22;border:1.5px solid #F59E0B;display:flex;align-items:center;justify-content:center;font-size:18px">⚖️</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;color:#F1F5F9">How many Consumers per Group?</div>
+            <div style="font-size:12px;color:#64748B">Scale up to the partition count — then stop</div>
+          </div>
+        </div>
+
+        <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:18px 22px;margin-bottom:14px">
+          <p style="font-size:13px;color:#94A3B8;line-height:1.7;margin-bottom:12px">The constraint is simple: <strong style="color:#F1F5F9">consumers ≤ partitions</strong>. Beyond the partition count, additional consumers sit idle with no partition to own. Scale the consumer count based on your current lag and throughput needs — you can always add or remove consumers and Kafka rebalances automatically.</p>
+
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:10px">Scaling ladder for the fulfillment group (3 partitions)</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            ${[
+              { c:1, throughput:'~20k events/sec', lag:'Growing — 1 worker can\'t keep up with Prime Day traffic', color:'#EF4444', status:'Falling behind' },
+              { c:2, throughput:'~40k events/sec', lag:'C2 owns 2 partitions — slight bottleneck, but catching up', color:'#F59E0B', status:'Recovering' },
+              { c:3, throughput:'~60k events/sec', lag:'Each consumer owns 1 partition — fully caught up', color:'#10B981', status:'✓ Ideal' },
+              { c:4, throughput:'~60k events/sec', lag:'C4 sits idle — no partition to own. Zero benefit.', color:'#475569', status:'Wasteful' },
+            ].map(r => `
+              <div style="display:flex;align-items:center;gap:12px;background:#0A0E1A;border-radius:8px;padding:10px 14px">
+                <div style="flex-shrink:0;width:80px;font-size:11px">
+                  <span style="color:${r.color};font-weight:800">${r.c} consumer${r.c>1?'s':''}</span>
+                </div>
+                <div style="flex-shrink:0;width:120px;font-size:11px;color:#06B6D4">${r.throughput}</div>
+                <div style="flex:1;font-size:11px;color:#94A3B8">${r.lag}</div>
+                <div style="flex-shrink:0;font-size:10px;font-weight:700;color:${r.color};white-space:nowrap">${r.status}</div>
+              </div>`).join('')}
+          </div>
+        </div>
+
+        <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:16px 20px">
+          <div style="font-size:12px;font-weight:700;color:#F1F5F9;margin-bottom:10px">What happens when a consumer joins or leaves? — Rebalancing</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:11px">
+            <div style="background:#0A0E1A;border-radius:8px;padding:12px">
+              <div style="color:#F59E0B;font-weight:700;margin-bottom:6px">Consumer joins</div>
+              <div style="color:#94A3B8;line-height:1.7">Kafka triggers a rebalance. All consumers briefly pause. Partitions are reassigned evenly. Consumers resume from their last committed offset — no events are skipped or double-processed.</div>
+            </div>
+            <div style="background:#0A0E1A;border-radius:8px;padding:12px">
+              <div style="color:#EF4444;font-weight:700;margin-bottom:6px">Consumer crashes</div>
+              <div style="color:#94A3B8;line-height:1.7">Kafka detects the crash via heartbeat timeout (~10s). Rebalance redistributes its partitions to the remaining consumers. No data is lost — the crashed consumer's offset is safely stored in Kafka.</div>
+            </div>
+            <div style="background:#0A0E1A;border-radius:8px;padding:12px">
+              <div style="color:#10B981;font-weight:700;margin-bottom:6px">Consumer scales back</div>
+              <div style="color:#94A3B8;line-height:1.7">When the consumer leaves cleanly, rebalance redistributes its partitions. Other consumers pick up the work. Prime Day is over → scale down from 3 to 1 Fulfillment consumer and Kafka handles the rest.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>`;
 }
