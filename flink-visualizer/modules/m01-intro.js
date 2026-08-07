@@ -9,14 +9,14 @@ const TIMELINE = [
     icon: '🐘',
     color: '#F59E0B',
     colorDim: 'rgba(245,158,11,0.15)',
-    desc: 'Google's MapReduce paper sparked Apache Hadoop. Data engineers ran batch jobs — read all data, process, write results. Revolutionary for big data analytics, but fundamentally designed for batch.',
+    desc: "Google's MapReduce paper sparked Apache Hadoop. Data engineers ran batch jobs — read all data, process, write results. Revolutionary for big data analytics, but fundamentally designed for batch.",
     problems: [
       { label: 'Job latency',       value: '30–60 min', pct: 95, color: '#F87171' },
       { label: 'State management',  value: 'None',      pct: 100, color: '#F87171' },
       { label: 'Event time support',value: 'None',      pct: 100, color: '#F87171' },
       { label: 'Throughput',        value: 'Medium',    pct: 40, color: '#FCD34D' },
     ],
-    uber: 'Uber's fraud detection ran Hadoop jobs every <strong>45 minutes</strong>. A fraudulent driver could complete 6 trips before detection. GPS data was analyzed only <em>after</em> the trip ended — useless for real-time safety.',
+    uber: "Uber's fraud detection ran Hadoop jobs every <strong>45 minutes</strong>. A fraudulent driver could complete 6 trips before detection. GPS data was analyzed only <em>after</em> the trip ended — useless for real-time safety.",
     verdict: '❌ Too slow for Uber\'s real-time needs',
   },
   {
@@ -67,7 +67,7 @@ const TIMELINE = [
       { label: 'SQL / Table API',   value: 'None',     pct: 100, color: '#F87171' },
       { label: 'Stateful ops',      value: 'Good',     pct: 20, color: '#34D399' },
     ],
-    uber: 'Samza required Kafka for everything — Uber's data came from custom TCP streams and S3. <strong>Temporal joins</strong> (joining driver location with pricing zone) required workarounds. No built-in windowed aggregations meant engineers wrote boilerplate for every pipeline.',
+    uber: "Samza required Kafka for everything — Uber's data came from custom TCP streams and S3. <strong>Temporal joins</strong> (joining driver location with pricing zone) required workarounds. No built-in windowed aggregations meant engineers wrote boilerplate for every pipeline.",
     verdict: '⚠️ Good state, but Kafka-locked with weak windowing',
   },
   {
@@ -163,7 +163,7 @@ export function mount(container) {
   container.innerHTML = createModuleShell({
     tag: '01 · Foundation · Uber Edition',
     title: 'Why Apache Flink?',
-    subtitle: 'The evolution of stream processing — from Hadoop's 45-minute batch jobs to Flink's sub-10ms real-time pipelines powering Uber at 1M+ events per second.',
+    subtitle: "The evolution of stream processing — from Hadoop's 45-minute batch jobs to Flink's sub-10ms real-time pipelines powering Uber at 1M+ events per second.",
     tabs: [
       { id: 'story',      label: '🚗 Uber Story' },
       { id: 'evolution',  label: '📅 Evolution Timeline' },

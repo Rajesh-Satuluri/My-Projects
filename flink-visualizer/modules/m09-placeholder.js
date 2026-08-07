@@ -13,13 +13,6 @@ const IQS = [
   { q: 'What is the difference between a periodic watermark and a punctuated watermark?', a: 'A periodic watermark is generated at a fixed wall-clock interval (e.g., every 200ms) by calling getCurrentWatermark() on the WatermarkGenerator. Flink\'s built-in BoundedOutOfOrdernessWatermarks is periodic. A punctuated watermark is emitted on specific events — you call ctx.emitWatermark() from onEvent() when a sentinel event (e.g., a "flush" message) appears. Periodic is simpler and common; punctuated is used when the stream itself carries reliable timestamp signals (e.g., Kafka end-of-partition markers).' },
 ];
 
-function evtColor(state) {
-  if (state === 'on-time') return '#10b981';
-  if (state === 'late') return '#ef4444';
-  if (state === 'side-output') return '#f59e0b';
-  return '#6366f1';
-}
-
 export function mount(container) {
   let allowedLateness = 5; // seconds — the out-of-orderness bound
   let sideOutputEnabled = false;
