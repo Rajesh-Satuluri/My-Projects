@@ -3,11 +3,11 @@ name: Deploy GitHub Pages
 on:
   push:
     branches:
-      - gh-pages
+      - claude/apache-flink-visualizer-f5tmg5
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -16,31 +16,35 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout gh-pages content
-        uses: actions/checkout@v4
-        with:
-          ref: gh-pages
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
-
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+
+      - name: Stage site
+        run: |
+          mkdir -p /tmp/site/flink-visualizer
+          cp -r flink-visualizer/. /tmp/site/flink-visualizer/
+          # Root index redirect
+          cat > /tmp/site/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="refresh" content="0;url=flink-visualizer/">
+            <title>My Projects</title>
+          </head>
+          <body>
+            <p>Redirecting to <a href="flink-visualizer/">Flink Visualizer</a>…</p>
+          </body>
+          </html>
+          EOF
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          timeout: 1200000
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: /tmp/site
+          publish_branch: gh-pages
+          force_orphan: true
