@@ -968,5 +968,76 @@ svg { display: block; }
   .uber-stats { gap: 16px; }
 }
 
+/* ============================================================ MODULE 4 — JOB LIFECYCLE */
+.lifecycle-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.lifecycle-stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 24px;
+}
+.lc-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: all .18s;
+  font-size: 13px;
+}
+.lc-step:hover { background: var(--surface2); color: var(--text); }
+.lc-step.active { background: var(--surface2); color: var(--text); border-color: var(--accent); }
+.lc-step.done .lc-step-icon::after { content: '✓'; font-size: 11px; }
+.lc-step-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+.lc-step-label { flex: 1; font-size: 12.5px; line-height: 1.3; }
+.lc-step-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.lc-detail-card {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  animation: fadeInUp .25s ease;
+}
+.lc-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.lc-detail-icon { font-size: 36px; }
+.lc-detail-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.lc-detail-desc { color: var(--text-secondary); line-height: 1.7; margin-bottom: 16px; }
+.lc-uber-box {
+  background: var(--surface2);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border-left: 3px solid var(--accent);
+}
+.lc-uber-label { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; }
+.lc-uber-box p { color: var(--text-secondary); font-size: 13.5px; line-height: 1.6; margin: 0; }
+.lc-nav-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+@media (max-width: 768px) {
+  .lifecycle-layout { grid-template-columns: 1fr; }
+  .lifecycle-stepper { flex-direction: row; flex-wrap: wrap; position: static; }
+  .lc-step-label { display: none; }
+}
+
 /* ============================================================ SCROLLBAR GLOBAL */
 * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
