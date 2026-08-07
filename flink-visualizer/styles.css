@@ -1165,5 +1165,18 @@ svg { display: block; }
 /* ============================================================ MODULE 13 — FAULT TOLERANCE */
 .ft-strategy-picker { display:flex;flex-wrap:wrap;gap:10px;padding:20px 28px 0; }
 
+/* ============================================================ MODULE 14 — BACKPRESSURE */
+.bp-controls { padding:18px 24px;margin:20px 28px 0; }
+
+/* ============================================================ MODULE 15 — SQL */
+.sql-picker { display:flex;flex-wrap:wrap;gap:10px;padding:20px 28px 0; }
+.sql-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 20px 28px 28px;
+}
+@media (max-width: 900px) { .sql-detail-grid { grid-template-columns: 1fr; } }
+
 /* ============================================================ SCROLLBAR GLOBAL */
 * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
