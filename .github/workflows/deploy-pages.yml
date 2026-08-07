@@ -19,7 +19,11 @@ jobs:
       - name: Stage site at root
         run: |
           mkdir -p /tmp/site-root
+          # Flink visualizer at root (primary)
           cp -r flink-visualizer/. /tmp/site-root/
+          # Kafka visualizer in /kafka subdirectory
+          mkdir -p /tmp/site-root/kafka
+          cp -r kafka-visualizer/. /tmp/site-root/kafka/
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v3
