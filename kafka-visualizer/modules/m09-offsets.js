@@ -15,12 +15,14 @@ export function mount(container) {
     tabs: [
       { id: 'lag',    label: '📍 Lag Visualization' },
       { id: 'commit', label: '💾 Commit Strategies' },
+      { id: 'amazon', label: '📦 Amazon Offsets' },
       { id: 'iq',     label: '🎯 Interview Q&A' },
     ]
   });
 
   let cleanup = buildLag(container);
   buildCommit(container);
+  buildAmazon(container);
   container.querySelector('#tab-iq').innerHTML = createIQSection(IQ);
   return cleanup;
 }
@@ -169,5 +171,108 @@ function buildCommit(container) {
             <div class="info-card-body">${s.desc}</div>
           </div>`).join('')}
       </div>
+    </div>`;
+}
+
+function buildAmazon(container) {
+  const tab = container.querySelector('#tab-amazon');
+  tab.innerHTML = `
+    <div class="scroll-content" style="max-width:920px;margin:0 auto">
+
+      <!-- Hero -->
+      <div style="background:#111827;border:1px solid #FF6900;border-radius:14px;padding:20px 24px;margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748B;margin-bottom:8px">Offset anatomy</div>
+        <div style="font-size:18px;font-weight:800;color:#F1F5F9;margin-bottom:4px">Where exactly is Fulfillment Service in the orders-P0 log right now?</div>
+        <div style="font-size:13px;color:#94A3B8">Your iPhone 15 Pro order landed at offset 847,231. Here's what the three offset positions mean for the Fulfillment consumer that will process it.</div>
+      </div>
+
+      <!-- 3 offset positions -->
+      <div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:14px">The three offsets — fulfillment-group on orders-P0</div>
+        <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:18px 22px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+            ${
+              [
+                { label:'Committed Offset', val:'847,050', color:'#10B981', desc:'The last offset fulfillment-group durably saved to __consumer_offsets. If consumer crashes right now, it restarts from here.' },
+                { label:'Current Offset',   val:'847,195', color:'#F59E0B', desc:'The record the consumer just fetched but has not yet committed. 145 orders are in-flight: fetched and being processed, not yet acknowledged.' },
+                { label:'Log-End Offset',   val:'847,231', color:'#EF4444', desc:'The next offset the producer will write. This is where your iPhone order just landed. LEO advances every 50ms at Prime Day rates.' },
+              ].map(o => `
+              <div style="background:#0A0E1A;border:1.5px solid ${o.color}44;border-radius:10px;padding:14px;text-align:center">
+                <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${o.color};margin-bottom:6px">${o.label}</div>
+                <div style="font-size:24px;font-weight:800;color:${o.color};font-family:monospace;margin-bottom:8px">${o.val}</div>
+                <div style="font-size:11px;color:#64748B;line-height:1.55">${o.desc}</div>
+              </div>`).join('')
+            }
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#0A0E1A;border-radius:8px;font-size:12px;color:#94A3B8">
+            <span style="color:#10B981;font-family:monospace;flex-shrink:0">847,050</span>
+            <div style="flex:1;height:3px;background:linear-gradient(to right,#10B981,#F59E0B);border-radius:2px"></div>
+            <span style="color:#F59E0B;font-family:monospace;flex-shrink:0">847,195</span>
+            <div style="flex:1;height:3px;background:linear-gradient(to right,#F59E0B,#EF4444);border-radius:2px"></div>
+            <span style="color:#EF4444;font-family:monospace;flex-shrink:0">847,231</span>
+            <span style="margin-left:10px;color:#64748B;flex-shrink:0">lag = 181 records ≈ 9ms at 20k/sec</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Crash scenario -->
+      <div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:14px">What happens if Fulfillment crashes right now</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div style="background:#EF444412;border:1.5px solid #EF444444;border-radius:12px;padding:16px 20px">
+            <div style="font-size:12px;font-weight:700;color:#EF4444;margin-bottom:8px">Without idempotent processing</div>
+            <div style="background:#0A0E1A;border-radius:8px;padding:12px;font-size:11px;color:#94A3B8;line-height:1.9">
+              1. Consumer fetched offsets 847,050–847,195<br>
+              2. Fulfillment DB writes started for 145 orders<br>
+              3. <span style="color:#EF4444">Crashes at record 847,100</span><br>
+              4. Restart: reads from committed offset 847,050<br>
+              5. Re-processes 847,050–847,100 again (50 orders)<br>
+              <span style="color:#EF4444">→ 50 orders dispatched twice to warehouse</span>
+            </div>
+          </div>
+          <div style="background:#10B98112;border:1.5px solid #10B98133;border-radius:12px;padding:16px 20px">
+            <div style="font-size:12px;font-weight:700;color:#10B981;margin-bottom:8px">With idempotent processing (Amazon)</div>
+            <div style="background:#0A0E1A;border-radius:8px;padding:12px;font-size:11px;color:#94A3B8;line-height:1.9">
+              1. Consumer fetched offsets 847,050–847,195<br>
+              2. Each order: DynamoDB upsert keyed on order_id<br>
+              3. <span style="color:#F59E0B">Crashes at record 847,100</span><br>
+              4. Restart: reads from committed offset 847,050<br>
+              5. Re-upserts 847,050–847,100: DynamoDB sees same key<br>
+              <span style="color:#10B981">→ Silent overwrite with identical data. Safe.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Commit code -->
+      <div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:14px">How fulfillment-group commits offsets in production</div>
+        <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:18px 22px">
+          <code style="display:block;background:#0A0E1A;padding:14px;border-radius:8px;font-size:11px;color:#94A3B8;line-height:1.9;white-space:pre">enable.auto.commit = false
+max.poll.records    = 100     // 100 orders per poll at most
+
+while (running) {
+  records = consumer.poll(Duration.ofMillis(500))
+  for (record : records) {
+    fulfillmentDB.upsert(record)   // idempotent DynamoDB write per order
+  }
+  consumer.commitAsync()           // non-blocking; fast path
+}
+// On shutdown:
+consumer.commitSync()              // flush final offsets before exit</code>
+          <div style="margin-top:12px;font-size:12px;color:#94A3B8;line-height:1.7">At 20,000 orders/sec across 6 partitions each consumer processes ~3,333 orders/sec. With max.poll.records=100, commitAsync fires ~33× per second per consumer. The committed offset always trails the DynamoDB write — so a crash always reprocesses at most 100 orders, all of which are safe idempotent upserts.</div>
+        </div>
+      </div>
+
+      <!-- Replay scenario -->
+      <div style="background:#3B82F612;border:1.5px solid #3B82F633;border-radius:12px;padding:18px 22px">
+        <div style="font-size:13px;font-weight:700;color:#3B82F6;margin-bottom:10px">Midnight reconciliation — replaying 24 hours of orders from Kafka</div>
+        <div style="font-size:12px;color:#94A3B8;line-height:1.7">
+          Every night, Amazon's reconciliation job re-verifies all orders from the past 24 hours against the payment gateway. Instead of joining database tables, it replays directly from Kafka:<br><br>
+          <code style="display:block;background:#0A0E1A;padding:8px 12px;border-radius:5px;font-size:11px;color:#3B82F6;margin:8px 0">kafka-consumer-groups.sh --reset-offsets --group reconciliation-group --topic orders --to-datetime 2024-12-01T00:00:00.000 --execute</code>
+          The reconciliation-group's offset resets to midnight. It batch-reads ~1.2M orders in ~60 seconds. Fulfillment, fraud, and notification groups are completely unaffected — each group has its own independent offset pointer into the same log.
+        </div>
+      </div>
+
     </div>`;
 }

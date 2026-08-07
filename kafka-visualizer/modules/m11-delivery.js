@@ -16,6 +16,7 @@ export function mount(container) {
       { id: 'lanes',  label: '🛡️ 3-Lane Comparison' },
       { id: 'eos',    label: '⚛️ EOS Deep Dive' },
       { id: 'zombie', label: '🧟 Zombie Fencing' },
+      { id: 'amazon', label: '📦 Amazon Delivery' },
       { id: 'iq',     label: '🎯 Interview Q&A' },
     ]
   });
@@ -23,6 +24,7 @@ export function mount(container) {
   let cleanup = buildLanes(container);
   buildEOS(container);
   buildZombie(container);
+  buildAmazon(container);
   container.querySelector('#tab-iq').innerHTML = createIQSection(IQ);
   return cleanup;
 }
@@ -183,19 +185,21 @@ function buildEOS(container) {
         <!-- Flow -->
         <text x="30" y="195" fill="#94A3B8" font-size="11" font-weight="700">Transaction Flow</text>
 
-        ${[
-          '1. producer.initTransactions() — register with coordinator',
-          '2. producer.beginTransaction()',
-          '3. producer.send(output-topic, transformed-record)',
-          '4. producer.sendOffsetsToTransaction(offsets, consumer-group)',
-          '5. producer.commitTransaction() — coordinator writes COMMIT marker',
-          '6. Consumer sees COMMIT marker → includes records in its view',
-        ].map((step, i) => `
+        ${
+          [
+            '1. producer.initTransactions() — register with coordinator',
+            '2. producer.beginTransaction()',
+            '3. producer.send(output-topic, transformed-record)',
+            '4. producer.sendOffsetsToTransaction(offsets, consumer-group)',
+            '5. producer.commitTransaction() — coordinator writes COMMIT marker',
+            '6. Consumer sees COMMIT marker → includes records in its view',
+          ].map((step, i) => `
           <rect x="30" y="${210 + i*28}" width="740" height="22" rx="5"
             fill="${i===4||i===5 ? '#10B98111' : '#1E293B'}"
             stroke="${i===4||i===5 ? '#10B981' : '#334155'}" stroke-width="1"/>
           <text x="44" y="${225 + i*28}" fill="${i===4||i===5 ? '#10B981' : '#94A3B8'}" font-size="10">${step}</text>
-        `).join('')}
+        `).join('')
+        }
 
         <text x="30" y="392" fill="#F59E0B" font-size="10">⚠️ On crash: coordinator aborts after transaction.timeout.ms (default 1min). Consumers never see partial results.</text>
       </svg>
@@ -328,5 +332,105 @@ function buildZombie(container) {
         <h3>Amazon payments use case</h3>
         <p>The Amazon payment processor sets <code>transactional.id = "payment-proc-" + region</code>. On rolling deploy, the new pod calls <code>initTransactions()</code> first — bumping epoch — before the old pod is terminated. This guarantees zero duplicate charges even during deployments where both old and new instances briefly overlap.</p>
       </div>
+    </div>`;
+}
+
+function buildAmazon(container) {
+  const tab = container.querySelector('#tab-amazon');
+  tab.innerHTML = `
+    <div class="scroll-content" style="max-width:920px;margin:0 auto">
+
+      <!-- Hero -->
+      <div style="background:#111827;border:1px solid #FF6900;border-radius:14px;padding:20px 24px;margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748B;margin-bottom:8px">Delivery semantics in practice</div>
+        <div style="font-size:18px;font-weight:800;color:#F1F5F9;margin-bottom:4px">Amazon chose a different delivery guarantee for every pipeline — here's why</div>
+        <div style="font-size:13px;color:#94A3B8">At-most-once, at-least-once, and exactly-once aren't interchangeable. The wrong choice either loses data or causes double-charges. Each pipeline's tolerance for loss vs. duplicates drives the decision.</div>
+      </div>
+
+      <!-- Decision table -->
+      <div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:14px">Which guarantee — and what breaks with the wrong choice</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          ${
+            [
+              {
+                topic:'payment-confirmations',
+                guarantee:'Exactly-Once (EOS)',
+                color:'#10B981',
+                why:'Loss = charge with no order record (customer charged, item never shipped). Duplicate = double charge. Neither is acceptable. EOS via transactional.id + acks=all + isolation.level=read_committed is the only correct choice.',
+                wrong:'at-least-once: producer retries after network drop → duplicate payment event → Fraud Detection locks account or customer charged twice for iPhone 15 Pro.',
+              },
+              {
+                topic:'orders',
+                guarantee:'At-Least-Once + idempotent sink',
+                color:'#3B82F6',
+                why:'Loss = customer paid but warehouse never notified (catastrophic). Duplicate = safe if Fulfillment DB uses order_id as PK (upsert is harmless). At-least-once + DynamoDB upsert gives effectively-EOS semantics without Kafka transaction overhead.',
+                wrong:'at-most-once: consumer crashes after committing offset but before DynamoDB write → order silently lost → customer waits for a package that will never ship.',
+              },
+              {
+                topic:'clickstream / recommendations',
+                guarantee:'At-Most-Once',
+                color:'#8B5CF6',
+                why:'Losing 0.01% of clicks is statistically invisible to the ML model. Duplicates, however, artificially inflate click-through rates — poisoning recommendations. A retry storm after a broker restart could duplicate 5M click events, making irrelevant products appear to trend.',
+                wrong:'at-least-once: retry after crash → duplicated click events → recommendation model thinks Product X is trending → users see irrelevant ads for hours.',
+              },
+              {
+                topic:'inventory-updates',
+                guarantee:'At-Least-Once + upsert',
+                color:'#F59E0B',
+                why:'"stock=500" written twice to DynamoDB via SET is idempotent — same result either way. "stock=500" lost once means the system shows 0 units when 500 are in the warehouse — orders blocked on Prime Day. Loss is worse than duplication here.',
+                wrong:'at-most-once: warehouse scans 500 units received, event lost → system still shows out-of-stock → iPhone 15 Pro disappears from the store despite being in-warehouse.',
+              },
+              {
+                topic:'notifications (email/SMS)',
+                guarantee:'At-Least-Once + notification_id dedup',
+                color:'#F59E0B',
+                why:'"Order shipped" not sent = customer calls support. "Order shipped" sent twice = minor annoyance. At-least-once ensures delivery. A notification_id (hash of order_id + event_type) stored in DynamoDB deduplicates: if already sent, skip.',
+                wrong:'at-most-once: Notifications consumer crashes after offset commit but before sending email → customer receives no "shipped" notification → support ticket volume spikes during Prime Day.',
+              },
+            ].map(r => `
+            <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:16px 20px">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+                <code style="font-size:11px;color:#FF6900;background:#0A0E1A;padding:3px 8px;border-radius:4px">${r.topic}</code>
+                <span style="background:${r.color}22;color:${r.color};padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700">${r.guarantee}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:11px">
+                <div style="background:#0A0E1A;border-radius:8px;padding:10px 14px">
+                  <div style="font-size:10px;font-weight:700;color:${r.color};margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Why this guarantee</div>
+                  <div style="color:#94A3B8;line-height:1.65">${r.why}</div>
+                </div>
+                <div style="background:#EF444408;border:1px solid #EF444422;border-radius:8px;padding:10px 14px">
+                  <div style="font-size:10px;font-weight:700;color:#EF4444;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Wrong choice → what breaks</div>
+                  <div style="color:#94A3B8;line-height:1.65">${r.wrong}</div>
+                </div>
+              </div>
+            </div>`).join('')
+          }
+        </div>
+      </div>
+
+      <!-- EOS cost -->
+      <div style="background:#10B98112;border:1.5px solid #10B98133;border-radius:12px;padding:18px 22px">
+        <div style="font-size:13px;font-weight:700;color:#10B981;margin-bottom:12px">Why Amazon doesn't use EOS for everything — the real cost</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:12px">
+          <div>
+            <div style="color:#EF4444;font-weight:600;margin-bottom:8px">EOS overhead vs at-least-once</div>
+            <div style="color:#94A3B8;line-height:1.75">
+              • 2 extra broker RPCs per transaction (begin + commit)<br>
+              • ~5ms added latency per commit (two-phase commit to coordinator)<br>
+              • Consumers need isolation.level=read_committed — ~5% throughput penalty scanning transaction markers<br>
+              • Each pod needs a unique transactional.id — complex in auto-scaled Kubernetes deployments
+            </div>
+          </div>
+          <div>
+            <div style="color:#10B981;font-weight:600;margin-bottom:8px">Amazon's rule of thumb</div>
+            <div style="color:#94A3B8;line-height:1.75">
+              Use EOS only when <em>both</em> loss and duplicates cause unacceptable business outcomes and the sink can't deduplicate externally.<br><br>
+              At Amazon's scale (&gt;1M msgs/sec), 5ms per transaction × payment volume = real latency budget. At-least-once + idempotent sink is simpler, faster, cheaper — and just as correct for most pipelines.
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>`;
 }

@@ -15,12 +15,14 @@ export function mount(container) {
     tabs: [
       { id: 'assign',    label: '👥 Assignment Demo' },
       { id: 'rebalance', label: '⚡ Rebalance Types' },
+      { id: 'amazon',    label: '📦 Amazon Groups' },
       { id: 'iq',        label: '🎯 Interview Q&A' },
     ]
   });
 
   let cleanup = buildAssign(container);
   buildRebalance(container);
+  buildAmazon(container);
   container.querySelector('#tab-iq').innerHTML = createIQSection(IQ);
   return cleanup;
 }
@@ -188,4 +190,100 @@ function buildRebalance(container) {
       <p>On Prime Day, the fulfillment consumer group has 200 consumers across 1000 partitions. An auto-scaler adds 50 consumers to handle the spike. With the eager protocol, all 200 existing consumers pause for up to 30 seconds during reassignment — 30,000 orders in limbo.</p>
       <p>With CooperativeStickyAssignor: only the ~250 partitions that need to migrate (from old consumers to the 50 new ones) are briefly paused. The remaining 750 partitions continue processing uninterrupted.</p>
     </div></div>`;
+}
+
+function buildAmazon(container) {
+  const tab = container.querySelector('#tab-amazon');
+  tab.innerHTML = `
+    <div class="scroll-content" style="max-width:920px;margin:0 auto">
+
+      <!-- Hero -->
+      <div style="background:#111827;border:1px solid #FF6900;border-radius:14px;padding:20px 24px;margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748B;margin-bottom:8px">Consumer group design</div>
+        <div style="font-size:18px;font-weight:800;color:#F1F5F9;margin-bottom:4px">Amazon runs 4 consumer groups on the orders topic — each with different rules</div>
+        <div style="font-size:13px;color:#94A3B8">Same 6 partitions. Same records. Four completely independent consumer groups — each reading at its own speed with its own lag SLA, consumer count, and failure budget.</div>
+      </div>
+
+      <!-- 4 consumer groups table -->
+      <div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:14px">The 4 groups on orders-topic (6 partitions)</div>
+        <div style="overflow-x:auto;border-radius:10px;border:1px solid #1E293B">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:720px">
+            <thead><tr style="background:#0F172A;border-bottom:1px solid #1E293B">
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Group</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Consumers</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Lag SLA</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Why This Count</th>
+            </tr></thead>
+            <tbody>
+              ${
+                [
+                  ['fulfillment-group',     '6 of 6', '<2s',     '#10B981', 'Matches partition count exactly — maximum parallelism. Each consumer owns 1 partition. Orders must reach warehouse ASAP.'],
+                  ['fraud-detection-group', '3 of 6', '<5s',     '#3B82F6', '3 consumers, 2 partitions each. Fraud model runs ~200ms per order — 3 consumers keep up comfortably. Adding more wastes CPU.'],
+                  ['notifications-group',   '2 of 6', '<30s',    '#8B5CF6', 'Email/SMS sends are slow (external API calls). 2 consumers with async HTTP handle the rate. 30s lag SLA — email delay is acceptable.'],
+                  ['analytics-group',       '1 of 6', '<1 hour', '#F59E0B', 'Batch reads into S3/Redshift. 1 consumer reads all 6 partitions sequentially. Throughput matters, not latency. Adding more consumers wastes resources.'],
+                ].map(([g,c,sla,color,why]) => `
+                <tr style="border-bottom:1px solid #0F172A">
+                  <td style="padding:10px 14px;color:${color};font-family:monospace;font-size:11px">${g}</td>
+                  <td style="padding:10px 14px;color:#F1F5F9;font-weight:600;text-align:center">${c}</td>
+                  <td style="padding:10px 14px;color:${color};font-weight:600">${sla}</td>
+                  <td style="padding:10px 14px;color:#94A3B8;font-size:11px;line-height:1.55">${why}</td>
+                </tr>`).join('')
+              }
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:10px;padding:10px 14px;background:#111827;border-radius:8px;font-size:12px;color:#94A3B8;line-height:1.7">
+          <strong style="color:#F59E0B">The idle consumer rule:</strong> analytics-group has 1 consumer for 6 partitions — all 6 assigned to it. Adding a 2nd analytics consumer would leave it permanently idle (partitions can't be split). Consumers &gt; partitions = wasted resources. This is why partition count is chosen to match <em>maximum future consumer parallelism</em>, not current need.
+        </div>
+      </div>
+
+      <!-- Rebalance cost -->
+      <div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:14px">Prime Day auto-scale — why rebalance protocol matters</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div style="background:#EF444412;border:1.5px solid #EF444444;border-radius:12px;padding:16px 20px">
+            <div style="font-size:12px;font-weight:700;color:#EF4444;margin-bottom:8px">Eager rebalance (stop-the-world)</div>
+            <div style="font-size:12px;color:#94A3B8;line-height:1.75">
+              2:00 PM Prime Day: auto-scaler adds 3 consumers to fulfillment-group (3 → 6).<br><br>
+              <strong style="color:#EF4444">All 3 existing consumers pause</strong> for the full rebalance (~8 seconds). At 20,000 orders/sec:<br>
+              <span style="color:#EF4444">~160,000 orders queued</span> in producer accumulator. Lag spikes. Fulfillment SLA breached.
+            </div>
+          </div>
+          <div style="background:#10B98112;border:1.5px solid #10B98133;border-radius:12px;padding:16px 20px">
+            <div style="font-size:12px;font-weight:700;color:#10B981;margin-bottom:8px">Cooperative rebalance (Amazon's choice)</div>
+            <div style="font-size:12px;color:#94A3B8;line-height:1.75">
+              Same event: 3 consumers added to fulfillment-group (3 → 6).<br><br>
+              3 of the 6 partitions migrate to the 3 new consumers. Only those 3 partitions briefly pause — the other 3 continue uninterrupted. <strong style="color:#10B981">~80,000 orders unaffected</strong>.<br>
+              <code style="color:#10B981">CooperativeStickyAssignor</code>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Consumer crash timeline -->
+      <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:18px 22px">
+        <div style="font-size:13px;font-weight:700;color:#F1F5F9;margin-bottom:14px">When a fulfillment consumer crashes — what Kafka does</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${
+            [
+              { t:'T+0s',   color:'#EF4444', e:'Consumer C3 process dies (OOM kill)',       d:'C3 owned orders-P2. It had committed up to offset 847,050 but had fetched up to 847,195 — 145 orders in-flight.' },
+              { t:'T+45s',  color:'#F59E0B', e:'session.timeout.ms fires',                  d:'No heartbeat from C3 for 45 seconds. Group coordinator (a broker) declares C3 dead and initiates a cooperative rebalance.' },
+              { t:'T+53s',  color:'#3B82F6', e:'Rebalance completes — P2 moves to C4',     d:'C4 takes ownership of orders-P2. It resumes from committed offset 847,050 — reprocessing the 145 orders C3 had fetched but not committed.' },
+              { t:'T+53s',  color:'#10B981', e:'Fulfillment resumes — 145 orders reprocessed', d:'Each reprocessed order is an idempotent upsert to the fulfillment DB (order_id primary key). No duplicate dispatches — same data, same key, DynamoDB silently overwrites.' },
+            ].map((e,i) => `
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="flex-shrink:0;min-width:60px;padding-top:12px;text-align:right">
+                <span style="font-size:10px;font-weight:700;color:${e.color};font-family:monospace">${e.t}</span>
+              </div>
+              <div style="flex:1;background:#0A0E1A;border-radius:8px;padding:10px 14px">
+                <div style="font-size:12px;font-weight:700;color:${e.color};margin-bottom:3px">${e.e}</div>
+                <div style="font-size:11px;color:#94A3B8;line-height:1.6">${e.d}</div>
+              </div>
+            </div>`).join('')
+          }
+        </div>
+      </div>
+
+    </div>`;
 }
