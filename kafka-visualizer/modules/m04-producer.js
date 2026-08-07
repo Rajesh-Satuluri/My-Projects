@@ -11,16 +11,18 @@ export function mount(container) {
   container.innerHTML = createModuleShell({
     tag: 'M04 · Core Internals',
     title: 'Producer Deep Dive',
-    subtitle: 'Serializer → Partitioner → Accumulator → Sender — the full producer pipeline animated',
+    subtitle: 'Serializer → Partitioner → Accumulator → Sender — traced through Amazon\'s Order Service',
     tabs: [
       { id: 'pipeline', label: '⚡ Pipeline Animation' },
       { id: 'config',   label: '⚙️ Key Configs' },
+      { id: 'amazon',   label: '📦 Amazon Story' },
       { id: 'iq',       label: '🎯 Interview Q&A' },
     ]
   });
 
   let cleanup = buildPipeline(container);
   buildConfig(container);
+  buildAmazon(container);
   container.querySelector('#tab-iq').innerHTML = createIQSection(IQ);
   return cleanup;
 }
@@ -152,6 +154,99 @@ function buildPipeline(container) {
   });
 
   return () => { if (raf) cancelAnimationFrame(raf); };
+}
+
+function buildAmazon(container) {
+  const tab = container.querySelector('#tab-amazon');
+  tab.innerHTML = `
+    <div class="scroll-content" style="max-width:920px;margin:0 auto">
+
+      <!-- Hero card -->
+      <div style="background:#111827;border:1px solid #FF6900;border-radius:14px;padding:20px 24px;margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748B;margin-bottom:8px">The producer in action</div>
+        <div style="font-size:18px;font-weight:800;color:#F1F5F9;margin-bottom:4px">You click Buy Now on iPhone 15 Pro — $999</div>
+        <div style="font-size:13px;color:#94A3B8">Here is exactly what the Order Service (a Kafka producer) does in the next 11 milliseconds.</div>
+      </div>
+
+      <!-- Timeline -->
+      <div style="margin-bottom:32px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:14px">Producer timeline — 11ms from click to "Order Confirmed"</div>
+        ${
+          [
+            { ms:'0ms',   color:'#3B82F6', stage:'Your click',        desc:'Browser sends POST /orders to Order Service. The handler creates a Java OrderEvent object: {orderId:"AMZ-24601", product:"iPhone 15 Pro", price:999, userId:"U-00123", warehouseId:"SEA-2"}' },
+            { ms:'2ms',   color:'#8B5CF6', stage:'Serializer',        desc:'Avro schema converts the OrderEvent object to 148 bytes of binary. The key "U-00123" is serialized separately to 7 bytes. No JSON overhead — Avro is 5× smaller than equivalent JSON.' },
+            { ms:'2.5ms', color:'#F59E0B', stage:'Partitioner',       desc:'murmur2("U-00123") % 3 = 0 → Partition 0. All U-00123\'s orders always land here — guaranteeing Fulfillment processes Order #1 before Order #2.' },
+            { ms:'2.6ms', color:'#FF6900', stage:'Accumulator',       desc:'Record queued in the Batch P0 deque in memory. Prime Day rate: 47 order events per batch at linger.ms=5. The producer doesn\'t send yet — it waits for the batch to fill.' },
+            { ms:'7.6ms', color:'#FF6900', stage:'linger.ms fires',   desc:'5ms elapsed. Sender thread wakes up, compresses the batch with LZ4 (148B × 47 orders → 892B compressed = 5.7× ratio), and sends one TCP segment to Broker 1.' },
+            { ms:'9ms',   color:'#10B981', stage:'Broker ack (ISR)',  desc:'Broker 1 writes to its log and replicates to Brokers 2 & 3. With acks=all, Order Service gets confirmation only after all 3 are written. Your order is durable on 3 machines.' },
+            { ms:'11ms',  color:'#10B981', stage:'"Order Confirmed"', desc:'"Order Confirmed" renders in your browser. The Order Service returned HTTP 200. Fulfillment, Fraud Detection, and Notifications have already started reading offset 847,231.' },
+          ].map((t,i) => `
+          <div style="display:flex;gap:14px;margin-bottom:10px">
+            <div style="flex-shrink:0;text-align:right;min-width:48px;padding-top:12px">
+              <span style="font-size:10px;font-weight:700;color:${t.color};font-family:monospace">${t.ms}</span>
+            </div>
+            <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center">
+              <div style="width:12px;height:12px;border-radius:50%;background:${t.color};margin-top:14px;flex-shrink:0"></div>
+              ${i < 6 ? `<div style="width:2px;flex:1;background:${t.color}33;min-height:20px"></div>` : ''}
+            </div>
+            <div style="flex:1;background:#111827;border:1px solid #1E293B;border-radius:10px;padding:12px 16px">
+              <div style="font-size:12px;font-weight:700;color:${t.color};margin-bottom:4px">${t.stage}</div>
+              <div style="font-size:12px;color:#94A3B8;line-height:1.65">${t.desc}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <!-- Config explained in plain English -->
+      <div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:14px">Why Amazon chose these producer settings — in plain English</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          ${
+            [
+              { key:'acks = all',              color:'#FF6900', plain:'Every order must be written to 3 brokers before "Order Confirmed" is shown. If the network drops at 8ms, the Order Service retries — the customer never sees a failed payment followed by a missing order.' },
+              { key:'enable.idempotence = true', color:'#8B5CF6', plain:'The producer assigns a unique sequence number to each record. If Order Service crashes after sending but before receiving the ack, it retries — but the broker recognises the duplicate sequence and silently drops the second copy. The customer\'s order is never double-created.' },
+              { key:'linger.ms = 5',           color:'#F59E0B', plain:'Instead of sending each order event individually (47 network round-trips), the producer batches all orders that arrive within 5ms into one TCP segment. At Prime Day rates of 14,000 orders/min, this cuts network calls by 47× and improves compression.' },
+              { key:'compression.type = lz4',  color:'#3B82F6', plain:'Order events are repetitive JSON-like structures (same field names, similar values). LZ4 compresses them ~5:1. The broker stores and replicates compressed data, so 1GB of orders takes only ~200MB of disk and network. LZ4 decompresses in microseconds — no latency penalty.' },
+              { key:'max.in.flight = 5 (idempotent)', color:'#10B981', plain:'With idempotence enabled, up to 5 batches can be in-flight to the broker simultaneously — the broker\'s sequence tracking prevents any reordering. Without idempotence, Amazon sets this to 1 for topics where ordering is critical (payments).' },
+            ].map(c => `
+            <div style="background:#111827;border:1px solid #1E293B;border-radius:10px;padding:14px 18px;display:flex;gap:14px">
+              <div style="flex-shrink:0;min-width:220px">
+                <code style="font-size:11px;color:${c.color};background:#0A0E1A;padding:4px 8px;border-radius:5px;font-weight:700">${c.key}</code>
+              </div>
+              <div style="font-size:12px;color:#94A3B8;line-height:1.65">${c.plain}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Idempotence failure scenario -->
+      <div style="background:#8B5CF612;border:1.5px solid #8B5CF644;border-radius:12px;padding:18px 22px">
+        <div style="font-size:13px;font-weight:700;color:#8B5CF6;margin-bottom:12px">The idempotent producer — what happens when a retry would double-charge you</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:12px">
+          <div>
+            <div style="color:#EF4444;font-weight:600;margin-bottom:8px">Without idempotence (dangerous)</div>
+            <div style="background:#0A0E1A;border-radius:8px;padding:12px;color:#94A3B8;line-height:1.8;font-size:11px">
+              1. Order Service sends order for iPhone 15 Pro<br>
+              2. Broker writes it at offset 847,231 ✓<br>
+              3. Network drops — ack never reaches producer<br>
+              4. Producer retries — sends the same order again<br>
+              5. Broker writes it <span style="color:#EF4444">again</span> at offset 847,232<br>
+              <span style="color:#EF4444">→ Customer charged twice, two iPhones shipped</span>
+            </div>
+          </div>
+          <div>
+            <div style="color:#10B981;font-weight:600;margin-bottom:8px">With idempotence (safe)</div>
+            <div style="background:#0A0E1A;border-radius:8px;padding:12px;color:#94A3B8;line-height:1.8;font-size:11px">
+              1. Producer sends order with PID=42, seq=7<br>
+              2. Broker writes it at offset 847,231 ✓<br>
+              3. Network drops — ack never reaches producer<br>
+              4. Producer retries — same PID=42, seq=7<br>
+              5. Broker sees seq=7 already written → <span style="color:#10B981">drops silently</span><br>
+              <span style="color:#10B981">→ Exactly one order, exactly one charge</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>`;
 }
 
 function buildConfig(container) {

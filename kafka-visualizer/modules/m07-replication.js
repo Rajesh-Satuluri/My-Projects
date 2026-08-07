@@ -11,16 +11,18 @@ export function mount(container) {
   container.innerHTML = createModuleShell({
     tag: 'M07 · Core Internals',
     title: 'Replication',
-    subtitle: 'Leader/follower replication, ISR, and what happens when a broker dies — kill-broker simulation',
+    subtitle: 'Leader/follower replication, ISR, and what happens when a Prime Day broker dies',
     tabs: [
-      { id: 'sim',  label: '💀 Kill-Broker Simulation' },
-      { id: 'flow', label: '🔄 Replication Flow' },
-      { id: 'iq',   label: '🎯 Interview Q&A' },
+      { id: 'sim',    label: '💀 Kill-Broker Simulation' },
+      { id: 'flow',   label: '🔄 Replication Flow' },
+      { id: 'amazon', label: '📦 Amazon Durability' },
+      { id: 'iq',     label: '🎯 Interview Q&A' },
     ]
   });
 
   let cleanup = buildSim(container);
   buildFlow(container);
+  buildAmazon(container);
   container.querySelector('#tab-iq').innerHTML = createIQSection(IQ);
   return cleanup;
 }
@@ -57,7 +59,7 @@ function buildSim(container) {
   const rings = [];
   const packets = [];
 
-  let phase = 'normal'; // 'normal' | 'killing' | 'recovery' | 'stable'
+  let phase = 'normal';
   let phaseTimer = 0;
   let raf = null;
   let lastT = 0;
@@ -177,6 +179,89 @@ function buildSim(container) {
   });
 
   return () => { if (raf) cancelAnimationFrame(raf); };
+}
+
+function buildAmazon(container) {
+  const tab = container.querySelector('#tab-amazon');
+  tab.innerHTML = `
+    <div class="scroll-content" style="max-width:920px;margin:0 auto">
+
+      <!-- Hero -->
+      <div style="background:#111827;border:1px solid #FF6900;border-radius:14px;padding:20px 24px;margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748B;margin-bottom:8px">Durability under fire</div>
+        <div style="font-size:18px;font-weight:800;color:#F1F5F9;margin-bottom:4px">Prime Day, 2:17 PM PST — Broker 1 dies mid-traffic</div>
+        <div style="font-size:13px;color:#94A3B8">1.2 million orders per hour. 20,000 events/sec on <code style="background:#0A0E1A;color:#FF6900;padding:1px 5px;border-radius:3px">orders-P0</code>. Broker 1 (the leader) has a hardware failure. Here is exactly what Kafka does — and why zero orders are lost.</div>
+      </div>
+
+      <!-- Config choices first -->
+      <div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:14px">Amazon's durability settings — and why each one</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          ${
+            [
+              { key:'replication.factor = 3',      color:'#3B82F6', why:'3 copies of every order event on 3 different physical machines in 3 different racks. Two brokers can fail simultaneously before any data is at risk.' },
+              { key:'min.insync.replicas = 2',      color:'#F59E0B', why:'A write is only accepted if at least 2 brokers are in the ISR. If Broker 2 is lagging (GC pause) and falls out of ISR, Amazon still writes — but only 2 brokers confirm instead of 3. If only 1 is left, writes block entirely.' },
+              { key:'acks = all',                   color:'#FF6900', why:'Order Service waits for all ISR members to write before returning "Order Confirmed". Slowest but safest: you know your order is durable on N machines before you see the confirmation.' },
+              { key:'unclean.leader.election = false', color:'#EF4444', why:'If all ISR members die, Kafka will NOT promote a lagging follower that missed some orders. The partition goes offline rather than losing committed orders. For payments and orders, data loss is worse than downtime.' },
+              { key:'replica.lag.time.max.ms = 30000', color:'#10B981', why:'A follower is removed from ISR only if it hasn\'t sent a fetch request in 30 seconds. Short GC pauses (<30s) don\'t shrink the ISR — no false alarms, no unnecessary durability warnings.' },
+            ].map(c => `
+            <div style="background:#111827;border:1px solid #1E293B;border-radius:10px;padding:14px 18px;display:flex;gap:14px">
+              <div style="flex-shrink:0;min-width:260px">
+                <code style="font-size:11px;color:${c.color};background:#0A0E1A;padding:4px 8px;border-radius:5px;font-weight:700">${c.key}</code>
+              </div>
+              <div style="font-size:12px;color:#94A3B8;line-height:1.65">${c.why}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Prime Day failure timeline -->
+      <div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:14px">The failure timeline — second by second</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${
+            [
+              { t:'2:17:00.000', color:'#EF4444', icon:'💀', event:'Broker 1 hardware failure',         detail:'NVMe controller failure. Broker 1 process dies instantly. 20,000 orders/sec were in-flight.' },
+              { t:'2:17:00.001', color:'#EF4444', icon:'⚠️', event:'Producers get errors',               detail:'Order Service producers receive NotLeaderForPartitionException. retries kick in immediately — orders are queued in the producer accumulator, not dropped.' },
+              { t:'2:17:00.001', color:'#F59E0B', icon:'⏱️', event:'Consumers pause at HWM',             detail:'Fulfillment, Fraud, Notifications consumers pause reads at the last High-Water Mark (offset 847,231). They wait for a new leader to be established — no processing, no data access.' },
+              { t:'2:17:08.200', color:'#3B82F6', icon:'⚡', event:'KRaft controller elects new leader',  detail:'8.2 seconds after failure, KRaft detects missed heartbeats. Broker 2 is chosen (highest committed offset in ISR). Leader metadata propagated to all producers and consumers.' },
+              { t:'2:17:08.400', color:'#10B981', icon:'✅', event:'Producers resume writing',            detail:'Order Service producers redirect to Broker 2. Queued orders from the 8.2-second window flush — first order at offset 847,232, no gap in the log.' },
+              { t:'2:17:08.500', color:'#10B981', icon:'✅', event:'Consumers resume reading',            detail:'Fulfillment picks up at offset 847,232. The 8.2-second pause means ~166 orders were delayed in processing but none were lost or skipped.' },
+              { t:'2:17:08.600', color:'#F59E0B', icon:'📊', event:'UnderReplicatedPartitions = 1',      detail:'Monitoring alerts fire. orders-P0 has only ISR={B2,B3}. One more broker failure = single point of durability. Engineers notified but do not intervene — Kafka handles it.' },
+              { t:'2:47:10.000', color:'#10B981', icon:'🔄', event:'Broker 1 restored',                  detail:'30 minutes later, new hardware is swapped in. Broker 1 rejoins as follower, fetches 600,000 missed order records from Broker 2 in 90 seconds.' },
+              { t:'2:48:40.000', color:'#10B981', icon:'✅', event:'ISR = {B1, B2, B3} restored',        detail:'Broker 1 is fully caught up. UnderReplicatedPartitions drops to 0. RF=3 fully restored. 0 orders lost. 0 data inconsistencies.' },
+            ].map((e,i) => `
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="flex-shrink:0;min-width:96px;text-align:right;padding-top:13px">
+                <span style="font-size:9px;font-weight:700;color:#475569;font-family:monospace">${e.t}</span>
+              </div>
+              <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center">
+                <div style="width:10px;height:10px;border-radius:50%;background:${e.color};margin-top:15px;flex-shrink:0"></div>
+                ${i < 8 ? `<div style="width:1.5px;flex:1;background:${e.color}33;min-height:14px"></div>` : ''}
+              </div>
+              <div style="flex:1;background:#111827;border:1px solid #1E293B;border-radius:10px;padding:10px 14px;margin-bottom:2px">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                  <span>${e.icon}</span>
+                  <span style="font-size:12px;font-weight:700;color:${e.color}">${e.event}</span>
+                </div>
+                <div style="font-size:12px;color:#94A3B8;line-height:1.6">${e.detail}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Unclean election contrast -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="background:#EF444412;border:1.5px solid #EF444444;border-radius:12px;padding:16px 20px">
+          <div style="font-size:12px;font-weight:700;color:#EF4444;margin-bottom:8px">If unclean election were enabled (never for orders)</div>
+          <div style="font-size:12px;color:#94A3B8;line-height:1.7">Both Broker 1 and Broker 2 die. Broker 3 is 2,000 offsets behind (hasn't replicated the last 2 seconds of orders). Unclean election promotes Broker 3 anyway. The 2,000 missing orders are <strong style="color:#EF4444">permanently lost</strong>. 2,000 customers whose orders were "confirmed" by the UI have no orders in any downstream system.</div>
+        </div>
+        <div style="background:#10B98112;border:1.5px solid #10B98133;border-radius:12px;padding:16px 20px">
+          <div style="font-size:12px;font-weight:700;color:#10B981;margin-bottom:8px">With unclean election disabled (Amazon's choice)</div>
+          <div style="font-size:12px;color:#94A3B8;line-height:1.7">Both Broker 1 and 2 die. Broker 3 is 2,000 offsets behind. orders-P0 goes <strong style="color:#F1F5F9">offline</strong>. Producers get errors, Order Service returns HTTP 503. The website shows "temporarily unavailable." When Broker 1 or 2 comes back, all 2,000 orders are there. <strong style="color:#10B981">Downtime is recoverable. Data loss is not.</strong></div>
+        </div>
+      </div>
+
+    </div>`;
 }
 
 function buildFlow(container) {

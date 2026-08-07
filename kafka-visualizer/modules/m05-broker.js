@@ -11,16 +11,18 @@ export function mount(container) {
   container.innerHTML = createModuleShell({
     tag: 'M05 · Core Internals',
     title: 'Broker Internals',
-    subtitle: 'Log segments, page cache, index files, zero-copy I/O — inside the Kafka broker',
+    subtitle: 'Log segments, page cache, zero-copy I/O — explained through Amazon\'s orders broker',
     tabs: [
-      { id: 'segments', label: '📁 Log Segments' },
+      { id: 'segments',  label: '📁 Log Segments' },
       { id: 'pagecache', label: '🧠 Page Cache' },
-      { id: 'iq',       label: '🎯 Interview Q&A' },
+      { id: 'amazon',    label: '📦 Amazon Broker' },
+      { id: 'iq',        label: '🎯 Interview Q&A' },
     ]
   });
 
   let cleanup = buildSegments(container);
   buildPageCache(container);
+  buildAmazon(container);
   container.querySelector('#tab-iq').innerHTML = createIQSection(IQ);
   return cleanup;
 }
@@ -119,6 +121,85 @@ function buildSegments(container) {
   });
 
   return () => { if (raf) cancelAnimationFrame(raf); };
+}
+
+function buildAmazon(container) {
+  const tab = container.querySelector('#tab-amazon');
+  tab.innerHTML = `
+    <div class="scroll-content" style="max-width:920px;margin:0 auto">
+
+      <!-- Hero -->
+      <div style="background:#111827;border:1px solid #FF6900;border-radius:14px;padding:20px 24px;margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748B;margin-bottom:8px">Inside Broker 1</div>
+        <div style="font-size:18px;font-weight:800;color:#F1F5F9;margin-bottom:4px">What's actually on disk when your order hits Kafka</div>
+        <div style="font-size:13px;color:#94A3B8">Broker 1 is the leader for <code style="background:#0A0E1A;color:#FF6900;padding:1px 5px;border-radius:3px">orders-P0</code>. Every Buy Now from US-West customers lands here. Here's what the broker does with your order event.</div>
+      </div>
+
+      <!-- Physical disk layout -->
+      <div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:14px">What's on disk — /var/kafka/orders-0/</div>
+        <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:18px 22px">
+          <div style="font-family:monospace;font-size:12px;color:#94A3B8;line-height:2">
+            <div style="color:#475569;margin-bottom:8px"># Sealed segments (immutable, eligible for retention cleanup after 7 days)</div>
+            <div><span style="color:#3B82F6">00000000000000000000.log</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#475569">1.0 GB</span>&nbsp;&nbsp;&nbsp;<span style="color:#64748B">offsets 0 – 11,999,999 &nbsp; (first 12M orders ever)</span></div>
+            <div><span style="color:#3B82F6">00000000000000000000.index</span>&nbsp;&nbsp;<span style="color:#475569">2.1 MB</span>&nbsp;&nbsp;&nbsp;<span style="color:#64748B">sparse offset→byte map, one entry per ~4KB</span></div>
+            <div><span style="color:#3B82F6">00000000000000000000.timeindex</span>&nbsp;<span style="color:#475569">1.8 MB</span>&nbsp;&nbsp;&nbsp;<span style="color:#64748B">timestamp→offset map for time-based seeks</span></div>
+            <div style="margin-top:6px"><span style="color:#3B82F6">00000000012000000000.log</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#475569">1.0 GB</span>&nbsp;&nbsp;&nbsp;<span style="color:#64748B">offsets 12,000,000 – 23,999,999 &nbsp; (sealed)</span></div>
+            <div><span style="color:#3B82F6">00000000024000000000.log</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#475569">1.0 GB</span>&nbsp;&nbsp;&nbsp;<span style="color:#64748B">offsets 24,000,000 – 35,999,999 &nbsp; (sealed)</span></div>
+            <div style="color:#475569;margin-top:10px;margin-bottom:6px"># 70 more sealed segments…</div>
+            <div style="margin-top:6px"><span style="color:#FF6900">00000000840000000000.log</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#475569">384 MB</span>&nbsp;&nbsp;&nbsp;<span style="color:#FF6900">← ACTIVE &nbsp; offsets 840,000,000 – 847,231+ &nbsp; growing now</span></div>
+            <div><span style="color:#FF6900">00000000840000000000.index</span>&nbsp;&nbsp;<span style="color:#475569">798 KB</span>&nbsp;&nbsp;&nbsp;<span style="color:#64748B">your order at offset 847,231 is indexed here</span></div>
+          </div>
+          <div style="margin-top:14px;padding:10px 14px;background:#0A0E1A;border-radius:8px;font-size:12px;color:#94A3B8;line-height:1.7">
+            <strong style="color:#F59E0B">Segment rolling:</strong> At normal Amazon load (~800k orders/day through P0), a 1GB segment fills in <strong style="color:#F1F5F9">~8 hours</strong>. During Prime Day (3× traffic), the same segment fills in <strong style="color:#EF4444">~2.7 hours</strong>. The 7-day retention window means Broker 1 keeps ~21 GB of order history on disk per partition at all times.
+          </div>
+        </div>
+      </div>
+
+      <!-- Offset lookup -->
+      <div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:14px">How Kafka finds your order in O(log n)</div>
+        <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:18px 22px">
+          <p style="font-size:13px;color:#94A3B8;line-height:1.7;margin-bottom:16px">Fulfillment Service asks: "give me the record at offset 847,231." Kafka doesn't scan the entire 384MB active segment. Here's the lookup:</p>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            ${
+              [
+                { n:'1', color:'#3B82F6', step:'Binary search on .index', detail:'The sparse index has one entry per ~4KB of .log data. Binary search finds: "offset 847,228 is at byte position 183,420,816". That\'s the closest indexed entry before 847,231.' },
+                { n:'2', color:'#F59E0B', step:'Sequential scan (max 4KB)', detail:'Kafka reads from byte 183,420,816 forward. Within 4KB of sequential scan, it finds offset 847,231 at byte 183,421,440 — your iPhone 15 Pro order.' },
+                { n:'3', color:'#10B981', step:'Zero-copy sendfile()',      detail:'The 148-byte record is sent directly from the OS page cache to the Fulfillment consumer\'s TCP socket — no copy to user space, no CPU involvement. The broker is transparent glass.' },
+              ].map(s => `
+              <div style="display:flex;gap:12px;align-items:flex-start">
+                <div style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:${s.color}22;border:1.5px solid ${s.color};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:${s.color};margin-top:2px">${s.n}</div>
+                <div style="flex:1;background:#0A0E1A;border-radius:8px;padding:10px 14px">
+                  <div style="font-size:12px;font-weight:700;color:${s.color};margin-bottom:4px">${s.step}</div>
+                  <div style="font-size:12px;color:#94A3B8;line-height:1.65">${s.detail}</div>
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- Page cache hit rate -->
+      <div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:14px">Why the Fulfillment consumer almost never touches disk</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:16px 20px">
+            <div style="font-size:13px;font-weight:700;color:#10B981;margin-bottom:8px">Page cache hit rate: ~99.7%</div>
+            <div style="font-size:12px;color:#94A3B8;line-height:1.7">Fulfillment Service reads orders about 10 seconds after they're written. Those records are almost certainly still in the OS page cache — the same RAM the broker used to write them. The "disk read" is actually a RAM read. This is why Kafka needs no JVM heap cache of its own.</div>
+          </div>
+          <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:16px 20px">
+            <div style="font-size:13px;font-weight:700;color:#06B6D4;margin-bottom:8px">Analytics consumer: cache miss</div>
+            <div style="font-size:12px;color:#94A3B8;line-height:1.7">The analytics consumer reads 3-day-old records to backfill dashboards — those pages were evicted from cache long ago. This triggers actual disk reads. That's OK: analytics has no SLA. Prime Day sales dashboard rebuilding from disk doesn't block anyone's order processing.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key insight callout -->
+      <div style="background:#10B98112;border:1.5px solid #10B98133;border-radius:12px;padding:16px 20px;font-size:13px;color:#94A3B8;line-height:1.7">
+        💡 <strong style="color:#10B981">The broker does almost nothing.</strong> It appends bytes to a file (sequential write — fastest possible disk operation), indexes them, and later reads them via sendfile (zero user-space copies). There's no message parsing, no routing logic, no per-message overhead. This is why a single commodity server can handle 2 million messages per second. Kafka's performance isn't clever — it's just refusing to do unnecessary work.
+      </div>
+
+    </div>`;
 }
 
 function buildPageCache(container) {

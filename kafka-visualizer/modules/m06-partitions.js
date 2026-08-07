@@ -11,16 +11,18 @@ export function mount(container) {
   container.innerHTML = createModuleShell({
     tag: 'M06 · Core Internals',
     title: 'Partitions',
-    subtitle: 'Distribution, ordering, parallelism, and the hot partition problem — with live throughput monitors',
+    subtitle: 'Distribution, ordering, parallelism, hot partitions — decisions Amazon makes for every topic',
     tabs: [
       { id: 'balance', label: '⚖️ Load Distribution' },
       { id: 'hot',     label: '🔥 Hot Partition Demo' },
+      { id: 'amazon',  label: '📦 Amazon Partitioning' },
       { id: 'iq',      label: '🎯 Interview Q&A' },
     ]
   });
 
   let cleanup = buildBalance(container);
   buildHot(container);
+  buildAmazon(container);
   container.querySelector('#tab-iq').innerHTML = createIQSection(IQ);
   return cleanup;
 }
@@ -138,6 +140,107 @@ function buildBalance(container) {
   });
 
   return () => { if (raf) cancelAnimationFrame(raf); };
+}
+
+function buildAmazon(container) {
+  const tab = container.querySelector('#tab-amazon');
+  tab.innerHTML = `
+    <div class="scroll-content" style="max-width:920px;margin:0 auto">
+
+      <!-- Hero -->
+      <div style="background:#111827;border:1px solid #FF6900;border-radius:14px;padding:20px 24px;margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748B;margin-bottom:8px">Design decisions</div>
+        <div style="font-size:18px;font-weight:800;color:#F1F5F9;margin-bottom:4px">How Amazon engineers decide partition count and keys for every topic</div>
+        <div style="font-size:13px;color:#94A3B8">Two decisions made once at topic creation that can never be cleanly undone — get them right the first time.</div>
+      </div>
+
+      <!-- Partition count decision -->
+      <div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:14px">Step 1: How many partitions? — The orders topic</div>
+        <div style="background:#111827;border:1px solid #1E293B;border-radius:12px;padding:18px 22px;margin-bottom:12px">
+          <div style="font-size:13px;font-weight:700;color:#F1F5F9;margin-bottom:12px">The calculation</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:12px;margin-bottom:14px">
+            <div style="background:#0A0E1A;border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:20px;font-weight:800;color:#FF6900">50,000</div>
+              <div style="color:#64748B;margin-top:4px">events/sec peak<br>(Prime Day orders)</div>
+            </div>
+            <div style="background:#0A0E1A;border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:20px;font-weight:800;color:#3B82F6">20,000</div>
+              <div style="color:#64748B;margin-top:4px">events/sec per<br>Fulfillment consumer</div>
+            </div>
+            <div style="background:#0A0E1A;border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:20px;font-weight:800;color:#10B981">3</div>
+              <div style="color:#64748B;margin-top:4px">partitions needed<br>(50k ÷ 20k = 2.5 → 3)</div>
+            </div>
+          </div>
+          <div style="background:#F59E0B12;border:1px solid #F59E0B33;border-radius:8px;padding:12px 14px;font-size:12px;color:#94A3B8;line-height:1.7">
+            <strong style="color:#F59E0B">Amazon chose 6, not 3.</strong> They over-partitioned 2× so they could scale Fulfillment consumers from 3 to 6 without repartitioning. Increasing partition count is safe; reducing it is not (it reshuffles keys and breaks per-customer ordering). When in doubt: partition count that handles 2× your expected peak load.
+          </div>
+        </div>
+        <div style="background:#EF444412;border:1px solid #EF444433;border-radius:10px;padding:12px 16px;font-size:12px;color:#94A3B8;line-height:1.7">
+          <strong style="color:#EF4444">What you cannot do after topic creation:</strong> decrease partition count, or change the key hashing scheme. If you add partitions (orders 3→6), records that were in P2 may now hash to different partitions — breaking the per-customer ordering guarantee for customers already being processed. Amazon freezes the partition count once set on production order topics.
+        </div>
+      </div>
+
+      <!-- Key strategy per topic -->
+      <div style="margin-bottom:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;margin-bottom:14px">Step 2: What key to use — different answer for every topic</div>
+        <div style="overflow-x:auto;border-radius:10px;border:1px solid #1E293B">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:700px">
+            <thead><tr style="background:#0F172A;border-bottom:1px solid #1E293B">
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Topic</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Key Used</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">Why This Key</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.06em">What Would Break With Wrong Key</th>
+            </tr></thead>
+            <tbody>
+              ${
+                [
+                  ['orders','customer_id','All of a customer\'s orders land on the same partition. Fulfillment processes Order #1 before Order #2 for the same customer — always.','region → P0 gets 65% US traffic (hot partition). order_id → random partition, no per-customer order guarantee.'],
+                  ['payments','order_id','All lifecycle events for one payment (initiated → authorized → captured → refunded) land on the same partition and are processed in sequence.','customer_id → a customer buying 10 items causes 10 payment events, mixing different orders on same partition with no useful ordering.'],
+                  ['inventory-updates','product_id','All stock changes for the same product (warehouse receives 500 units, someone buys one, someone returns one) are processed in sequence — stock count never goes negative due to ordering.','null → stock increments and decrements for the same product can arrive out of order, leading to phantom inventory.'],
+                  ['click-events','null (no key)','Nobody cares about the order of click events. Maximum throughput matters — null triggers sticky partitioner, filling batches efficiently across all partitions.','customer_id → each unique customer is a key; high cardinality is fine but adds unnecessary serialization overhead with zero benefit.'],
+                  ['shipping-events','order_id','Order #12345 lifecycle: Packed → Shipped → Out for delivery → Delivered must be in this exact sequence for the Notifications service to send the right message.','null → Delivered event could arrive before Shipped. Notifications sends "Your order is delivered" before "Your order has shipped" — confusing.'],
+                ].map(([t,k,why,wrong]) => `
+                <tr style="border-bottom:1px solid #0F172A">
+                  <td style="padding:10px 14px;color:#FF6900;font-family:monospace;font-size:11px">${t}</td>
+                  <td style="padding:10px 14px;color:#06B6D4;font-family:monospace;font-size:11px">${k}</td>
+                  <td style="padding:10px 14px;color:#F1F5F9;font-size:12px;line-height:1.55">${why}</td>
+                  <td style="padding:10px 14px;color:#EF4444;font-size:11px;line-height:1.55">${wrong}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- The US-region mistake visual -->
+      <div style="background:#EF444412;border:1.5px solid #EF444444;border-radius:12px;padding:18px 22px">
+        <div style="font-size:13px;font-weight:700;color:#EF4444;margin-bottom:12px">What would have happened if Amazon used region as the orders key</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:12px">
+          <div>
+            <div style="color:#EF4444;font-weight:600;margin-bottom:8px">region key — catastrophic skew</div>
+            <div style="background:#0A0E1A;border-radius:8px;padding:12px;font-size:11px;color:#94A3B8;line-height:1.9">
+              P0 (US) &nbsp;&nbsp;&nbsp; → <span style="color:#EF4444">████████████████ 65%</span><br>
+              P1 (EU) &nbsp;&nbsp;&nbsp; → <span style="color:#F59E0B">█████ 20%</span><br>
+              P2 (APAC) → <span style="color:#94A3B8">███ 10%</span><br>
+              P3 (LATAM) → <span style="color:#475569">█ 5%</span><br>
+              <span style="color:#64748B;font-size:10px;display:block;margin-top:6px">P0 consumer handles 13× more work than P3 consumer.<br>Fulfillment for US orders backs up. US customers wait 10 minutes for order confirmation during Prime Day.</span>
+            </div>
+          </div>
+          <div>
+            <div style="color:#10B981;font-weight:600;margin-bottom:8px">customer_id key — even spread</div>
+            <div style="background:#0A0E1A;border-radius:8px;padding:12px;font-size:11px;color:#94A3B8;line-height:1.9">
+              P0 → <span style="color:#10B981">████ 25%</span><br>
+              P1 → <span style="color:#10B981">████ 25%</span><br>
+              P2 → <span style="color:#10B981">████ 25%</span><br>
+              P3 → <span style="color:#10B981">████ 25%</span><br>
+              <span style="color:#64748B;font-size:10px;display:block;margin-top:6px">300M+ unique customer IDs → perfect hash distribution.<br>Each Fulfillment consumer handles exactly the same load. No lag on any partition.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>`;
 }
 
 function buildHot(container) {
