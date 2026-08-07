@@ -3,7 +3,7 @@ name: Deploy GitHub Pages
 on:
   push:
     branches:
-      - gh-pages
+      - claude/dbt-learning-module-e1393i
   workflow_dispatch:
 
 permissions:
@@ -19,10 +19,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout gh-pages content
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: gh-pages
+
+      - name: Stage site
+        run: |
+          mkdir -p /tmp/site-root
+          # Root redirect to dbt visualizer
+          echo '<meta http-equiv="refresh" content="0;url=dbt/">' > /tmp/site-root/index.html
+          # dbt visualizer in /dbt subdirectory
+          mkdir -p /tmp/site-root/dbt
+          cp -r dbt-visualizer/. /tmp/site-root/dbt/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -30,7 +37,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '/tmp/site-root'
 
   deploy:
     environment:
