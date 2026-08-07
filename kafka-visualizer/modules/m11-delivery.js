@@ -37,6 +37,12 @@ function buildLanes(container) {
         <button class="ctrl-btn" id="dlv-reset">🔄 Reset</button>
         <span class="ctrl-label">Watch what happens to each delivery semantic on crash</span>
       </div>
+    </div>
+    <div class="canvas-explainer">
+      <h3>What you're watching</h3>
+      <p>The three lanes run the same consume-process-produce workflow under different delivery semantics. <strong>Red (at-most-once)</strong> commits the offset before processing — if the consumer crashes after the commit but before finishing work, that record is permanently gone. Zero duplicates, possible data loss. Producers use <code>acks=0</code> or <code>acks=1</code> and never retry. This is acceptable for sensor telemetry where the latest reading overwrites the last anyway.</p>
+      <p><strong>Amber (at-least-once)</strong> commits only after successful processing — a crash before the commit causes the consumer to restart from the last committed offset and reprocess. No data loss, but duplicates are possible. Your downstream system must be idempotent: a database upsert keyed on <code>order_id</code> is safe to run twice, a bank transfer is not. This is Amazon's default for most non-financial pipelines including clickstream, inventory sync, and notifications.</p>
+      <p><strong>Green (exactly-once)</strong> wraps consume + process + produce-offset into one atomic Kafka transaction. Either all three succeed together, or none are visible. The cost: producer needs <code>enable.idempotence=true</code> and a <code>transactional.id</code>, consumers need <code>isolation.level=read_committed</code>, and each transaction adds ~5ms latency for the two-phase commit round-trip with the transaction coordinator. Amazon uses EOS for payment confirmations. It does not use it for recommendation clicks — the operational cost isn't justified.</p>
     </div>`;
 
   const canvas = tab.querySelector('#dlv-canvas');

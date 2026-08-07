@@ -35,6 +35,12 @@ function buildBalance(container) {
         <button class="ctrl-btn" id="part-hot">🔥 Hot Keys (country)</button>
         <span class="ctrl-label">Producer partition assignment by key hash</span>
       </div>
+    </div>
+    <div class="canvas-explainer">
+      <h3>What you're watching</h3>
+      <p>Each sparkline shows the per-second message rate arriving at one partition (P0–P4). In <strong>Uniform Keys</strong> mode, the producer keys every record with a high-cardinality value like <code>order_id</code> — a UUID. Kafka's murmur2 hash distributes UUIDs nearly uniformly, so all five charts show similar heights and each consumer thread carries an equal share of the work.</p>
+      <p>Switch to <strong>Hot Keys</strong> mode to simulate a producer using <code>country</code> as the partition key. If 80% of Amazon orders originate from US customers, 80% of records hash to whichever partition "US" maps to — one sparkline dominates while the rest starve. This is a <strong>hot partition</strong>: one consumer thread is overwhelmed, the others are idle, and you can't fix it by adding more consumers since each partition has at most one owner per group.</p>
+      <p>The fix is a key with higher cardinality. <code>customer_id</code> or <code>order_id</code> distribute evenly because there are millions of distinct values. For cases where the key is inherently low-cardinality but ordering must be preserved per key, <strong>key salting</strong> appends a random suffix (e.g., <code>US-3</code>) to spread load, then strips it in the consumer before processing. Note: you cannot reduce the partition count of an existing topic — only increase it, which breaks per-key ordering for existing consumers until they restart.</p>
     </div>`;
 
   const canvas = tab.querySelector('#part-canvas');

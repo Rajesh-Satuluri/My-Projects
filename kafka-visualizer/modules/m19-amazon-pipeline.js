@@ -36,6 +36,12 @@ function buildPipeline(container) {
         <button class="ctrl-btn" id="amz-prime">⭐ Prime Order</button>
         <span class="ctrl-label">Watch events flow through the full Amazon pipeline</span>
       </div>
+    </div>
+    <div class="canvas-explainer">
+      <h3>What you're watching</h3>
+      <p>Each node is a separate Amazon microservice consuming the same order event from Kafka through its own independent consumer group. When you place an order, a single <code>OrderPlaced</code> event is written once to Kafka — and from that one write, <strong>five downstream services simultaneously receive their own copy</strong> with zero coupling between them. The Inventory Service doesn't know the Fraud Service exists. The Notification Service doesn't know about Recommendations. Each team deploys and scales independently.</p>
+      <p>This fan-out pattern is why Kafka replaced point-to-point REST calls inside Amazon's order pipeline. Before Kafka, adding the Recommendations Service meant the Order Service team had to add a new outbound HTTP call, handle timeouts, manage retries, and coordinate deployments with another team. After Kafka, the Recommendations team created a new consumer group pointing at the existing topic — the Order Service team made zero changes and was never consulted.</p>
+      <p>Notice the <strong>Snowflake DW</strong> node receiving events via Kafka Connect Sink — this is the analytics copy, lag-tolerant, accumulating every event from every topic for business intelligence queries. The <strong>BI Dashboard</strong> then queries Snowflake rather than touching production Kafka at all. This separation of operational consumers (low-latency, sub-second SLA) from analytical consumers (batch-tolerant, minutes of acceptable lag) running on the same cluster and same topic is a core architectural pattern at Amazon, Netflix, and LinkedIn.</p>
     </div>`;
 
   const canvas = tab.querySelector('#amz-canvas');

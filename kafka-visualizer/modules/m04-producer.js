@@ -35,6 +35,12 @@ function buildPipeline(container) {
         <button class="ctrl-btn" id="prod-burst">⚡ Burst (10 events)</button>
         <span class="ctrl-label">Watch: serialize → partition → batch → send → ack</span>
       </div>
+    </div>
+    <div class="canvas-explainer">
+      <h3>What you're watching</h3>
+      <p>The animation shows a single record's journey from application code through four internal pipeline stages before it reaches a broker. The <strong>Serializer</strong> converts Java objects to bytes using Avro or JSON schema. The <strong>Partitioner</strong> runs a murmur2 hash on the record key to deterministically pick a partition — the same key always lands on the same partition, which is how per-key ordering is guaranteed across all producers.</p>
+      <p>The <strong>Accumulator</strong> is the stage most engineers overlook. Records don't send immediately — they pool in a per-partition deque until <code>batch.size</code> bytes are reached or <code>linger.ms</code> milliseconds pass, whichever comes first. This batching is the primary reason Kafka achieves millions of records per second: the network overhead of one TCP segment carrying 1,000 records is nearly identical to carrying 1.</p>
+      <p>The <strong>acks</strong> setting controls what "sent" means at the broker end. With <code>acks=0</code> the producer fires and forgets — no broker response is waited for, and data loss is possible. With <code>acks=1</code> the leader writes to its log and replies immediately, but followers may not have replicated yet. With <code>acks=all</code> the leader waits until every ISR member confirms before replying — the production-safe default at Amazon for financial events.</p>
     </div>`;
 
   const canvas = tab.querySelector('#producer-canvas');

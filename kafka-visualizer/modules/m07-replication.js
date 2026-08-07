@@ -35,6 +35,12 @@ function buildSim(container) {
         <button class="ctrl-btn" id="repl-restore">🔄 Restore Broker 1</button>
         <span class="ctrl-label" id="repl-status">All replicas in ISR. RF=3, acks=all.</span>
       </div>
+    </div>
+    <div class="canvas-explainer">
+      <h3>What you're watching</h3>
+      <p>The three broker nodes form a replication group for one topic partition. <strong>Broker 1</strong> starts as the leader — it accepts all writes from producers and serves reads. Brokers 2 and 3 are followers — they continuously fetch from the leader and replicate every record. The set of followers currently caught up within <code>replica.lag.time.max.ms</code> (default 30s) is called the <strong>In-Sync Replica set (ISR)</strong>. With <code>acks=all</code>, a record is only acknowledged after all ISR members have written it.</p>
+      <p>When you kill the leader, the <strong>controller</strong> (a special broker role managed by KRaft) detects the failure via missed heartbeats, then elects a new leader from the remaining ISR members — the surviving broker with the highest committed offset wins. This election takes 1–30 seconds. During this window, producers with <code>acks=all</code> receive temporary errors and retry. Consumers pause at the last committed High-Water Mark and resume once the new leader is confirmed.</p>
+      <p>After the new leader is elected, metadata propagates to all clients and replication resumes normally. When the old leader returns, it rejoins as a follower and must catch up before the ISR accepts it back. Until it does, <strong>UnderReplicatedPartitions</strong> stays above zero — a durability warning meaning you are one additional failure away from potential data loss. With <code>RF=3, min.insync.replicas=2</code>, you can survive this entire sequence without losing a single committed record.</p>
     </div>`;
 
   const canvas = tab.querySelector('#repl-canvas');

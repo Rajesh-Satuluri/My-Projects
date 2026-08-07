@@ -36,6 +36,12 @@ function buildLag(container) {
         <button class="ctrl-btn" id="lag-normal">✅ Normal</button>
         <span class="ctrl-label" id="lag-status">System balanced</span>
       </div>
+    </div>
+    <div class="canvas-explainer">
+      <h3>What you're watching</h3>
+      <p>Each horizontal bar represents one consumer group's lag for a partition — how many records have been produced but not yet committed as processed. The bar fills left to right: <strong>green</strong> means nearly caught up, <strong>amber</strong> means falling behind, <strong>red</strong> means critically behind. Lag is measured in records, not seconds — but at a known production rate you can convert: 10,000 records of lag at 1,000 records/sec equals 10 seconds behind.</p>
+      <p>Hit "Producer Spike" to simulate a burst — all bars jump because records arrive faster than consumers process them. Hit "Slow Consumer" to simulate a consumer spending too long per record (e.g., a slow external API call). Notice that <strong>fraud-group lag growing is far more alarming than analytics-group lag growing</strong> — a fraud system that's 5 minutes behind is approving payments it should block, while an analytics dashboard 5 minutes stale is a non-event. One metric, two completely different SLAs.</p>
+      <p>The three offset positions shown on the canvas tell the full story: <strong>Log-End Offset (LEO)</strong> is where the next produced record will land. <strong>Current Offset</strong> is what the consumer is actively fetching. <strong>Committed Offset</strong> is the last position durably saved to <code>__consumer_offsets</code> — if the consumer crashes and restarts, it resumes from here. Lag = LEO − Committed Offset. A large gap between Current and Committed means the consumer will reprocess all that work on the next crash restart.</p>
     </div>`;
 
   const canvas = tab.querySelector('#lag-canvas');

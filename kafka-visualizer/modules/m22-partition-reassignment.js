@@ -51,6 +51,12 @@ function buildSim(container) {
     </div>
     <div style="padding:10px 20px;background:var(--bg2);border-top:1px solid var(--border)">
       <div id="ra-log" style="font-family:monospace;font-size:11px;color:var(--text2);line-height:1.8;max-height:70px;overflow-y:auto"></div>
+    </div>
+    <div class="canvas-explainer">
+      <h3>What you're watching</h3>
+      <p>The broker circles each show a <strong>leader-count bar</strong> (how many partition leaders they hold) and a replica count. In a balanced cluster, both values are roughly equal across all brokers. Click "Add Broker 4" — the new broker appears with zero partitions and zero leaders. <strong>Kafka does not automatically migrate existing partitions to new brokers.</strong> New topics created after the broker joins will include it, but all existing topics stay on their current brokers until you explicitly reassign them.</p>
+      <p>Click "Reassign Partitions" to start a migration. The progress bar represents an underlying data copy: each partition's log files are replicated byte-by-byte from their current broker to Broker 4. During this period, <strong>UnderReplicatedPartitions is elevated — this is normal and expected</strong>, not an alert. Each partition in transit temporarily has one extra in-sync follower catching up. The <code>--throttle</code> flag limits replication bandwidth so this copy doesn't compete with production traffic; without it, a 1TB reassignment can saturate the network for hours.</p>
+      <p>After data copy completes, click "Preferred Election." Even after reassignment, leadership may stay concentrated on the original brokers because they never stepped down during the copy. Preferred leader election forces each partition to its designated preferred leader (the first broker in its replica assignment list) — distributing leadership evenly. This is a <strong>zero-I/O operation</strong>: no data moves, only the leader role switches, and it completes in milliseconds. Always run preferred election after any reassignment or after a broker rejoins the cluster following downtime.</p>
     </div>`;
 
   const canvas = tab.querySelector('#reassign-canvas');

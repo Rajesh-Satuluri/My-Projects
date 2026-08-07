@@ -38,6 +38,12 @@ function buildProducer(container) {
         <span class="ctrl-label" id="perf-label">Default: ~100k msg/s</span>
       </div>
     </div>
+    <div class="canvas-explainer">
+      <h3>What you're watching</h3>
+      <p>The two sparklines compare <strong>produce rate (msg/s)</strong> and <strong>P99 latency (ms)</strong> between Default and Tuned producer configurations. Default config optimizes for latency — records send almost immediately (<code>linger.ms=0</code>, <code>batch.size=16KB</code>) so each network round-trip carries very few records. This achieves low latency but poor throughput: you're paying full TCP overhead per tiny batch.</p>
+      <p>Tuned config flips the trade-off. Larger <code>batch.size</code> (1 MB) and a non-zero <code>linger.ms</code> (20ms) let the accumulator fill before sending, so each TCP segment carries hundreds or thousands of records. Combined with <code>compression.type=lz4</code>, this reduces both network bytes and broker write I/O. The throughput jump from ~100k to ~1.8M msg/s comes entirely from these three config changes — no hardware change required.</p>
+      <p>The configs below the chart are interdependent — tuning one without the others is the most common producer misconfiguration. <code>batch.size</code> sets the ceiling; <code>linger.ms</code> controls how long to wait to reach it; <code>buffer.memory</code> must be large enough to hold all in-flight batches or the producer will block. At Amazon-scale throughput, all three are set together as a unit, not individually.</p>
+    </div>
     <div class="config-section">
       <div class="config-grid" id="prod-configs"></div>
     </div>`;

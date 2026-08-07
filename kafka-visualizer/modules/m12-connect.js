@@ -35,6 +35,12 @@ function buildFlow(container) {
         <button class="ctrl-btn" id="kc-sink">▶ Run Sink Pipeline</button>
         <span class="ctrl-label">Amazon: RDS → Kafka → Elasticsearch + S3</span>
       </div>
+    </div>
+    <div class="canvas-explainer">
+      <h3>What you're watching</h3>
+      <p>The animation shows two Kafka Connect pipeline types. The <strong>CDC Source pipeline</strong> (Debezium) reads MySQL's binary replication log directly — every INSERT, UPDATE, and DELETE on the Amazon RDS orders table appears as a Kafka event within milliseconds, without any application code changes. Each event carries both the <strong>before</strong> and <strong>after</strong> row state, plus the transaction ID and log sequence number, making it a complete audit trail of every database change.</p>
+      <p>Before each event reaches Kafka, it passes through the <strong>SMT (Single Message Transform) Pipeline</strong>. SMTs are lightweight stateless transforms applied inline inside the Connect worker: masking a credit card number, renaming a column to match a downstream schema, routing records to different topics based on a field value, or adding a processing timestamp. No external streaming job is needed for simple transformations — SMTs handle them for free at ingestion time.</p>
+      <p>The <strong>Sink pipeline</strong> reads from Kafka and writes to Elasticsearch and S3 simultaneously — each is a separate connector consuming the same topic via its own consumer group. This fan-out is free: adding a new sink (Snowflake, DynamoDB, a third-party webhook) requires zero changes to the source system or existing sinks. The <strong>dead-letter queue (DLQ)</strong> catches any record that fails deserialization or transformation, so one malformed record never halts the entire pipeline.</p>
     </div>`;
 
   const canvas = tab.querySelector('#tab-flow canvas') || tab.querySelector('canvas');

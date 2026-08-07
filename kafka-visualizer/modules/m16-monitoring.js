@@ -36,6 +36,12 @@ function buildDashboard(container) {
         <button class="ctrl-btn" id="mon-urp">🔴 Under-replicated</button>
         <button class="ctrl-btn" id="mon-normal">✅ Normal</button>
       </div>
+    </div>
+    <div class="canvas-explainer">
+      <h3>Reading the dashboard</h3>
+      <p>The four sparklines are the primary throughput signals. <strong>Produce rate</strong> and <strong>Consume rate</strong> should track closely — a widening gap means lag is accumulating somewhere. <strong>Produce latency P99</strong> above 200ms usually indicates broker disk I/O saturation or network congestion; it is the earliest warning sign before lag becomes visible. <strong>Disk write MB/s</strong> rising sharply during normal operation often precedes a disk-full incident — alert before it reaches 80% of provisioned throughput.</p>
+      <p>The three lag bars represent different consumer groups on the same topic — notice they have very different acceptable thresholds. The <strong>fulfillment-group</strong> drives warehouse pick requests: any lag means delayed shipments with a measurable customer SLA impact. The <strong>fraud-group</strong> must approve payments in under 200ms: lag here directly means financial exposure. The <strong>analytics-group</strong> feeds business dashboards: a few minutes of lag is invisible to any user. One Kafka cluster, three completely different operational SLAs on the same data.</p>
+      <p>The Cluster Health panel contains the most critical binary metrics. <code>ActiveControllerCount</code> must always be exactly 1 — zero means the cluster cannot handle broker failures; more than 1 indicates a split-brain condition. <code>UnderReplicatedPartitions</code> above zero for more than 5 minutes means durability is at risk: one more broker failure could take those partitions offline. <code>OfflinePartitions</code> above zero means data is completely unreachable — this is an active production incident requiring immediate response, not a warning.</p>
     </div>`;
 
   const canvas = tab.querySelector('#mon-canvas');

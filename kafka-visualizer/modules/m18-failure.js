@@ -39,6 +39,12 @@ function buildSim(container) {
     </div>
     <div style="padding:12px 20px;background:var(--bg2);border-top:1px solid var(--border)">
       <div id="fail-log" style="font-family:monospace;font-size:11px;color:var(--text2);line-height:1.8;max-height:80px;overflow-y:auto"></div>
+    </div>
+    <div class="canvas-explainer">
+      <h3>What you're watching</h3>
+      <p>The seven nodes show a minimal Kafka cluster: two producers writing to a three-broker replication group, and two consumers reading from it. <strong>Broker 1</strong> is the partition leader — it accepts all writes. Brokers 2 and 3 are followers — they fetch and replicate asynchronously. The lag bar at the bottom shows the consumer group's position relative to the leader's latest offset.</p>
+      <p>When you kill Broker 2, watch the sequence in the log: the controller detects the missed heartbeat, removes Broker 2 from the ISR, and marks it offline. No leader election is needed here since Broker 1 is still alive — but <strong>UnderReplicatedPartitions jumps to 3</strong>, meaning each partition now has only 2 live replicas. If Broker 1 also fails now, you have a single point of failure. Use "Network Partition" to drop both Broker 2 and 3 simultaneously and see a <code>NotEnoughReplicasException</code> scenario with <code>min.insync.replicas=2</code>.</p>
+      <p>This is the fundamental availability vs. durability tension in distributed systems. With <code>min.insync.replicas=1</code>, writes continue even with a single surviving replica — but if that replica dies before replication completes, data is lost. With <code>min.insync.replicas=2</code>, writes block when ISR drops below 2 — durability is protected, but availability decreases. Amazon's payment topics use <code>min.insync.replicas=2</code>. Metrics and logs topics often use <code>min.insync.replicas=1</code>.</p>
     </div>`;
 
   const canvas = tab.querySelector('#fail-canvas');

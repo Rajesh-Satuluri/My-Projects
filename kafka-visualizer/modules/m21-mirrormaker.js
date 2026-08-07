@@ -48,6 +48,12 @@ function buildFlow(container) {
         <button class="ctrl-btn" id="mm2-reset">🔄 Reset</button>
         <span class="ctrl-label">Watch MirrorMaker 2 replicate records cross-region</span>
       </div>
+    </div>
+    <div class="canvas-explainer">
+      <h3>What you're watching</h3>
+      <p>The left node is your primary Kafka cluster in <strong>us-east-1</strong>; the right is the DR cluster in <strong>us-west-2</strong>. The central MirrorMaker 2 node is a Kafka Connect worker running three connectors simultaneously: <code>MirrorSourceConnector</code> reads topic data from the primary and writes it to the DR cluster (the orange→green→blue packet flow); <code>MirrorCheckpointConnector</code> translates consumer group offsets and saves them on the DR cluster (the amber return packets); <code>MirrorHeartbeatConnector</code> writes a heartbeat record every second so you can measure exact replication lag.</p>
+      <p>The <strong>amber checkpoint packets</strong> flowing back are the most critical part for disaster recovery. Raw Kafka offsets are cluster-local integers — offset 1,042,500 on the primary is not the same position as offset 1,042,500 on the DR cluster, because the DR cluster may have started replication mid-stream or had compaction run. MM2 maintains a source-to-target offset mapping and writes translated offsets to the DR cluster's <code>__consumer_offsets.sync</code> topic, so consumers know exactly where to resume without reprocessing or skipping records.</p>
+      <p>Click "Simulate Failover" to see the primary go dark. In a real failover, your application's bootstrap server config switches to the DR cluster. Consumers call <code>KafkaAdminClient.listConsumerGroupOffsets()</code> to retrieve the translated offsets and <code>seek()</code> to that position before polling. Your maximum data loss (RPO) equals the checkpoint sync interval — default 60 seconds. Any event produced to the primary in the last 60 seconds that wasn't checkpointed yet is the only potential gap.</p>
     </div>`;
 
   const canvas = tab.querySelector('#mm2-canvas');

@@ -36,6 +36,12 @@ function buildAssign(container) {
         <button class="ctrl-btn" id="cg-reset">🔄 Reset</button>
         <span class="ctrl-label" id="cg-status">3 consumers, 6 partitions</span>
       </div>
+    </div>
+    <div class="canvas-explainer">
+      <h3>What you're watching</h3>
+      <p>The colored boxes are topic partitions (P0–P5). The circles are consumer instances in a single consumer group. Lines show the current assignment — each partition is owned by exactly one consumer at a time. <strong>No two consumers in the same group ever read the same partition simultaneously</strong> — that is the core guarantee of the consumer group protocol, and it's what prevents double-processing without requiring locks or coordination between consumer instances.</p>
+      <p>Click "Add Consumer" to trigger a <strong>rebalance</strong>. During the default eager (stop-the-world) rebalance, the group coordinator broker temporarily halts all consumption across every consumer while it recalculates and redistributes partition assignments. For a 200-consumer group handling Amazon Prime Day traffic, this pause can last 30–60 seconds — during which consumer lag climbs and downstream systems stop receiving events.</p>
+      <p>Notice the assignment math: with 6 partitions and 3 consumers, each consumer owns exactly 2. Add a 4th consumer and one sits idle — partitions can't be split. This means the <strong>maximum parallelism for a topic is always equal to its partition count</strong>. Increase consumers beyond partition count and the extras wait. Remove consumers below partition count and each survivor absorbs the orphaned partitions — which is why partition count is the most important topic sizing decision you make at creation time.</p>
     </div>`;
 
   const canvas = tab.querySelector('#cg-canvas');
