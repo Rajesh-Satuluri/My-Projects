@@ -123,7 +123,7 @@
     },
   ];
 
-  /* ── Table renderer ───────────────────────────────────────── */
+  /* ── Table renderer (v2) ──────────────────────────────────── */
   const TITLE_H = 22, HEAD_H = 24, ROW_H = 26;
 
   function _renderTable(cfg, hl, hlColor) {
@@ -136,42 +136,44 @@
     const bodyH = HEAD_H + cfg.rows.length * ROW_H;
     const parts = [];
 
-    // Title bar
+    // Title bar + accent strip
     parts.push(el('rect', { x: cfg.x, y: cfg.y, width: totalW, height: TITLE_H, rx: 6,
-      fill: cfg.accent + '22', stroke: cfg.accent + '55' }));
+      fill: cfg.accent + '2a', stroke: cfg.accent + '55' }));
+    parts.push(el('rect', { x: cfg.x + 1, y: cfg.y + 1, width: totalW - 2, height: 3, rx: 5,
+      fill: cfg.accent + '70' }));
     parts.push(el('text', { x: cfg.x + 10, y: cfg.y + 15, fill: cfg.accent,
       'font-size': 11, 'font-family': 'var(--font-mono, monospace)', 'font-weight': 700 }, esc(cfg.title)));
 
-    // Table outline
+    // Table outline — deeper dark
     parts.push(el('rect', { x: cfg.x, y: gridY, width: totalW, height: bodyH, rx: 6,
-      fill: '#161b22', stroke: '#30363d' }));
+      fill: '#0c1420', stroke: '#1c2b3a' }));
 
     // Highlight overlays (behind text)
     (hl || []).forEach(ci => {
       parts.push(el('rect', { x: colLeft[ci], y: gridY, width: cfg.cols[ci].w, height: bodyH, rx: 4,
-        fill: hlColor + '26', stroke: hlColor, 'stroke-width': 1.5 }));
+        fill: hlColor + '28', stroke: hlColor, 'stroke-width': 1.5 }));
     });
 
     // Header text
     cfg.cols.forEach((c, i) => {
       const on = (hl || []).indexOf(i) >= 0;
       parts.push(el('text', { x: colLeft[i] + 8, y: gridY + 16,
-        fill: on ? hlColor : '#8b949e', 'font-size': 10,
+        fill: on ? hlColor : '#374151', 'font-size': 10,
         'font-family': 'var(--font-mono, monospace)', 'font-weight': 700 }, esc(c.name)));
     });
     parts.push(el('line', { x1: cfg.x, y1: gridY + HEAD_H, x2: cfg.x + totalW, y2: gridY + HEAD_H,
-      stroke: '#30363d' }));
+      stroke: '#1c2b3a' }));
 
     // Rows
     cfg.rows.forEach((row, r) => {
       const ry = gridY + HEAD_H + r * ROW_H;
       if (r % 2 === 1) {
-        parts.push(el('rect', { x: cfg.x, y: ry, width: totalW, height: ROW_H, fill: '#1c2128' }));
+        parts.push(el('rect', { x: cfg.x, y: ry, width: totalW, height: ROW_H, fill: '#101e2e55' }));
       }
       row.forEach((val, i) => {
         const on = (hl || []).indexOf(i) >= 0;
         parts.push(el('text', { x: colLeft[i] + 8, y: ry + 17,
-          fill: on ? '#e6edf3' : '#6e7681', 'font-size': 10,
+          fill: on ? '#e2e8f0' : '#4b5563', 'font-size': 10,
           'font-family': 'var(--font-mono, monospace)' }, esc(val)));
       });
     });
@@ -182,9 +184,18 @@
   function _buildDiagram(si) {
     const kt = KEY_TYPES[si];
     const color = kt.color;
+    const gradId = 'keysglow' + si;
+    const defs = el('defs', {}, [
+      el('radialGradient', { id: gradId, cx: '50%', cy: '50%', r: '65%' }, [
+        el('stop', { offset: '0%', 'stop-color': color, 'stop-opacity': '0.08' }),
+        el('stop', { offset: '100%', 'stop-color': color, 'stop-opacity': '0' }),
+      ]),
+    ]);
     return el('svg', { viewBox: '0 0 520 340', xmlns: 'http://www.w3.org/2000/svg',
       role: 'img', 'aria-label': kt.label + ' highlighted on the schema' }, [
-      el('rect', { width: 520, height: 340, fill: '#0d1117', rx: 8 }),
+      defs,
+      el('rect', { width: 520, height: 340, fill: '#07090f', rx: 10 }),
+      el('rect', { width: 520, height: 340, fill: 'url(#' + gradId + ')', rx: 10 }),
       _renderTable(CUSTOMERS, kt.hl.customers, color),
       _renderTable(ORDER_ITEMS, kt.hl.order_items, color),
     ]);
@@ -219,9 +230,26 @@
   function _updateStep(page, si) {
     const kt = KEY_TYPES[si];
 
+    /* pills */
     page.querySelectorAll('.keys-pill').forEach((elm, i) => {
-      elm.classList.toggle('active', i === si);
+      const isActive = i === si;
+      elm.classList.toggle('active', isActive);
+      if (isActive) {
+        elm.style.background = kt.color + '18';
+        elm.style.color = kt.color;
+        elm.style.borderLeftColor = kt.color;
+      } else {
+        elm.style.background = '';
+        elm.style.color = '';
+        elm.style.borderLeftColor = 'transparent';
+      }
     });
+
+    /* header ambient glow */
+    const header = page.querySelector('.keys-header');
+    if (header) {
+      header.style.background = 'radial-gradient(ellipse at 20% 50%, ' + kt.color + '0c 0%, #161b22 55%)';
+    }
 
     const diagram = page.querySelector('.keys-diagram');
     if (diagram) diagram.innerHTML = _buildDiagram(si);
@@ -233,6 +261,11 @@
       tag.style.color = kt.color;
       tag.style.borderColor = kt.color + '40';
     }
+
+    /* info border */
+    const info = page.querySelector('.keys-info-panel');
+    if (info) info.style.borderLeftColor = kt.color;
+
     const set = (sel, val) => { const n = page.querySelector(sel); if (n) n.textContent = val; };
     set('.keys-what', kt.what);
     set('.keys-why', kt.why);
@@ -241,43 +274,46 @@
   }
 
   function _buildHTML() {
-    const pills = KEY_TYPES.map((k, i) =>
-      '<button class="keys-pill step-pill' + (i === 0 ? ' active' : '') + '" data-step="' + i + '">' +
-      esc(k.label) + '</button>'
-    ).join('');
-
     const k0 = KEY_TYPES[0];
+    const pills = KEY_TYPES.map((k, i) => {
+      const active = i === 0;
+      const sty = active
+        ? ' style="background:' + k.color + '18;color:' + k.color + ';border-left-color:' + k.color + ';"'
+        : '';
+      return '<button class="keys-pill' + (active ? ' active' : '') + '" data-step="' + i + '"' + sty + '>'
+        + esc(k.label) + '</button>';
+    }).join('');
 
     return [
 '<style>',
 '.keys-page { display: grid; grid-template-rows: auto 1fr; height: calc(100vh - 52px - 52px); overflow: hidden; padding: 0; gap: 0; min-height: 0; }',
-'.keys-header { padding: 20px 28px 16px; border-bottom: 1px solid var(--border-default); background: var(--bg-2); flex-shrink: 0; }',
+'.keys-header { padding: 20px 28px 16px; border-bottom: 1px solid var(--border-default); background: var(--bg-2); position: relative; overflow: hidden; flex-shrink: 0; transition: background 0.3s ease; }',
 '.keys-tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; padding: 3px 10px; border-radius: 9999px; border: 1px solid; margin-bottom: 8px; }',
-'.keys-title { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }',
+'.keys-title { font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #e6edf3 0%, #06b6d4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 4px; letter-spacing: -0.02em; }',
 '.keys-sub { font-size: 13px; color: var(--text-muted); }',
-'.keys-body { display: grid; grid-template-columns: 220px 1fr; gap: 0; overflow: hidden; }',
-'.keys-sidebar { border-right: 1px solid var(--border-default); overflow-y: auto; padding: 12px 8px; background: var(--bg-2); }',
-'.keys-sidebar .step-pill { display: block; width: 100%; text-align: left; margin-bottom: 4px; }',
-'.keys-sidebar .step-pill.active { background: var(--blue-subtle); color: var(--blue); border-color: rgba(88,166,255,.25); }',
-'.keys-main { display: flex; flex-direction: column; overflow: hidden; }',
+'.keys-body { display: grid; grid-template-columns: 220px 1fr; gap: 0; overflow: hidden; min-height: 0; }',
+'.keys-sidebar { border-right: 1px solid var(--border-default); overflow-y: auto; padding: 10px 6px; background: var(--bg-2); }',
+'.keys-pill { display: block; width: 100%; text-align: left; margin-bottom: 3px; border-left: 3px solid transparent; padding: 6px 10px; border-radius: 0 6px 6px 0; font-size: 12.5px; color: var(--text-secondary); background: none; cursor: pointer; border-top: none; border-right: none; border-bottom: none; transition: background 0.12s, color 0.12s; }',
+'.keys-pill:hover { background: var(--bg-3); color: var(--text-primary); }',
+'.keys-main { display: flex; flex-direction: column; overflow: hidden; min-height: 0; }',
 '.keys-diagram { flex: 1; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 12px; background: var(--bg-1); }',
 '.keys-diagram svg { max-width: 100%; max-height: 100%; border-radius: 8px; }',
-'.keys-info { border-top: 1px solid var(--border-default); padding: 12px 20px 14px; background: var(--bg-2); flex-shrink: 0; }',
+'.keys-info { border-top: 1px solid var(--border-default); border-left: 3px solid transparent; padding: 12px 20px 14px; background: var(--bg-2); flex-shrink: 0; transition: border-left-color 0.2s ease; }',
 '.keys-grid { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 4px; align-items: baseline; }',
-'.keys-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); white-space: nowrap; }',
-'.keys-val { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }',
-'.keys-eg { font-family: var(--font-mono); color: var(--text-primary); font-size: 11.5px; }',
+'.keys-lbl { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--text-muted); white-space: nowrap; padding-top: 1px; }',
+'.keys-val { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; }',
+'.keys-eg { font-family: var(--font-mono); color: var(--blue); font-size: 11px; }',
 '</style>',
 '<div class="keys-header">',
 '  <div class="keys-tag" style="background:' + k0.color + '1e;color:' + k0.color + ';border-color:' + k0.color + '40;">' + esc(k0.label) + '</div>',
 '  <h1 class="keys-title">Keys</h1>',
-'  <p class="keys-sub">Nine ways to identify a row. Step through each key type and watch it light up on ShopFlow’s <code>customers</code> and <code>order_items</code> tables.</p>',
+'  <p class="keys-sub">Nine ways to identify a row. Step through each key type and watch it light up on ShopFlow\'s <code>customers</code> and <code>order_items</code> tables.</p>',
 '</div>',
 '<div class="keys-body">',
-'  <div class="keys-sidebar"><div class="step-pills" style="flex-direction:column;">' + pills + '</div></div>',
+'  <div class="keys-sidebar">' + pills + '</div>',
 '  <div class="keys-main">',
 '    <div class="keys-diagram">' + _buildDiagram(0) + '</div>',
-'    <div class="keys-info">',
+'    <div class="keys-info keys-info-panel" style="border-left-color:' + k0.color + ';">',
 '      <div class="keys-grid">',
 '        <span class="keys-lbl">What</span><span class="keys-val keys-what">' + esc(k0.what) + '</span>',
 '        <span class="keys-lbl">Why</span><span class="keys-val keys-why">' + esc(k0.why) + '</span>',

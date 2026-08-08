@@ -4679,7 +4679,7 @@ kbd {
     },
   ];
 
-  /* ── Table renderer ───────────────────────────────────────── */
+  /* ── Table renderer (v2) ──────────────────────────────────── */
   const TITLE_H = 22, HEAD_H = 24, ROW_H = 26;
 
   function _renderTable(cfg, hl, hlColor) {
@@ -4692,42 +4692,44 @@ kbd {
     const bodyH = HEAD_H + cfg.rows.length * ROW_H;
     const parts = [];
 
-    // Title bar
+    // Title bar + accent strip
     parts.push(el('rect', { x: cfg.x, y: cfg.y, width: totalW, height: TITLE_H, rx: 6,
-      fill: cfg.accent + '22', stroke: cfg.accent + '55' }));
+      fill: cfg.accent + '2a', stroke: cfg.accent + '55' }));
+    parts.push(el('rect', { x: cfg.x + 1, y: cfg.y + 1, width: totalW - 2, height: 3, rx: 5,
+      fill: cfg.accent + '70' }));
     parts.push(el('text', { x: cfg.x + 10, y: cfg.y + 15, fill: cfg.accent,
       'font-size': 11, 'font-family': 'var(--font-mono, monospace)', 'font-weight': 700 }, esc(cfg.title)));
 
-    // Table outline
+    // Table outline — deeper dark
     parts.push(el('rect', { x: cfg.x, y: gridY, width: totalW, height: bodyH, rx: 6,
-      fill: '#161b22', stroke: '#30363d' }));
+      fill: '#0c1420', stroke: '#1c2b3a' }));
 
     // Highlight overlays (behind text)
     (hl || []).forEach(ci => {
       parts.push(el('rect', { x: colLeft[ci], y: gridY, width: cfg.cols[ci].w, height: bodyH, rx: 4,
-        fill: hlColor + '26', stroke: hlColor, 'stroke-width': 1.5 }));
+        fill: hlColor + '28', stroke: hlColor, 'stroke-width': 1.5 }));
     });
 
     // Header text
     cfg.cols.forEach((c, i) => {
       const on = (hl || []).indexOf(i) >= 0;
       parts.push(el('text', { x: colLeft[i] + 8, y: gridY + 16,
-        fill: on ? hlColor : '#8b949e', 'font-size': 10,
+        fill: on ? hlColor : '#374151', 'font-size': 10,
         'font-family': 'var(--font-mono, monospace)', 'font-weight': 700 }, esc(c.name)));
     });
     parts.push(el('line', { x1: cfg.x, y1: gridY + HEAD_H, x2: cfg.x + totalW, y2: gridY + HEAD_H,
-      stroke: '#30363d' }));
+      stroke: '#1c2b3a' }));
 
     // Rows
     cfg.rows.forEach((row, r) => {
       const ry = gridY + HEAD_H + r * ROW_H;
       if (r % 2 === 1) {
-        parts.push(el('rect', { x: cfg.x, y: ry, width: totalW, height: ROW_H, fill: '#1c2128' }));
+        parts.push(el('rect', { x: cfg.x, y: ry, width: totalW, height: ROW_H, fill: '#101e2e55' }));
       }
       row.forEach((val, i) => {
         const on = (hl || []).indexOf(i) >= 0;
         parts.push(el('text', { x: colLeft[i] + 8, y: ry + 17,
-          fill: on ? '#e6edf3' : '#6e7681', 'font-size': 10,
+          fill: on ? '#e2e8f0' : '#4b5563', 'font-size': 10,
           'font-family': 'var(--font-mono, monospace)' }, esc(val)));
       });
     });
@@ -4738,9 +4740,18 @@ kbd {
   function _buildDiagram(si) {
     const kt = KEY_TYPES[si];
     const color = kt.color;
+    const gradId = 'keysglow' + si;
+    const defs = el('defs', {}, [
+      el('radialGradient', { id: gradId, cx: '50%', cy: '50%', r: '65%' }, [
+        el('stop', { offset: '0%', 'stop-color': color, 'stop-opacity': '0.08' }),
+        el('stop', { offset: '100%', 'stop-color': color, 'stop-opacity': '0' }),
+      ]),
+    ]);
     return el('svg', { viewBox: '0 0 520 340', xmlns: 'http://www.w3.org/2000/svg',
       role: 'img', 'aria-label': kt.label + ' highlighted on the schema' }, [
-      el('rect', { width: 520, height: 340, fill: '#0d1117', rx: 8 }),
+      defs,
+      el('rect', { width: 520, height: 340, fill: '#07090f', rx: 10 }),
+      el('rect', { width: 520, height: 340, fill: 'url(#' + gradId + ')', rx: 10 }),
       _renderTable(CUSTOMERS, kt.hl.customers, color),
       _renderTable(ORDER_ITEMS, kt.hl.order_items, color),
     ]);
@@ -4775,9 +4786,26 @@ kbd {
   function _updateStep(page, si) {
     const kt = KEY_TYPES[si];
 
+    /* pills */
     page.querySelectorAll('.keys-pill').forEach((elm, i) => {
-      elm.classList.toggle('active', i === si);
+      const isActive = i === si;
+      elm.classList.toggle('active', isActive);
+      if (isActive) {
+        elm.style.background = kt.color + '18';
+        elm.style.color = kt.color;
+        elm.style.borderLeftColor = kt.color;
+      } else {
+        elm.style.background = '';
+        elm.style.color = '';
+        elm.style.borderLeftColor = 'transparent';
+      }
     });
+
+    /* header ambient glow */
+    const header = page.querySelector('.keys-header');
+    if (header) {
+      header.style.background = 'radial-gradient(ellipse at 20% 50%, ' + kt.color + '0c 0%, #161b22 55%)';
+    }
 
     const diagram = page.querySelector('.keys-diagram');
     if (diagram) diagram.innerHTML = _buildDiagram(si);
@@ -4789,6 +4817,11 @@ kbd {
       tag.style.color = kt.color;
       tag.style.borderColor = kt.color + '40';
     }
+
+    /* info border */
+    const info = page.querySelector('.keys-info-panel');
+    if (info) info.style.borderLeftColor = kt.color;
+
     const set = (sel, val) => { const n = page.querySelector(sel); if (n) n.textContent = val; };
     set('.keys-what', kt.what);
     set('.keys-why', kt.why);
@@ -4797,43 +4830,46 @@ kbd {
   }
 
   function _buildHTML() {
-    const pills = KEY_TYPES.map((k, i) =>
-      '<button class="keys-pill step-pill' + (i === 0 ? ' active' : '') + '" data-step="' + i + '">' +
-      esc(k.label) + '</button>'
-    ).join('');
-
     const k0 = KEY_TYPES[0];
+    const pills = KEY_TYPES.map((k, i) => {
+      const active = i === 0;
+      const sty = active
+        ? ' style="background:' + k.color + '18;color:' + k.color + ';border-left-color:' + k.color + ';"'
+        : '';
+      return '<button class="keys-pill' + (active ? ' active' : '') + '" data-step="' + i + '"' + sty + '>'
+        + esc(k.label) + '</button>';
+    }).join('');
 
     return [
 '<style>',
 '.keys-page { display: grid; grid-template-rows: auto 1fr; height: calc(100vh - 52px - 52px); overflow: hidden; padding: 0; gap: 0; min-height: 0; }',
-'.keys-header { padding: 20px 28px 16px; border-bottom: 1px solid var(--border-default); background: var(--bg-2); flex-shrink: 0; }',
+'.keys-header { padding: 20px 28px 16px; border-bottom: 1px solid var(--border-default); background: var(--bg-2); position: relative; overflow: hidden; flex-shrink: 0; transition: background 0.3s ease; }',
 '.keys-tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; padding: 3px 10px; border-radius: 9999px; border: 1px solid; margin-bottom: 8px; }',
-'.keys-title { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }',
+'.keys-title { font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #e6edf3 0%, #06b6d4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 4px; letter-spacing: -0.02em; }',
 '.keys-sub { font-size: 13px; color: var(--text-muted); }',
-'.keys-body { display: grid; grid-template-columns: 220px 1fr; gap: 0; overflow: hidden; }',
-'.keys-sidebar { border-right: 1px solid var(--border-default); overflow-y: auto; padding: 12px 8px; background: var(--bg-2); }',
-'.keys-sidebar .step-pill { display: block; width: 100%; text-align: left; margin-bottom: 4px; }',
-'.keys-sidebar .step-pill.active { background: var(--blue-subtle); color: var(--blue); border-color: rgba(88,166,255,.25); }',
-'.keys-main { display: flex; flex-direction: column; overflow: hidden; }',
+'.keys-body { display: grid; grid-template-columns: 220px 1fr; gap: 0; overflow: hidden; min-height: 0; }',
+'.keys-sidebar { border-right: 1px solid var(--border-default); overflow-y: auto; padding: 10px 6px; background: var(--bg-2); }',
+'.keys-pill { display: block; width: 100%; text-align: left; margin-bottom: 3px; border-left: 3px solid transparent; padding: 6px 10px; border-radius: 0 6px 6px 0; font-size: 12.5px; color: var(--text-secondary); background: none; cursor: pointer; border-top: none; border-right: none; border-bottom: none; transition: background 0.12s, color 0.12s; }',
+'.keys-pill:hover { background: var(--bg-3); color: var(--text-primary); }',
+'.keys-main { display: flex; flex-direction: column; overflow: hidden; min-height: 0; }',
 '.keys-diagram { flex: 1; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 12px; background: var(--bg-1); }',
 '.keys-diagram svg { max-width: 100%; max-height: 100%; border-radius: 8px; }',
-'.keys-info { border-top: 1px solid var(--border-default); padding: 12px 20px 14px; background: var(--bg-2); flex-shrink: 0; }',
+'.keys-info { border-top: 1px solid var(--border-default); border-left: 3px solid transparent; padding: 12px 20px 14px; background: var(--bg-2); flex-shrink: 0; transition: border-left-color 0.2s ease; }',
 '.keys-grid { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 4px; align-items: baseline; }',
-'.keys-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); white-space: nowrap; }',
-'.keys-val { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }',
-'.keys-eg { font-family: var(--font-mono); color: var(--text-primary); font-size: 11.5px; }',
+'.keys-lbl { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--text-muted); white-space: nowrap; padding-top: 1px; }',
+'.keys-val { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; }',
+'.keys-eg { font-family: var(--font-mono); color: var(--blue); font-size: 11px; }',
 '</style>',
 '<div class="keys-header">',
 '  <div class="keys-tag" style="background:' + k0.color + '1e;color:' + k0.color + ';border-color:' + k0.color + '40;">' + esc(k0.label) + '</div>',
 '  <h1 class="keys-title">Keys</h1>',
-'  <p class="keys-sub">Nine ways to identify a row. Step through each key type and watch it light up on ShopFlow’s <code>customers</code> and <code>order_items</code> tables.</p>',
+'  <p class="keys-sub">Nine ways to identify a row. Step through each key type and watch it light up on ShopFlow\'s <code>customers</code> and <code>order_items</code> tables.</p>',
 '</div>',
 '<div class="keys-body">',
-'  <div class="keys-sidebar"><div class="step-pills" style="flex-direction:column;">' + pills + '</div></div>',
+'  <div class="keys-sidebar">' + pills + '</div>',
 '  <div class="keys-main">',
 '    <div class="keys-diagram">' + _buildDiagram(0) + '</div>',
-'    <div class="keys-info">',
+'    <div class="keys-info keys-info-panel" style="border-left-color:' + k0.color + ';">',
 '      <div class="keys-grid">',
 '        <span class="keys-lbl">What</span><span class="keys-val keys-what">' + esc(k0.what) + '</span>',
 '        <span class="keys-lbl">Why</span><span class="keys-val keys-why">' + esc(k0.why) + '</span>',
@@ -4865,7 +4901,7 @@ kbd {
 <!-- js/modules/relationships.js -->
 <script>
 /* ============================================================
-   Module: Relationships
+   Module: Relationships — v2 (visual upgrade)
    Cardinality types with Crow's Foot ERD — ShopFlow schema.
    ============================================================ */
 
@@ -4971,151 +5007,188 @@ kbd {
   ];
 
   /* ── SVG helpers ──────────────────────────────────────────── */
-
   function _cx(e) { return e.x + e.w / 2; }
   function _cy(e) { return e.y + e.h / 2; }
 
-  function _entityBox(name, active, stepColor) {
-    const e = ENTITIES[name];
-    const isActive = active.indexOf(name) >= 0;
-    const fill = isActive ? e.color + '22' : '#0d111788';
-    const stroke = isActive ? e.color : '#30363d';
-    const textColor = isActive ? e.color : '#484f58';
+  function _entityBox(name, active) {
+    var e = ENTITIES[name];
+    var isActive = active.indexOf(name) >= 0;
+    var c = e.color;
+
+    if (isActive) {
+      return el('g', {}, [
+        /* glow halo */
+        el('rect', { x: e.x - 4, y: e.y - 4, width: e.w + 8, height: e.h + 8, rx: 12,
+          fill: c + '14', stroke: c + '30', 'stroke-width': 1 }),
+        /* main box */
+        el('rect', { x: e.x, y: e.y, width: e.w, height: e.h, rx: 8,
+          fill: '#0f1a28', stroke: c, 'stroke-width': 2 }),
+        /* top accent stripe */
+        el('rect', { x: e.x + 2, y: e.y + 2, width: e.w - 4, height: 4, rx: 6, fill: c + '66' }),
+        /* entity name */
+        el('text', { x: _cx(e), y: e.y + 24,
+          'text-anchor': 'middle', fill: c,
+          'font-size': 11, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 },
+          esc(name)),
+        /* pk badge */
+        el('text', { x: _cx(e), y: e.y + 39,
+          'text-anchor': 'middle', fill: c + '99',
+          'font-size': 8, 'font-family': 'var(--font-mono,monospace)' },
+          esc(name.toLowerCase() + '_id PK')),
+      ]);
+    }
+
     return el('g', {}, [
       el('rect', { x: e.x, y: e.y, width: e.w, height: e.h, rx: 8,
-        fill: fill, stroke: stroke, 'stroke-width': isActive ? 2 : 1 }),
-      el('text', { x: _cx(e), y: e.y + 20,
-        'text-anchor': 'middle', fill: textColor,
+        fill: '#0c1420', stroke: '#1c2b3a', 'stroke-width': 1 }),
+      el('text', { x: _cx(e), y: e.y + 24,
+        'text-anchor': 'middle', fill: '#2d4060',
         'font-size': 11, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 },
         esc(name)),
-      el('text', { x: _cx(e), y: e.y + 35,
-        'text-anchor': 'middle', fill: isActive ? e.color + 'cc' : '#30363d',
-        'font-size': 8.5, 'font-family': 'var(--font-mono,monospace)' },
+      el('text', { x: _cx(e), y: e.y + 39,
+        'text-anchor': 'middle', fill: '#1a2b3d',
+        'font-size': 8, 'font-family': 'var(--font-mono,monospace)' },
         esc(name.toLowerCase() + '_id PK')),
     ]);
   }
 
-  /* Crow's Foot: draws line from entity A edge toward B edge */
-  function _connection(rel) {
-    const A = ENTITIES[rel.from];
-    const B = ENTITIES[rel.to];
+  /* Crow's Foot: colored per step */
+  function _connection(rel, stepColor) {
+    var A = ENTITIES[rel.from];
+    var B = ENTITIES[rel.to];
     if (!A || !B) return '';
 
-    const ax = _cx(A), ay = _cy(A);
-    const bx = _cx(B), by = _cy(B);
+    var ax = _cx(A), ay = _cy(A);
+    var bx = _cx(B), by = _cy(B);
 
-    /* Pick closest edges */
-    let x1, y1, x2, y2;
-    const dx = bx - ax, dy = by - ay;
+    var x1, y1, x2, y2;
+    var dx = bx - ax, dy = by - ay;
     if (Math.abs(dx) > Math.abs(dy)) {
-      // horizontal dominant
       x1 = dx > 0 ? A.x + A.w : A.x;
       y1 = ay;
       x2 = dx > 0 ? B.x : B.x + B.w;
       y2 = by;
     } else {
-      // vertical dominant
       x1 = ax;
       y1 = dy > 0 ? A.y + A.h : A.y;
       x2 = bx;
       y2 = dy > 0 ? B.y : B.y + B.h;
     }
 
-    const color = '#58a6ff88';
-    const parts = [];
+    var color = stepColor + 'bb';
+    var parts = [];
 
-    // Path
-    const midX = (x1 + x2) / 2, midY = (y1 + y2) / 2;
-    const d = 'M' + x1 + ',' + y1 + ' C' + midX + ',' + y1 + ' ' + midX + ',' + y2 + ' ' + x2 + ',' + y2;
-    parts.push(el('path', { d: d, fill: 'none', stroke: color, 'stroke-width': 1.5 }));
+    var midX = (x1 + x2) / 2, midY = (y1 + y2) / 2;
+    var d = 'M' + x1 + ',' + y1 + ' C' + midX + ',' + y1 + ' ' + midX + ',' + y2 + ' ' + x2 + ',' + y2;
+    parts.push(el('path', { d: d, fill: 'none', stroke: color, 'stroke-width': 1.8 }));
 
-    // ONE side: single vertical tick at A end
-    const tLen = 6;
+    /* ONE side tick */
+    var tLen = 6;
     if (Math.abs(dx) > Math.abs(dy)) {
-      const dir = dx > 0 ? 1 : -1;
-      parts.push(el('line', { x1: x1 + dir * 4, y1: y1 - tLen, x2: x1 + dir * 4, y2: y1 + tLen, stroke: color, 'stroke-width': 1.5 }));
+      var dirA = dx > 0 ? 1 : -1;
+      parts.push(el('line', { x1: x1 + dirA * 4, y1: y1 - tLen, x2: x1 + dirA * 4, y2: y1 + tLen,
+        stroke: color, 'stroke-width': 1.8 }));
     } else {
-      const dir = dy > 0 ? 1 : -1;
-      parts.push(el('line', { x1: x1 - tLen, y1: y1 + dir * 4, x2: x1 + tLen, y2: y1 + dir * 4, stroke: color, 'stroke-width': 1.5 }));
+      var dirA2 = dy > 0 ? 1 : -1;
+      parts.push(el('line', { x1: x1 - tLen, y1: y1 + dirA2 * 4, x2: x1 + tLen, y2: y1 + dirA2 * 4,
+        stroke: color, 'stroke-width': 1.8 }));
     }
 
-    // MANY side: crow's foot at B end
+    /* MANY / ONE_TO_ONE end */
     if (rel.type === 'ONE_TO_MANY') {
       if (Math.abs(dx) > Math.abs(dy)) {
-        const dir = dx > 0 ? -1 : 1;
-        parts.push(el('line', { x1: x2, y1: y2, x2: x2 + dir * 8, y2: y2 - 7, stroke: color, 'stroke-width': 1.5 }));
-        parts.push(el('line', { x1: x2, y1: y2, x2: x2 + dir * 8, y2: y2 + 7, stroke: color, 'stroke-width': 1.5 }));
-        parts.push(el('line', { x1: x2 + dir * 8, y1: y2 - tLen, x2: x2 + dir * 8, y2: y2 + tLen, stroke: color, 'stroke-width': 1.5 }));
+        var dirB = dx > 0 ? -1 : 1;
+        parts.push(el('line', { x1: x2, y1: y2, x2: x2 + dirB * 8, y2: y2 - 7, stroke: color, 'stroke-width': 1.8 }));
+        parts.push(el('line', { x1: x2, y1: y2, x2: x2 + dirB * 8, y2: y2 + 7, stroke: color, 'stroke-width': 1.8 }));
+        parts.push(el('line', { x1: x2 + dirB * 8, y1: y2 - tLen, x2: x2 + dirB * 8, y2: y2 + tLen,
+          stroke: color, 'stroke-width': 1.8 }));
       } else {
-        const dir = dy > 0 ? -1 : 1;
-        parts.push(el('line', { x1: x2, y1: y2, x2: x2 - 7, y2: y2 + dir * 8, stroke: color, 'stroke-width': 1.5 }));
-        parts.push(el('line', { x1: x2, y1: y2, x2: x2 + 7, y2: y2 + dir * 8, stroke: color, 'stroke-width': 1.5 }));
-        parts.push(el('line', { x1: x2 - tLen, y1: y2 + dir * 8, x2: x2 + tLen, y2: y2 + dir * 8, stroke: color, 'stroke-width': 1.5 }));
+        var dirB2 = dy > 0 ? -1 : 1;
+        parts.push(el('line', { x1: x2, y1: y2, x2: x2 - 7, y2: y2 + dirB2 * 8, stroke: color, 'stroke-width': 1.8 }));
+        parts.push(el('line', { x1: x2, y1: y2, x2: x2 + 7, y2: y2 + dirB2 * 8, stroke: color, 'stroke-width': 1.8 }));
+        parts.push(el('line', { x1: x2 - tLen, y1: y2 + dirB2 * 8, x2: x2 + tLen, y2: y2 + dirB2 * 8,
+          stroke: color, 'stroke-width': 1.8 }));
       }
     } else {
-      // ONE_TO_ONE: single tick at B too
       if (Math.abs(dx) > Math.abs(dy)) {
-        const dir = dx > 0 ? -1 : 1;
-        parts.push(el('line', { x1: x2 + dir * 4, y1: y2 - tLen, x2: x2 + dir * 4, y2: y2 + tLen, stroke: color, 'stroke-width': 1.5 }));
+        var dirC = dx > 0 ? -1 : 1;
+        parts.push(el('line', { x1: x2 + dirC * 4, y1: y2 - tLen, x2: x2 + dirC * 4, y2: y2 + tLen,
+          stroke: color, 'stroke-width': 1.8 }));
       } else {
-        const dir = dy > 0 ? -1 : 1;
-        parts.push(el('line', { x1: x2 - tLen, y1: y2 + dir * 4, x2: x2 + tLen, y2: y2 + dir * 4, stroke: color, 'stroke-width': 1.5 }));
+        var dirC2 = dy > 0 ? -1 : 1;
+        parts.push(el('line', { x1: x2 - tLen, y1: y2 + dirC2 * 4, x2: x2 + tLen, y2: y2 + dirC2 * 4,
+          stroke: color, 'stroke-width': 1.8 }));
       }
     }
 
-    // Label
-    parts.push(el('text', { x: midX, y: midY - 4, 'text-anchor': 'middle',
-      fill: color, 'font-size': 8, 'font-family': 'var(--font-mono,monospace)' }, esc(rel.label)));
+    /* relationship label */
+    parts.push(el('text', { x: midX, y: midY - 5, 'text-anchor': 'middle',
+      fill: stepColor + 'dd', 'font-size': 8, 'font-family': 'var(--font-mono,monospace)',
+      'font-weight': 600 }, esc(rel.label)));
 
     return el('g', {}, parts);
   }
 
   function _buildDiagram(si) {
-    const step = STEPS[si];
-    const entityNames = Object.keys(ENTITIES);
+    var step = STEPS[si];
+    var sc = step.color;
+    var gradId = 'relglow' + si;
+    var entityNames = Object.keys(ENTITIES);
 
-    const connLines = step.rels.map(r => _connection(r));
-    const boxes = entityNames.map(n => _entityBox(n, step.active, step.color));
+    var defs = el('defs', {}, [
+      el('radialGradient', { id: gradId, cx: '50%', cy: '50%', r: '65%' }, [
+        el('stop', { offset: '0%', 'stop-color': sc, 'stop-opacity': '0.07' }),
+        el('stop', { offset: '100%', 'stop-color': sc, 'stop-opacity': '0' }),
+      ]),
+    ]);
+
+    var connLines = step.rels.map(function (r) { return _connection(r, sc); });
+    var boxes = entityNames.map(function (n) { return _entityBox(n, step.active); });
 
     return el('svg', { viewBox: '0 0 530 340', xmlns: 'http://www.w3.org/2000/svg',
       role: 'img', 'aria-label': step.label + ' relationship diagram' }, [
-      el('rect', { width: 530, height: 340, fill: '#0d1117', rx: 8 }),
+      defs,
+      el('rect', { width: 530, height: 340, fill: '#07090f', rx: 10 }),
+      el('rect', { width: 530, height: 340, fill: 'url(#' + gradId + ')', rx: 10 }),
       el('g', {}, connLines),
       el('g', {}, boxes),
     ]);
   }
 
   /* ── Module scaffold ──────────────────────────────────────── */
-  let _engine = null;
+  var _engine = null;
 
   function _buildHTML() {
-    const pills = STEPS.map((s, i) =>
-      '<button class="rel-pill step-pill' + (i === 0 ? ' active' : '') + '" data-step="' + i + '">' +
-      esc(s.label) + '</button>'
-    ).join('');
-
-    const s0 = STEPS[0];
+    var s0 = STEPS[0];
+    var pills = STEPS.map(function (s, i) {
+      var active = i === 0;
+      var sty = active
+        ? ' style="background:' + s.color + '18;color:' + s.color + ';border-left-color:' + s.color + ';"'
+        : '';
+      return '<button class="rel-pill' + (active ? ' active' : '') + '" data-step="' + i + '"' + sty + '>'
+        + esc(s.label) + '</button>';
+    }).join('');
 
     return [
 '<style>',
 '.rel-page { display: grid; grid-template-rows: auto 1fr; height: calc(100vh - 52px - 52px); overflow: hidden; padding: 0; gap: 0; min-height: 0; }',
-'.rel-header { padding: 20px 28px 16px; border-bottom: 1px solid var(--border-default); background: var(--bg-2); flex-shrink: 0; }',
+'.rel-header { padding: 20px 28px 16px; border-bottom: 1px solid var(--border-default); background: var(--bg-2); position: relative; overflow: hidden; flex-shrink: 0; transition: background 0.3s ease; }',
 '.rel-tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; padding: 3px 10px; border-radius: 9999px; border: 1px solid; margin-bottom: 8px; }',
-'.rel-title { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }',
+'.rel-title { font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #e6edf3 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 4px; letter-spacing: -0.02em; }',
 '.rel-sub { font-size: 13px; color: var(--text-muted); }',
 '.rel-body { display: grid; grid-template-columns: 190px 1fr; gap: 0; overflow: hidden; min-height: 0; }',
-'.rel-sidebar { border-right: 1px solid var(--border-default); overflow-y: auto; padding: 12px 8px; background: var(--bg-2); }',
-'.rel-sidebar .step-pill { display: block; width: 100%; text-align: left; margin-bottom: 4px; }',
-'.rel-sidebar .step-pill.active { background: var(--blue-subtle); color: var(--blue); border-color: rgba(88,166,255,.25); }',
+'.rel-sidebar { border-right: 1px solid var(--border-default); overflow-y: auto; padding: 10px 6px; background: var(--bg-2); }',
+'.rel-pill { display: block; width: 100%; text-align: left; margin-bottom: 3px; border-left: 3px solid transparent; padding: 6px 10px 6px 10px; border-radius: 0 6px 6px 0; font-size: 12.5px; color: var(--text-secondary); background: none; cursor: pointer; border-top: none; border-right: none; border-bottom: none; transition: background 0.12s, color 0.12s; }',
+'.rel-pill:hover { background: var(--bg-3); color: var(--text-primary); }',
 '.rel-main { display: flex; flex-direction: column; overflow: hidden; min-height: 0; }',
 '.rel-diagram { flex: 1; min-height: 0; position: relative; overflow: hidden; background: var(--bg-1); }',
 '.rel-diagram svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; }',
-'.rel-info { border-top: 1px solid var(--border-default); padding: 10px 20px 12px; background: var(--bg-2); flex: 0 0 auto; max-height: 195px; overflow-y: auto; }',
-'.rel-grid { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 3px; align-items: baseline; }',
-'.rel-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); white-space: nowrap; }',
-'.rel-val { font-size: 12.5px; color: var(--text-secondary); line-height: 1.4; }',
-'.rel-eg { font-family: var(--font-mono); color: var(--text-primary); font-size: 11px; }',
-'.rel-sql { font-family: var(--font-mono); color: var(--green,#3fb950); font-size: 10.5px; white-space: pre; background: var(--bg-1); border: 1px solid var(--border-default); border-radius: 6px; padding: 6px 10px; overflow-x: auto; max-height: 72px; overflow-y: auto; }',
+'.rel-info { border-top: 1px solid var(--border-default); border-left: 3px solid transparent; padding: 10px 20px 12px; background: var(--bg-2); flex: 0 0 auto; max-height: 195px; overflow-y: auto; transition: border-left-color 0.2s ease; }',
+'.rel-grid { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 4px; align-items: baseline; }',
+'.rel-lbl { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--text-muted); white-space: nowrap; padding-top: 1px; }',
+'.rel-val { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; }',
+'.rel-eg { font-family: var(--font-mono); color: var(--blue); font-size: 11px; }',
+'.rel-sql { font-family: var(--font-mono); color: #4ade80; font-size: 10.5px; white-space: pre; background: #070d14; border: 1px solid #1a2537; border-radius: 6px; padding: 6px 10px; overflow-x: auto; max-height: 72px; overflow-y: auto; }',
 '</style>',
 '<div class="rel-header">',
 '  <div class="rel-tag" style="background:' + s0.color + '1e;color:' + s0.color + ';border-color:' + s0.color + '40;">' + esc(s0.label) + '</div>',
@@ -5123,10 +5196,10 @@ kbd {
 '  <p class="rel-sub">How ShopFlow\'s 8 entities connect. Crow\'s Foot notation shows cardinality live on the ERD.</p>',
 '</div>',
 '<div class="rel-body">',
-'  <div class="rel-sidebar"><div class="step-pills" style="flex-direction:column;">' + pills + '</div></div>',
+'  <div class="rel-sidebar">' + pills + '</div>',
 '  <div class="rel-main">',
 '    <div class="rel-diagram rel-diagram-slot">' + _buildDiagram(0) + '</div>',
-'    <div class="rel-info">',
+'    <div class="rel-info rel-info-panel" style="border-left-color:' + s0.color + ';">',
 '      <div class="rel-grid">',
 '        <span class="rel-lbl">What</span><span class="rel-val rel-what">' + esc(s0.what) + '</span>',
 '        <span class="rel-lbl">Why</span><span class="rel-val rel-why">' + esc(s0.why) + '</span>',
@@ -5140,13 +5213,31 @@ kbd {
   }
 
   function _updateStep(page, si) {
-    const s = STEPS[si];
+    var s = STEPS[si];
 
-    page.querySelectorAll('.rel-pill').forEach((elm, i) => {
-      elm.classList.toggle('active', i === si);
+    /* pills */
+    page.querySelectorAll('.rel-pill').forEach(function (elm, i) {
+      var isActive = i === si;
+      elm.classList.toggle('active', isActive);
+      if (isActive) {
+        elm.style.background = s.color + '18';
+        elm.style.color = s.color;
+        elm.style.borderLeftColor = s.color;
+      } else {
+        elm.style.background = '';
+        elm.style.color = '';
+        elm.style.borderLeftColor = 'transparent';
+      }
     });
 
-    const tag = page.querySelector('.rel-tag');
+    /* header ambient glow */
+    var header = page.querySelector('.rel-header');
+    if (header) {
+      header.style.background = 'radial-gradient(ellipse at 20% 50%, ' + s.color + '0c 0%, #161b22 55%)';
+    }
+
+    /* step tag */
+    var tag = page.querySelector('.rel-tag');
     if (tag) {
       tag.textContent = s.label;
       tag.style.background = s.color + '1e';
@@ -5154,10 +5245,15 @@ kbd {
       tag.style.borderColor = s.color + '40';
     }
 
-    const diag = page.querySelector('.rel-diagram-slot');
+    /* diagram */
+    var diag = page.querySelector('.rel-diagram-slot');
     if (diag) diag.innerHTML = _buildDiagram(si);
 
-    const set = (sel, val) => { const n = page.querySelector(sel); if (n) n.textContent = val; };
+    /* info panel border */
+    var info = page.querySelector('.rel-info-panel');
+    if (info) info.style.borderLeftColor = s.color;
+
+    var set = function (sel, val) { var n = page.querySelector(sel); if (n) n.textContent = val; };
     set('.rel-what', s.what);
     set('.rel-why', s.why);
     set('.rel-example', s.example);
@@ -5166,22 +5262,26 @@ kbd {
 
   function _render(container) {
     container.innerHTML = '';
-    const page = document.createElement('div');
+    var page = document.createElement('div');
     page.className = 'rel-page page-enter';
     page.innerHTML = _buildHTML();
     container.appendChild(page);
 
     _engine = new IV.AnimationEngine({
-      steps: STEPS.map((s, i) => ({
-        label: s.label,
-        description: s.what,
-        duration: 3000,
-        enter() { _updateStep(page, i); },
-      })),
+      steps: STEPS.map(function (s, i) {
+        return {
+          label: s.label,
+          description: s.what,
+          duration: 3000,
+          enter: function () { _updateStep(page, i); },
+        };
+      }),
     });
 
-    page.querySelectorAll('.rel-pill').forEach(elm => {
-      elm.addEventListener('click', () => _engine.goto(parseInt(elm.dataset.step, 10)));
+    page.querySelectorAll('.rel-pill').forEach(function (elm) {
+      elm.addEventListener('click', function () {
+        _engine.goto(parseInt(elm.dataset.step, 10));
+      });
     });
 
     IV.AnimationControls.register(_engine);
@@ -5194,7 +5294,7 @@ kbd {
     title: 'Relationships',
     group: 'db-design',
     render: _render,
-    destroy() {
+    destroy: function () {
       if (_engine) { _engine.destroy(); _engine = null; }
       window.IcebergViz.AnimationControls.hide();
     },
@@ -5206,38 +5306,41 @@ kbd {
 <!-- js/modules/normalization.js -->
 <script>
 /* ============================================================
-   Module: Normalization
+   Module: Normalization — v2 (visual upgrade)
    0NF → 1NF → 2NF → 3NF on ShopFlow's orders_flat table.
    ============================================================ */
 
 (function () {
   'use strict';
 
-  const IV = window.IcebergViz;
-  const SVG = IV.SVG;
-  const el = SVG.el, esc = SVG.esc;
+  var IV = window.IcebergViz;
+  var SVG = IV.SVG;
+  var el = SVG.el, esc = SVG.esc;
 
-  const T_H = 22, R_H = 15;   // title height, row height
+  var T_H = 22, R_H = 15;
 
-  /* ── Draw a compact table ────────────────────────────────── */
+  /* ── Draw a compact table (visual upgrade) ───────────────── */
   function _tbl(name, cols, x, y, w, accent) {
-    const h = T_H + cols.length * R_H;
-    const parts = [];
+    var h = T_H + cols.length * R_H;
+    var parts = [];
+    /* header bg + accent strip */
     parts.push(el('rect', { x: x, y: y, width: w, height: T_H, rx: 5,
-      fill: accent + '22', stroke: accent + '55' }));
+      fill: accent + '2a', stroke: accent + '55' }));
+    parts.push(el('rect', { x: x + 1, y: y + 1, width: w - 2, height: 3, rx: 4, fill: accent + '70' }));
     parts.push(el('text', { x: x + 7, y: y + 15, fill: accent,
       'font-size': 10, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(name)));
+    /* body */
     parts.push(el('rect', { x: x, y: y + T_H, width: w, height: h - T_H,
-      fill: '#161b22', stroke: '#30363d' }));
+      fill: '#0c1420', stroke: '#1c2b3a', 'stroke-width': 1 }));
     cols.forEach(function (col, i) {
       var ry = y + T_H + i * R_H;
-      if (i % 2) parts.push(el('rect', { x: x + 1, y: ry, width: w - 2, height: R_H, fill: '#1c212866' }));
-      var tc = col.tag === 'PK' ? '#f59e0b' : col.tag === 'FK' ? '#8b5cf6' : (col.color || '#6e7681');
-      var nc = col.tag === 'PK' ? '#e6edf3' : col.tag === 'FK' ? '#d2bfff' : (col.color ? '#e6edf3' : '#8b949e');
+      if (i % 2) parts.push(el('rect', { x: x + 1, y: ry, width: w - 2, height: R_H, fill: '#101e2e55' }));
+      var tc = col.tag === 'PK' ? '#f59e0b' : col.tag === 'FK' ? '#8b5cf6' : (col.color || '#374151');
+      var nc = col.tag === 'PK' ? '#fde68a' : col.tag === 'FK' ? '#d2bfff' : (col.color ? '#e2e8f0' : '#6b7280');
       if (col.tag) {
         parts.push(el('text', { x: x + 6, y: ry + 11, fill: tc,
           'font-size': 7.5, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(col.tag)));
-        parts.push(el('text', { x: x + 25, y: ry + 11, fill: nc,
+        parts.push(el('text', { x: x + 26, y: ry + 11, fill: nc,
           'font-size': 8.5, 'font-family': 'var(--font-mono,monospace)' }, esc(col.name)));
       } else {
         parts.push(el('text', { x: x + 8, y: ry + 11, fill: nc,
@@ -5247,40 +5350,41 @@ kbd {
     return el('g', {}, parts);
   }
 
-  /* ── Draw a bezier arrow ─────────────────────────────────── */
+  /* ── Bezier arrow ────────────────────────────────────────── */
   function _arrow(x1, y1, x2, y2, color) {
-    color = color || '#58a6ff88';
+    color = color || '#58a6ff99';
     var mx = (x1 + x2) / 2;
     var d = 'M' + x1 + ',' + y1 + ' C' + mx + ',' + y1 + ' ' + mx + ',' + y2 + ' ' + x2 + ',' + y2;
-    var dx = x2 - mx, dy = 0, len = Math.sqrt(dx * dx + dy * dy) || 1;
-    var ux = dx / len, uy = dy / len;
-    var pts = x2 + ',' + y2 + ' ' + (x2 - 7 * ux - 4 * uy) + ',' + (y2 - 7 * uy + 4 * ux) +
-              ' ' + (x2 - 7 * ux + 4 * uy) + ',' + (y2 - 7 * uy - 4 * ux);
+    var dx = x2 - mx, len = Math.abs(dx) || 1;
+    var ux = dx / len;
+    var pts = x2 + ',' + y2 + ' ' + (x2 - 7 * ux - 4) + ',' + (y2 - 4) +
+              ' ' + (x2 - 7 * ux + 4) + ',' + (y2 + 4);
     return el('g', {}, [
-      el('path', { d: d, fill: 'none', stroke: color, 'stroke-width': 1.5 }),
+      el('path', { d: d, fill: 'none', stroke: color, 'stroke-width': 1.8 }),
       el('polygon', { points: pts, fill: color }),
     ]);
   }
 
-  /* ── Vertical arrow (for cross-row links) ────────────────── */
+  /* ── Vertical arrow ─────────────────────────────────────── */
   function _varrow(x1, y1, x2, y2, color) {
-    color = color || '#58a6ff88';
+    color = color || '#58a6ff99';
     var my = (y1 + y2) / 2;
     var d = 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + my + ' ' + x2 + ',' + my + ' ' + x2 + ',' + y2;
-    var dx = 0, dy = y2 - my, len = Math.abs(dy) || 1;
-    var ux = dx / len, uy = dy / len;
     var pts = x2 + ',' + y2 + ' ' + (x2 - 4) + ',' + (y2 - 7) + ' ' + (x2 + 4) + ',' + (y2 - 7);
     return el('g', {}, [
-      el('path', { d: d, fill: 'none', stroke: color, 'stroke-width': 1.5 }),
+      el('path', { d: d, fill: 'none', stroke: color, 'stroke-width': 1.8 }),
       el('polygon', { points: pts, fill: color }),
     ]);
   }
 
+  /* ── Badge ───────────────────────────────────────────────── */
   function _badge(x, y, w, text, color) {
     return el('g', {}, [
-      el('rect', { x: x, y: y, width: w, height: 20, rx: 4, fill: color + '22', stroke: color + '55' }),
-      el('text', { x: x + 8, y: y + 14, fill: color,
-        'font-size': 10, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(text)),
+      el('rect', { x: x, y: y, width: w, height: 20, rx: 5,
+        fill: color + '1e', stroke: color + '50' }),
+      el('rect', { x: x + 1, y: y + 1, width: 3, height: 18, rx: 3, fill: color + '80' }),
+      el('text', { x: x + 12, y: y + 14, fill: color,
+        'font-size': 9.5, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(text)),
     ]);
   }
 
@@ -5311,20 +5415,19 @@ kbd {
       { y: 38 + T_H + 12.5 * R_H, label: 'LINE ITEM',      color: '#ef4444' },
     ];
     var parts = [
-      _badge(14, 10, 310, '500M rows x 14 cols — everything in one table', '#ef4444'),
+      _badge(14, 10, 315, '500M rows x 14 cols — everything in one table', '#ef4444'),
       _tbl('orders_flat', cols, 14, 36, 345, '#ef4444'),
     ];
     groupY.forEach(function (g) {
       parts.push(el('text', { x: 372, y: g.y + 4,
-        fill: g.color, 'font-size': 9, 'font-family': 'var(--font-sans,sans-serif)', 'font-weight': 700 }, esc(g.label)));
+        fill: g.color, 'font-size': 9, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(g.label)));
     });
-    // redundancy bracket
     var bTop = 38 + T_H + 2 * R_H, bBot = 38 + T_H + 9 * R_H;
     parts.push(el('line', { x1: 364, y1: bTop, x2: 364, y2: bBot, stroke: '#f59e0b55', 'stroke-width': 1.5 }));
     parts.push(el('text', { x: 369, y: bTop + (bBot - bTop) / 2 - 5,
-      fill: '#f59e0b88', 'font-size': 8, 'font-family': 'var(--font-sans,sans-serif)' }, 'repeats per'));
+      fill: '#f59e0b99', 'font-size': 8, 'font-family': 'var(--font-mono,monospace)' }, 'repeats per'));
     parts.push(el('text', { x: 369, y: bTop + (bBot - bTop) / 2 + 7,
-      fill: '#f59e0b88', 'font-size': 8, 'font-family': 'var(--font-sans,sans-serif)' }, 'every order'));
+      fill: '#f59e0b99', 'font-size': 8, 'font-family': 'var(--font-mono,monospace)' }, 'every order'));
     return el('g', {}, parts);
   }
 
@@ -5348,22 +5451,20 @@ kbd {
     ];
     var partialY = 36 + T_H + 4 * R_H;
     var parts = [
-      _badge(14, 10, 280, 'PK set — 1NF satisfied. Partial deps remain.', '#f59e0b'),
+      _badge(14, 10, 282, 'PK set — 1NF satisfied. Partial deps remain.', '#f59e0b'),
       _tbl('orders_flat', cols, 14, 36, 345, '#f59e0b'),
     ];
-    // Partial dep bracket on right
     parts.push(el('line', { x1: 363, y1: partialY, x2: 363, y2: partialY + 3 * R_H,
       stroke: '#f59e0b88', 'stroke-width': 1.5 }));
     parts.push(el('text', { x: 368, y: partialY + 1.2 * R_H,
-      fill: '#f59e0b', 'font-size': 8.5, 'font-family': 'var(--font-sans,sans-serif)' }, 'depends only'));
+      fill: '#f59e0b', 'font-size': 8.5, 'font-family': 'var(--font-mono,monospace)' }, 'depends only'));
     parts.push(el('text', { x: 368, y: partialY + 2.2 * R_H,
-      fill: '#f59e0b', 'font-size': 8.5, 'font-family': 'var(--font-sans,sans-serif)' }, 'on customer_id'));
-    // Partial dep bracket: product cols
+      fill: '#f59e0b', 'font-size': 8.5, 'font-family': 'var(--font-mono,monospace)' }, 'on customer_id'));
     var pY = 36 + T_H + 7 * R_H;
     parts.push(el('line', { x1: 363, y1: pY, x2: 363, y2: pY + 2 * R_H,
       stroke: '#10b98188', 'stroke-width': 1.5 }));
     parts.push(el('text', { x: 368, y: pY + R_H,
-      fill: '#10b981', 'font-size': 8.5, 'font-family': 'var(--font-sans,sans-serif)' }, 'product_id only'));
+      fill: '#10b981', 'font-size': 8.5, 'font-family': 'var(--font-mono,monospace)' }, 'product_id only'));
     return el('g', {}, parts);
   }
 
@@ -5396,20 +5497,17 @@ kbd {
     var px = 358, pw = 162;
     var ty = 38;
     var parts = [
-      _badge(14, 10, 280, '2NF: partial deps split into 3 tables', '#f59e0b'),
+      _badge(14, 10, 282, '2NF: partial deps split into 3 tables', '#f59e0b'),
       _tbl('orders', oCols, ox, ty, ow, '#8b5cf6'),
       _tbl('order_items', iCols, ix, ty, iw, '#ef4444'),
       _tbl('products', pCols, px, ty, pw, '#10b981'),
-      // order_items.order_id → orders
-      _arrow(ix, ty + T_H + 0.5 * R_H, ox + ow, ty + T_H * 0.5, '#8b5cf666'),
-      // order_items.product_id → products
-      _arrow(ix + iw, ty + T_H + R_H * 1.5, px, ty + T_H * 0.5, '#10b98166'),
+      _arrow(ix, ty + T_H + 0.5 * R_H, ox + ow, ty + T_H * 0.5, '#8b5cf699'),
+      _arrow(ix + iw, ty + T_H + R_H * 1.5, px, ty + T_H * 0.5, '#10b98199'),
     ];
-    // Transitive dep note
     var noteY = ty + T_H + oCols.length * R_H + 14;
     parts.push(_badge(ox, noteY, ow, 'still: customer_name', '#f59e0b'));
-    parts.push(el('text', { x: ox + 8, y: noteY + 30,
-      fill: '#f59e0b88', 'font-size': 8.5, 'font-family': 'var(--font-sans,sans-serif)' },
+    parts.push(el('text', { x: ox + 8, y: noteY + 31,
+      fill: '#f59e0b88', 'font-size': 8.5, 'font-family': 'var(--font-mono,monospace)' },
       'transitive: depends on customer_id'));
     return el('g', {}, parts);
   }
@@ -5427,24 +5525,19 @@ kbd {
     var ix = 307, iw = 145, iy = 38;
     var sx = 12, sw = 118, sy = 180;
     var px = 146, pw = 155, py = 180;
-
     var iBottom = iy + T_H + iCols.length * R_H;
 
     var parts = [
-      _badge(14, 10, 270, '3NF: transitive deps removed — 5 clean tables', '#10b981'),
+      _badge(14, 10, 272, '3NF: transitive deps removed — 5 clean tables', '#10b981'),
       _tbl('customers', cCols, cx, cy, cw, '#3b82f6'),
       _tbl('orders', oCols, ox, oy, ow, '#8b5cf6'),
       _tbl('order_items', iCols, ix, iy, iw, '#ef4444'),
       _tbl('sellers', sCols, sx, sy, sw, '#f59e0b'),
       _tbl('products', pCols, px, py, pw, '#10b981'),
-      // orders → customers
-      _arrow(ox, oy + T_H + R_H * 1.5, cx + cw, cy + T_H * 0.5, '#3b82f666'),
-      // order_items → orders
-      _arrow(ix, iy + T_H + R_H * 0.5, ox + ow, oy + T_H * 0.5, '#8b5cf666'),
-      // order_items → products (cross-row)
-      _varrow(ix + iw * 0.65, iBottom, px + pw * 0.65, py, '#10b98166'),
-      // products → sellers
-      _arrow(px, py + T_H + R_H * 1.5, sx + sw, sy + T_H * 0.5, '#f59e0b66'),
+      _arrow(ox, oy + T_H + R_H * 1.5, cx + cw, cy + T_H * 0.5, '#3b82f699'),
+      _arrow(ix, iy + T_H + R_H * 0.5, ox + ow, oy + T_H * 0.5, '#8b5cf699'),
+      _varrow(ix + iw * 0.65, iBottom, px + pw * 0.65, py, '#10b98199'),
+      _arrow(px, py + T_H + R_H * 1.5, sx + sw, sy + T_H * 0.5, '#f59e0b99'),
     ];
     return el('g', {}, parts);
   }
@@ -5462,35 +5555,35 @@ kbd {
     var ix = 307, iw = 145, iy = 32;
     var sx = 12, sw = 118, sy = 168;
     var px = 146, pw = 155, py = 168;
-
     var iBottom = iy + T_H + iCols.length * R_H;
     var statsY = 262;
 
     var parts = [
-      _badge(14, 6, 200, '5 tables, zero redundancy', '#3b82f6'),
+      _badge(14, 6, 202, '5 tables, zero redundancy', '#3b82f6'),
       _tbl('customers', cCols, cx, cy, cw, '#3b82f6'),
       _tbl('orders', oCols, ox, oy, ow, '#8b5cf6'),
       _tbl('order_items', iCols, ix, iy, iw, '#ef4444'),
       _tbl('sellers', sCols, sx, sy, sw, '#f59e0b'),
       _tbl('products', pCols, px, py, pw, '#10b981'),
-      _arrow(ox, oy + T_H + R_H * 1.5, cx + cw, cy + T_H * 0.5, '#3b82f666'),
-      _arrow(ix, iy + T_H + R_H * 0.5, ox + ow, oy + T_H * 0.5, '#8b5cf666'),
-      _varrow(ix + iw * 0.65, iBottom, px + pw * 0.65, py, '#10b98166'),
-      _arrow(px, py + T_H + R_H * 1.5, sx + sw, sy + T_H * 0.5, '#f59e0b66'),
+      _arrow(ox, oy + T_H + R_H * 1.5, cx + cw, cy + T_H * 0.5, '#3b82f699'),
+      _arrow(ix, iy + T_H + R_H * 0.5, ox + ow, oy + T_H * 0.5, '#8b5cf699'),
+      _varrow(ix + iw * 0.65, iBottom, px + pw * 0.65, py, '#10b98199'),
+      _arrow(px, py + T_H + R_H * 1.5, sx + sw, sy + T_H * 0.5, '#f59e0b99'),
     ];
 
     var statsData = [
-      { label: 'Storage', val: '50GB → 8GB', color: '#3b82f6', x: 14 },
-      { label: 'Update 1 customer', val: '47M rows → 1 row', color: '#10b981', x: 175 },
-      { label: 'Anomalies', val: 'eliminated', color: '#a855f7', x: 370 },
+      { label: 'Storage',           val: '50GB → 8GB',    color: '#3b82f6', x: 14  },
+      { label: 'Update 1 customer', val: '47M rows → 1',  color: '#10b981', x: 175 },
+      { label: 'Anomalies',         val: 'eliminated',    color: '#a855f7', x: 370 },
     ];
     statsData.forEach(function (s) {
-      parts.push(el('rect', { x: s.x, y: statsY, width: 155, height: 30, rx: 5,
-        fill: s.color + '15', stroke: s.color + '44' }));
-      parts.push(el('text', { x: s.x + 8, y: statsY + 12,
-        fill: s.color, 'font-size': 8.5, 'font-family': 'var(--font-sans,sans-serif)', 'font-weight': 700 }, esc(s.label)));
-      parts.push(el('text', { x: s.x + 8, y: statsY + 25,
-        fill: s.color, 'font-size': 10.5, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(s.val)));
+      parts.push(el('rect', { x: s.x, y: statsY, width: 155, height: 34, rx: 7,
+        fill: s.color + '18', stroke: s.color + '44' }));
+      parts.push(el('rect', { x: s.x + 1, y: statsY + 1, width: 3, height: 32, rx: 3, fill: s.color + '80' }));
+      parts.push(el('text', { x: s.x + 11, y: statsY + 13,
+        fill: s.color, 'font-size': 8.5, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(s.label)));
+      parts.push(el('text', { x: s.x + 11, y: statsY + 28,
+        fill: s.color, 'font-size': 11, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(s.val)));
     });
 
     return el('g', {}, parts);
@@ -5538,9 +5631,20 @@ kbd {
   ];
 
   function _buildDiagram(si) {
+    var step = STEPS[si];
+    var sc = step.color;
+    var gradId = 'normglow' + si;
+    var defs = el('defs', {}, [
+      el('radialGradient', { id: gradId, cx: '50%', cy: '50%', r: '65%' }, [
+        el('stop', { offset: '0%', 'stop-color': sc, 'stop-opacity': '0.07' }),
+        el('stop', { offset: '100%', 'stop-color': sc, 'stop-opacity': '0' }),
+      ]),
+    ]);
     return el('svg', { viewBox: '0 0 540 310', xmlns: 'http://www.w3.org/2000/svg',
-      role: 'img', 'aria-label': STEPS[si].label + ' normalization diagram' }, [
-      el('rect', { width: 540, height: 310, fill: '#0d1117', rx: 8 }),
+      role: 'img', 'aria-label': step.label + ' normalization diagram' }, [
+      defs,
+      el('rect', { width: 540, height: 310, fill: '#07090f', rx: 10 }),
+      el('rect', { width: 540, height: 310, fill: 'url(#' + gradId + ')', rx: 10 }),
       DIAGRAMS[si](),
     ]);
   }
@@ -5549,33 +5653,36 @@ kbd {
   var _engine = null;
 
   function _buildHTML() {
-    var pills = STEPS.map(function (s, i) {
-      return '<button class="norm-pill step-pill' + (i === 0 ? ' active' : '') +
-             '" data-step="' + i + '">' + esc(s.label) + '</button>';
-    }).join('');
-
     var s0 = STEPS[0];
+    var pills = STEPS.map(function (s, i) {
+      var active = i === 0;
+      var sty = active
+        ? ' style="background:' + s.color + '18;color:' + s.color + ';border-left-color:' + s.color + ';"'
+        : '';
+      return '<button class="norm-pill' + (active ? ' active' : '') + '" data-step="' + i + '"' + sty + '>'
+        + esc(s.label) + '</button>';
+    }).join('');
 
     return [
 '<style>',
 '.norm-page { display: grid; grid-template-rows: auto 1fr; height: calc(100vh - 52px - 52px); overflow: hidden; padding: 0; gap: 0; min-height: 0; }',
-'.norm-header { padding: 20px 28px 16px; border-bottom: 1px solid var(--border-default); background: var(--bg-2); flex-shrink: 0; }',
+'.norm-header { padding: 20px 28px 16px; border-bottom: 1px solid var(--border-default); background: var(--bg-2); position: relative; overflow: hidden; flex-shrink: 0; transition: background 0.3s ease; }',
 '.norm-tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; padding: 3px 10px; border-radius: 9999px; border: 1px solid; margin-bottom: 8px; }',
 '.norm-nf-badge { display: inline-block; font-size: 10px; font-weight: 700; font-family: var(--font-mono); padding: 2px 8px; border-radius: 4px; background: var(--bg-3); color: var(--text-muted); margin-left: 8px; vertical-align: middle; }',
-'.norm-title { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }',
+'.norm-title { font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #e6edf3 0%, #10b981 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 4px; letter-spacing: -0.02em; }',
 '.norm-sub { font-size: 13px; color: var(--text-muted); }',
 '.norm-body { display: grid; grid-template-columns: 155px 1fr; gap: 0; overflow: hidden; min-height: 0; }',
-'.norm-sidebar { border-right: 1px solid var(--border-default); overflow-y: auto; padding: 12px 8px; background: var(--bg-2); }',
-'.norm-sidebar .step-pill { display: block; width: 100%; text-align: left; margin-bottom: 4px; }',
-'.norm-sidebar .step-pill.active { background: var(--blue-subtle); color: var(--blue); border-color: rgba(88,166,255,.25); }',
+'.norm-sidebar { border-right: 1px solid var(--border-default); overflow-y: auto; padding: 10px 6px; background: var(--bg-2); }',
+'.norm-pill { display: block; width: 100%; text-align: left; margin-bottom: 3px; border-left: 3px solid transparent; padding: 6px 10px 6px 10px; border-radius: 0 6px 6px 0; font-size: 12.5px; color: var(--text-secondary); background: none; cursor: pointer; border-top: none; border-right: none; border-bottom: none; transition: background 0.12s, color 0.12s; }',
+'.norm-pill:hover { background: var(--bg-3); color: var(--text-primary); }',
 '.norm-main { display: flex; flex-direction: column; overflow: hidden; min-height: 0; }',
 '.norm-diagram { flex: 1; min-height: 0; position: relative; overflow: hidden; background: var(--bg-1); }',
 '.norm-diagram svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; }',
-'.norm-info { border-top: 1px solid var(--border-default); padding: 10px 20px 12px; background: var(--bg-2); flex: 0 0 auto; max-height: 175px; overflow-y: auto; }',
-'.norm-grid { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 3px; align-items: baseline; }',
-'.norm-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); white-space: nowrap; }',
-'.norm-val { font-size: 12.5px; color: var(--text-secondary); line-height: 1.4; }',
-'.norm-eg { font-family: var(--font-mono); color: var(--text-primary); font-size: 11px; }',
+'.norm-info { border-top: 1px solid var(--border-default); border-left: 3px solid transparent; padding: 10px 20px 12px; background: var(--bg-2); flex: 0 0 auto; max-height: 175px; overflow-y: auto; transition: border-left-color 0.2s ease; }',
+'.norm-grid { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 4px; align-items: baseline; }',
+'.norm-lbl { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--text-muted); white-space: nowrap; padding-top: 1px; }',
+'.norm-val { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; }',
+'.norm-eg { font-family: var(--font-mono); color: var(--blue); font-size: 11px; }',
 '</style>',
 '<div class="norm-header">',
 '  <div>',
@@ -5586,10 +5693,10 @@ kbd {
 '  <p class="norm-sub">Eliminating redundancy in ShopFlow\'s <code>orders_flat</code> table — 0NF through 3NF.</p>',
 '</div>',
 '<div class="norm-body">',
-'  <div class="norm-sidebar"><div class="step-pills" style="flex-direction:column;">' + pills + '</div></div>',
+'  <div class="norm-sidebar">' + pills + '</div>',
 '  <div class="norm-main">',
 '    <div class="norm-diagram norm-diagram-slot">' + _buildDiagram(0) + '</div>',
-'    <div class="norm-info">',
+'    <div class="norm-info norm-info-panel" style="border-left-color:' + s0.color + ';">',
 '      <div class="norm-grid">',
 '        <span class="norm-lbl">What</span><span class="norm-val norm-what">' + esc(s0.what) + '</span>',
 '        <span class="norm-lbl">Why</span><span class="norm-val norm-why">' + esc(s0.why) + '</span>',
@@ -5605,18 +5712,46 @@ kbd {
   function _updateStep(page, si) {
     var s = STEPS[si];
 
+    /* pills */
     page.querySelectorAll('.norm-pill').forEach(function (elm, i) {
-      elm.classList.toggle('active', i === si);
+      var isActive = i === si;
+      elm.classList.toggle('active', isActive);
+      if (isActive) {
+        elm.style.background = s.color + '18';
+        elm.style.color = s.color;
+        elm.style.borderLeftColor = s.color;
+      } else {
+        elm.style.background = '';
+        elm.style.color = '';
+        elm.style.borderLeftColor = 'transparent';
+      }
     });
 
+    /* header ambient glow */
+    var header = page.querySelector('.norm-header');
+    if (header) {
+      header.style.background = 'radial-gradient(ellipse at 20% 50%, ' + s.color + '0c 0%, #161b22 55%)';
+    }
+
+    /* step tag */
     var tag = page.querySelector('.norm-tag');
-    if (tag) { tag.textContent = s.label; tag.style.background = s.color + '1e'; tag.style.color = s.color; tag.style.borderColor = s.color + '40'; }
+    if (tag) {
+      tag.textContent = s.label;
+      tag.style.background = s.color + '1e';
+      tag.style.color = s.color;
+      tag.style.borderColor = s.color + '40';
+    }
 
     var nf = page.querySelector('.norm-nf-slot');
     if (nf) nf.textContent = s.nf;
 
+    /* diagram */
     var diag = page.querySelector('.norm-diagram-slot');
     if (diag) diag.innerHTML = _buildDiagram(si);
+
+    /* info panel border */
+    var info = page.querySelector('.norm-info-panel');
+    if (info) info.style.borderLeftColor = s.color;
 
     function _set(sel, val) { var n = page.querySelector(sel); if (n) n.textContent = val; }
     _set('.norm-what', s.what);

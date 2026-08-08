@@ -1,36 +1,39 @@
 /* ============================================================
-   Module: Normalization
+   Module: Normalization — v2 (visual upgrade)
    0NF → 1NF → 2NF → 3NF on ShopFlow's orders_flat table.
    ============================================================ */
 
 (function () {
   'use strict';
 
-  const IV = window.IcebergViz;
-  const SVG = IV.SVG;
-  const el = SVG.el, esc = SVG.esc;
+  var IV = window.IcebergViz;
+  var SVG = IV.SVG;
+  var el = SVG.el, esc = SVG.esc;
 
-  const T_H = 22, R_H = 15;   // title height, row height
+  var T_H = 22, R_H = 15;
 
-  /* ── Draw a compact table ────────────────────────────────── */
+  /* ── Draw a compact table (visual upgrade) ───────────────── */
   function _tbl(name, cols, x, y, w, accent) {
-    const h = T_H + cols.length * R_H;
-    const parts = [];
+    var h = T_H + cols.length * R_H;
+    var parts = [];
+    /* header bg + accent strip */
     parts.push(el('rect', { x: x, y: y, width: w, height: T_H, rx: 5,
-      fill: accent + '22', stroke: accent + '55' }));
+      fill: accent + '2a', stroke: accent + '55' }));
+    parts.push(el('rect', { x: x + 1, y: y + 1, width: w - 2, height: 3, rx: 4, fill: accent + '70' }));
     parts.push(el('text', { x: x + 7, y: y + 15, fill: accent,
       'font-size': 10, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(name)));
+    /* body */
     parts.push(el('rect', { x: x, y: y + T_H, width: w, height: h - T_H,
-      fill: '#161b22', stroke: '#30363d' }));
+      fill: '#0c1420', stroke: '#1c2b3a', 'stroke-width': 1 }));
     cols.forEach(function (col, i) {
       var ry = y + T_H + i * R_H;
-      if (i % 2) parts.push(el('rect', { x: x + 1, y: ry, width: w - 2, height: R_H, fill: '#1c212866' }));
-      var tc = col.tag === 'PK' ? '#f59e0b' : col.tag === 'FK' ? '#8b5cf6' : (col.color || '#6e7681');
-      var nc = col.tag === 'PK' ? '#e6edf3' : col.tag === 'FK' ? '#d2bfff' : (col.color ? '#e6edf3' : '#8b949e');
+      if (i % 2) parts.push(el('rect', { x: x + 1, y: ry, width: w - 2, height: R_H, fill: '#101e2e55' }));
+      var tc = col.tag === 'PK' ? '#f59e0b' : col.tag === 'FK' ? '#8b5cf6' : (col.color || '#374151');
+      var nc = col.tag === 'PK' ? '#fde68a' : col.tag === 'FK' ? '#d2bfff' : (col.color ? '#e2e8f0' : '#6b7280');
       if (col.tag) {
         parts.push(el('text', { x: x + 6, y: ry + 11, fill: tc,
           'font-size': 7.5, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(col.tag)));
-        parts.push(el('text', { x: x + 25, y: ry + 11, fill: nc,
+        parts.push(el('text', { x: x + 26, y: ry + 11, fill: nc,
           'font-size': 8.5, 'font-family': 'var(--font-mono,monospace)' }, esc(col.name)));
       } else {
         parts.push(el('text', { x: x + 8, y: ry + 11, fill: nc,
@@ -40,40 +43,41 @@
     return el('g', {}, parts);
   }
 
-  /* ── Draw a bezier arrow ─────────────────────────────────── */
+  /* ── Bezier arrow ────────────────────────────────────────── */
   function _arrow(x1, y1, x2, y2, color) {
-    color = color || '#58a6ff88';
+    color = color || '#58a6ff99';
     var mx = (x1 + x2) / 2;
     var d = 'M' + x1 + ',' + y1 + ' C' + mx + ',' + y1 + ' ' + mx + ',' + y2 + ' ' + x2 + ',' + y2;
-    var dx = x2 - mx, dy = 0, len = Math.sqrt(dx * dx + dy * dy) || 1;
-    var ux = dx / len, uy = dy / len;
-    var pts = x2 + ',' + y2 + ' ' + (x2 - 7 * ux - 4 * uy) + ',' + (y2 - 7 * uy + 4 * ux) +
-              ' ' + (x2 - 7 * ux + 4 * uy) + ',' + (y2 - 7 * uy - 4 * ux);
+    var dx = x2 - mx, len = Math.abs(dx) || 1;
+    var ux = dx / len;
+    var pts = x2 + ',' + y2 + ' ' + (x2 - 7 * ux - 4) + ',' + (y2 - 4) +
+              ' ' + (x2 - 7 * ux + 4) + ',' + (y2 + 4);
     return el('g', {}, [
-      el('path', { d: d, fill: 'none', stroke: color, 'stroke-width': 1.5 }),
+      el('path', { d: d, fill: 'none', stroke: color, 'stroke-width': 1.8 }),
       el('polygon', { points: pts, fill: color }),
     ]);
   }
 
-  /* ── Vertical arrow (for cross-row links) ────────────────── */
+  /* ── Vertical arrow ─────────────────────────────────────── */
   function _varrow(x1, y1, x2, y2, color) {
-    color = color || '#58a6ff88';
+    color = color || '#58a6ff99';
     var my = (y1 + y2) / 2;
     var d = 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + my + ' ' + x2 + ',' + my + ' ' + x2 + ',' + y2;
-    var dx = 0, dy = y2 - my, len = Math.abs(dy) || 1;
-    var ux = dx / len, uy = dy / len;
     var pts = x2 + ',' + y2 + ' ' + (x2 - 4) + ',' + (y2 - 7) + ' ' + (x2 + 4) + ',' + (y2 - 7);
     return el('g', {}, [
-      el('path', { d: d, fill: 'none', stroke: color, 'stroke-width': 1.5 }),
+      el('path', { d: d, fill: 'none', stroke: color, 'stroke-width': 1.8 }),
       el('polygon', { points: pts, fill: color }),
     ]);
   }
 
+  /* ── Badge ───────────────────────────────────────────────── */
   function _badge(x, y, w, text, color) {
     return el('g', {}, [
-      el('rect', { x: x, y: y, width: w, height: 20, rx: 4, fill: color + '22', stroke: color + '55' }),
-      el('text', { x: x + 8, y: y + 14, fill: color,
-        'font-size': 10, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(text)),
+      el('rect', { x: x, y: y, width: w, height: 20, rx: 5,
+        fill: color + '1e', stroke: color + '50' }),
+      el('rect', { x: x + 1, y: y + 1, width: 3, height: 18, rx: 3, fill: color + '80' }),
+      el('text', { x: x + 12, y: y + 14, fill: color,
+        'font-size': 9.5, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(text)),
     ]);
   }
 
@@ -104,20 +108,19 @@
       { y: 38 + T_H + 12.5 * R_H, label: 'LINE ITEM',      color: '#ef4444' },
     ];
     var parts = [
-      _badge(14, 10, 310, '500M rows x 14 cols — everything in one table', '#ef4444'),
+      _badge(14, 10, 315, '500M rows x 14 cols — everything in one table', '#ef4444'),
       _tbl('orders_flat', cols, 14, 36, 345, '#ef4444'),
     ];
     groupY.forEach(function (g) {
       parts.push(el('text', { x: 372, y: g.y + 4,
-        fill: g.color, 'font-size': 9, 'font-family': 'var(--font-sans,sans-serif)', 'font-weight': 700 }, esc(g.label)));
+        fill: g.color, 'font-size': 9, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(g.label)));
     });
-    // redundancy bracket
     var bTop = 38 + T_H + 2 * R_H, bBot = 38 + T_H + 9 * R_H;
     parts.push(el('line', { x1: 364, y1: bTop, x2: 364, y2: bBot, stroke: '#f59e0b55', 'stroke-width': 1.5 }));
     parts.push(el('text', { x: 369, y: bTop + (bBot - bTop) / 2 - 5,
-      fill: '#f59e0b88', 'font-size': 8, 'font-family': 'var(--font-sans,sans-serif)' }, 'repeats per'));
+      fill: '#f59e0b99', 'font-size': 8, 'font-family': 'var(--font-mono,monospace)' }, 'repeats per'));
     parts.push(el('text', { x: 369, y: bTop + (bBot - bTop) / 2 + 7,
-      fill: '#f59e0b88', 'font-size': 8, 'font-family': 'var(--font-sans,sans-serif)' }, 'every order'));
+      fill: '#f59e0b99', 'font-size': 8, 'font-family': 'var(--font-mono,monospace)' }, 'every order'));
     return el('g', {}, parts);
   }
 
@@ -141,22 +144,20 @@
     ];
     var partialY = 36 + T_H + 4 * R_H;
     var parts = [
-      _badge(14, 10, 280, 'PK set — 1NF satisfied. Partial deps remain.', '#f59e0b'),
+      _badge(14, 10, 282, 'PK set — 1NF satisfied. Partial deps remain.', '#f59e0b'),
       _tbl('orders_flat', cols, 14, 36, 345, '#f59e0b'),
     ];
-    // Partial dep bracket on right
     parts.push(el('line', { x1: 363, y1: partialY, x2: 363, y2: partialY + 3 * R_H,
       stroke: '#f59e0b88', 'stroke-width': 1.5 }));
     parts.push(el('text', { x: 368, y: partialY + 1.2 * R_H,
-      fill: '#f59e0b', 'font-size': 8.5, 'font-family': 'var(--font-sans,sans-serif)' }, 'depends only'));
+      fill: '#f59e0b', 'font-size': 8.5, 'font-family': 'var(--font-mono,monospace)' }, 'depends only'));
     parts.push(el('text', { x: 368, y: partialY + 2.2 * R_H,
-      fill: '#f59e0b', 'font-size': 8.5, 'font-family': 'var(--font-sans,sans-serif)' }, 'on customer_id'));
-    // Partial dep bracket: product cols
+      fill: '#f59e0b', 'font-size': 8.5, 'font-family': 'var(--font-mono,monospace)' }, 'on customer_id'));
     var pY = 36 + T_H + 7 * R_H;
     parts.push(el('line', { x1: 363, y1: pY, x2: 363, y2: pY + 2 * R_H,
       stroke: '#10b98188', 'stroke-width': 1.5 }));
     parts.push(el('text', { x: 368, y: pY + R_H,
-      fill: '#10b981', 'font-size': 8.5, 'font-family': 'var(--font-sans,sans-serif)' }, 'product_id only'));
+      fill: '#10b981', 'font-size': 8.5, 'font-family': 'var(--font-mono,monospace)' }, 'product_id only'));
     return el('g', {}, parts);
   }
 
@@ -189,20 +190,17 @@
     var px = 358, pw = 162;
     var ty = 38;
     var parts = [
-      _badge(14, 10, 280, '2NF: partial deps split into 3 tables', '#f59e0b'),
+      _badge(14, 10, 282, '2NF: partial deps split into 3 tables', '#f59e0b'),
       _tbl('orders', oCols, ox, ty, ow, '#8b5cf6'),
       _tbl('order_items', iCols, ix, ty, iw, '#ef4444'),
       _tbl('products', pCols, px, ty, pw, '#10b981'),
-      // order_items.order_id → orders
-      _arrow(ix, ty + T_H + 0.5 * R_H, ox + ow, ty + T_H * 0.5, '#8b5cf666'),
-      // order_items.product_id → products
-      _arrow(ix + iw, ty + T_H + R_H * 1.5, px, ty + T_H * 0.5, '#10b98166'),
+      _arrow(ix, ty + T_H + 0.5 * R_H, ox + ow, ty + T_H * 0.5, '#8b5cf699'),
+      _arrow(ix + iw, ty + T_H + R_H * 1.5, px, ty + T_H * 0.5, '#10b98199'),
     ];
-    // Transitive dep note
     var noteY = ty + T_H + oCols.length * R_H + 14;
     parts.push(_badge(ox, noteY, ow, 'still: customer_name', '#f59e0b'));
-    parts.push(el('text', { x: ox + 8, y: noteY + 30,
-      fill: '#f59e0b88', 'font-size': 8.5, 'font-family': 'var(--font-sans,sans-serif)' },
+    parts.push(el('text', { x: ox + 8, y: noteY + 31,
+      fill: '#f59e0b88', 'font-size': 8.5, 'font-family': 'var(--font-mono,monospace)' },
       'transitive: depends on customer_id'));
     return el('g', {}, parts);
   }
@@ -220,24 +218,19 @@
     var ix = 307, iw = 145, iy = 38;
     var sx = 12, sw = 118, sy = 180;
     var px = 146, pw = 155, py = 180;
-
     var iBottom = iy + T_H + iCols.length * R_H;
 
     var parts = [
-      _badge(14, 10, 270, '3NF: transitive deps removed — 5 clean tables', '#10b981'),
+      _badge(14, 10, 272, '3NF: transitive deps removed — 5 clean tables', '#10b981'),
       _tbl('customers', cCols, cx, cy, cw, '#3b82f6'),
       _tbl('orders', oCols, ox, oy, ow, '#8b5cf6'),
       _tbl('order_items', iCols, ix, iy, iw, '#ef4444'),
       _tbl('sellers', sCols, sx, sy, sw, '#f59e0b'),
       _tbl('products', pCols, px, py, pw, '#10b981'),
-      // orders → customers
-      _arrow(ox, oy + T_H + R_H * 1.5, cx + cw, cy + T_H * 0.5, '#3b82f666'),
-      // order_items → orders
-      _arrow(ix, iy + T_H + R_H * 0.5, ox + ow, oy + T_H * 0.5, '#8b5cf666'),
-      // order_items → products (cross-row)
-      _varrow(ix + iw * 0.65, iBottom, px + pw * 0.65, py, '#10b98166'),
-      // products → sellers
-      _arrow(px, py + T_H + R_H * 1.5, sx + sw, sy + T_H * 0.5, '#f59e0b66'),
+      _arrow(ox, oy + T_H + R_H * 1.5, cx + cw, cy + T_H * 0.5, '#3b82f699'),
+      _arrow(ix, iy + T_H + R_H * 0.5, ox + ow, oy + T_H * 0.5, '#8b5cf699'),
+      _varrow(ix + iw * 0.65, iBottom, px + pw * 0.65, py, '#10b98199'),
+      _arrow(px, py + T_H + R_H * 1.5, sx + sw, sy + T_H * 0.5, '#f59e0b99'),
     ];
     return el('g', {}, parts);
   }
@@ -255,35 +248,35 @@
     var ix = 307, iw = 145, iy = 32;
     var sx = 12, sw = 118, sy = 168;
     var px = 146, pw = 155, py = 168;
-
     var iBottom = iy + T_H + iCols.length * R_H;
     var statsY = 262;
 
     var parts = [
-      _badge(14, 6, 200, '5 tables, zero redundancy', '#3b82f6'),
+      _badge(14, 6, 202, '5 tables, zero redundancy', '#3b82f6'),
       _tbl('customers', cCols, cx, cy, cw, '#3b82f6'),
       _tbl('orders', oCols, ox, oy, ow, '#8b5cf6'),
       _tbl('order_items', iCols, ix, iy, iw, '#ef4444'),
       _tbl('sellers', sCols, sx, sy, sw, '#f59e0b'),
       _tbl('products', pCols, px, py, pw, '#10b981'),
-      _arrow(ox, oy + T_H + R_H * 1.5, cx + cw, cy + T_H * 0.5, '#3b82f666'),
-      _arrow(ix, iy + T_H + R_H * 0.5, ox + ow, oy + T_H * 0.5, '#8b5cf666'),
-      _varrow(ix + iw * 0.65, iBottom, px + pw * 0.65, py, '#10b98166'),
-      _arrow(px, py + T_H + R_H * 1.5, sx + sw, sy + T_H * 0.5, '#f59e0b66'),
+      _arrow(ox, oy + T_H + R_H * 1.5, cx + cw, cy + T_H * 0.5, '#3b82f699'),
+      _arrow(ix, iy + T_H + R_H * 0.5, ox + ow, oy + T_H * 0.5, '#8b5cf699'),
+      _varrow(ix + iw * 0.65, iBottom, px + pw * 0.65, py, '#10b98199'),
+      _arrow(px, py + T_H + R_H * 1.5, sx + sw, sy + T_H * 0.5, '#f59e0b99'),
     ];
 
     var statsData = [
-      { label: 'Storage', val: '50GB → 8GB', color: '#3b82f6', x: 14 },
-      { label: 'Update 1 customer', val: '47M rows → 1 row', color: '#10b981', x: 175 },
-      { label: 'Anomalies', val: 'eliminated', color: '#a855f7', x: 370 },
+      { label: 'Storage',           val: '50GB → 8GB',    color: '#3b82f6', x: 14  },
+      { label: 'Update 1 customer', val: '47M rows → 1',  color: '#10b981', x: 175 },
+      { label: 'Anomalies',         val: 'eliminated',    color: '#a855f7', x: 370 },
     ];
     statsData.forEach(function (s) {
-      parts.push(el('rect', { x: s.x, y: statsY, width: 155, height: 30, rx: 5,
-        fill: s.color + '15', stroke: s.color + '44' }));
-      parts.push(el('text', { x: s.x + 8, y: statsY + 12,
-        fill: s.color, 'font-size': 8.5, 'font-family': 'var(--font-sans,sans-serif)', 'font-weight': 700 }, esc(s.label)));
-      parts.push(el('text', { x: s.x + 8, y: statsY + 25,
-        fill: s.color, 'font-size': 10.5, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(s.val)));
+      parts.push(el('rect', { x: s.x, y: statsY, width: 155, height: 34, rx: 7,
+        fill: s.color + '18', stroke: s.color + '44' }));
+      parts.push(el('rect', { x: s.x + 1, y: statsY + 1, width: 3, height: 32, rx: 3, fill: s.color + '80' }));
+      parts.push(el('text', { x: s.x + 11, y: statsY + 13,
+        fill: s.color, 'font-size': 8.5, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(s.label)));
+      parts.push(el('text', { x: s.x + 11, y: statsY + 28,
+        fill: s.color, 'font-size': 11, 'font-family': 'var(--font-mono,monospace)', 'font-weight': 700 }, esc(s.val)));
     });
 
     return el('g', {}, parts);
@@ -331,9 +324,20 @@
   ];
 
   function _buildDiagram(si) {
+    var step = STEPS[si];
+    var sc = step.color;
+    var gradId = 'normglow' + si;
+    var defs = el('defs', {}, [
+      el('radialGradient', { id: gradId, cx: '50%', cy: '50%', r: '65%' }, [
+        el('stop', { offset: '0%', 'stop-color': sc, 'stop-opacity': '0.07' }),
+        el('stop', { offset: '100%', 'stop-color': sc, 'stop-opacity': '0' }),
+      ]),
+    ]);
     return el('svg', { viewBox: '0 0 540 310', xmlns: 'http://www.w3.org/2000/svg',
-      role: 'img', 'aria-label': STEPS[si].label + ' normalization diagram' }, [
-      el('rect', { width: 540, height: 310, fill: '#0d1117', rx: 8 }),
+      role: 'img', 'aria-label': step.label + ' normalization diagram' }, [
+      defs,
+      el('rect', { width: 540, height: 310, fill: '#07090f', rx: 10 }),
+      el('rect', { width: 540, height: 310, fill: 'url(#' + gradId + ')', rx: 10 }),
       DIAGRAMS[si](),
     ]);
   }
@@ -342,33 +346,36 @@
   var _engine = null;
 
   function _buildHTML() {
-    var pills = STEPS.map(function (s, i) {
-      return '<button class="norm-pill step-pill' + (i === 0 ? ' active' : '') +
-             '" data-step="' + i + '">' + esc(s.label) + '</button>';
-    }).join('');
-
     var s0 = STEPS[0];
+    var pills = STEPS.map(function (s, i) {
+      var active = i === 0;
+      var sty = active
+        ? ' style="background:' + s.color + '18;color:' + s.color + ';border-left-color:' + s.color + ';"'
+        : '';
+      return '<button class="norm-pill' + (active ? ' active' : '') + '" data-step="' + i + '"' + sty + '>'
+        + esc(s.label) + '</button>';
+    }).join('');
 
     return [
 '<style>',
 '.norm-page { display: grid; grid-template-rows: auto 1fr; height: calc(100vh - 52px - 52px); overflow: hidden; padding: 0; gap: 0; min-height: 0; }',
-'.norm-header { padding: 20px 28px 16px; border-bottom: 1px solid var(--border-default); background: var(--bg-2); flex-shrink: 0; }',
+'.norm-header { padding: 20px 28px 16px; border-bottom: 1px solid var(--border-default); background: var(--bg-2); position: relative; overflow: hidden; flex-shrink: 0; transition: background 0.3s ease; }',
 '.norm-tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; padding: 3px 10px; border-radius: 9999px; border: 1px solid; margin-bottom: 8px; }',
 '.norm-nf-badge { display: inline-block; font-size: 10px; font-weight: 700; font-family: var(--font-mono); padding: 2px 8px; border-radius: 4px; background: var(--bg-3); color: var(--text-muted); margin-left: 8px; vertical-align: middle; }',
-'.norm-title { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }',
+'.norm-title { font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #e6edf3 0%, #10b981 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 4px; letter-spacing: -0.02em; }',
 '.norm-sub { font-size: 13px; color: var(--text-muted); }',
 '.norm-body { display: grid; grid-template-columns: 155px 1fr; gap: 0; overflow: hidden; min-height: 0; }',
-'.norm-sidebar { border-right: 1px solid var(--border-default); overflow-y: auto; padding: 12px 8px; background: var(--bg-2); }',
-'.norm-sidebar .step-pill { display: block; width: 100%; text-align: left; margin-bottom: 4px; }',
-'.norm-sidebar .step-pill.active { background: var(--blue-subtle); color: var(--blue); border-color: rgba(88,166,255,.25); }',
+'.norm-sidebar { border-right: 1px solid var(--border-default); overflow-y: auto; padding: 10px 6px; background: var(--bg-2); }',
+'.norm-pill { display: block; width: 100%; text-align: left; margin-bottom: 3px; border-left: 3px solid transparent; padding: 6px 10px 6px 10px; border-radius: 0 6px 6px 0; font-size: 12.5px; color: var(--text-secondary); background: none; cursor: pointer; border-top: none; border-right: none; border-bottom: none; transition: background 0.12s, color 0.12s; }',
+'.norm-pill:hover { background: var(--bg-3); color: var(--text-primary); }',
 '.norm-main { display: flex; flex-direction: column; overflow: hidden; min-height: 0; }',
 '.norm-diagram { flex: 1; min-height: 0; position: relative; overflow: hidden; background: var(--bg-1); }',
 '.norm-diagram svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; }',
-'.norm-info { border-top: 1px solid var(--border-default); padding: 10px 20px 12px; background: var(--bg-2); flex: 0 0 auto; max-height: 175px; overflow-y: auto; }',
-'.norm-grid { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 3px; align-items: baseline; }',
-'.norm-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); white-space: nowrap; }',
-'.norm-val { font-size: 12.5px; color: var(--text-secondary); line-height: 1.4; }',
-'.norm-eg { font-family: var(--font-mono); color: var(--text-primary); font-size: 11px; }',
+'.norm-info { border-top: 1px solid var(--border-default); border-left: 3px solid transparent; padding: 10px 20px 12px; background: var(--bg-2); flex: 0 0 auto; max-height: 175px; overflow-y: auto; transition: border-left-color 0.2s ease; }',
+'.norm-grid { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 4px; align-items: baseline; }',
+'.norm-lbl { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--text-muted); white-space: nowrap; padding-top: 1px; }',
+'.norm-val { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; }',
+'.norm-eg { font-family: var(--font-mono); color: var(--blue); font-size: 11px; }',
 '</style>',
 '<div class="norm-header">',
 '  <div>',
@@ -379,10 +386,10 @@
 '  <p class="norm-sub">Eliminating redundancy in ShopFlow\'s <code>orders_flat</code> table — 0NF through 3NF.</p>',
 '</div>',
 '<div class="norm-body">',
-'  <div class="norm-sidebar"><div class="step-pills" style="flex-direction:column;">' + pills + '</div></div>',
+'  <div class="norm-sidebar">' + pills + '</div>',
 '  <div class="norm-main">',
 '    <div class="norm-diagram norm-diagram-slot">' + _buildDiagram(0) + '</div>',
-'    <div class="norm-info">',
+'    <div class="norm-info norm-info-panel" style="border-left-color:' + s0.color + ';">',
 '      <div class="norm-grid">',
 '        <span class="norm-lbl">What</span><span class="norm-val norm-what">' + esc(s0.what) + '</span>',
 '        <span class="norm-lbl">Why</span><span class="norm-val norm-why">' + esc(s0.why) + '</span>',
@@ -398,18 +405,46 @@
   function _updateStep(page, si) {
     var s = STEPS[si];
 
+    /* pills */
     page.querySelectorAll('.norm-pill').forEach(function (elm, i) {
-      elm.classList.toggle('active', i === si);
+      var isActive = i === si;
+      elm.classList.toggle('active', isActive);
+      if (isActive) {
+        elm.style.background = s.color + '18';
+        elm.style.color = s.color;
+        elm.style.borderLeftColor = s.color;
+      } else {
+        elm.style.background = '';
+        elm.style.color = '';
+        elm.style.borderLeftColor = 'transparent';
+      }
     });
 
+    /* header ambient glow */
+    var header = page.querySelector('.norm-header');
+    if (header) {
+      header.style.background = 'radial-gradient(ellipse at 20% 50%, ' + s.color + '0c 0%, #161b22 55%)';
+    }
+
+    /* step tag */
     var tag = page.querySelector('.norm-tag');
-    if (tag) { tag.textContent = s.label; tag.style.background = s.color + '1e'; tag.style.color = s.color; tag.style.borderColor = s.color + '40'; }
+    if (tag) {
+      tag.textContent = s.label;
+      tag.style.background = s.color + '1e';
+      tag.style.color = s.color;
+      tag.style.borderColor = s.color + '40';
+    }
 
     var nf = page.querySelector('.norm-nf-slot');
     if (nf) nf.textContent = s.nf;
 
+    /* diagram */
     var diag = page.querySelector('.norm-diagram-slot');
     if (diag) diag.innerHTML = _buildDiagram(si);
+
+    /* info panel border */
+    var info = page.querySelector('.norm-info-panel');
+    if (info) info.style.borderLeftColor = s.color;
 
     function _set(sel, val) { var n = page.querySelector(sel); if (n) n.textContent = val; }
     _set('.norm-what', s.what);
