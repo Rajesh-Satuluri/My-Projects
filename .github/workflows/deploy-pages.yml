@@ -45,11 +45,11 @@ jobs:
           ref: claude/python-pyspark-companion
           path: _branches/python
 
-      - name: Checkout databricks branch
+      - name: Checkout db-engineering branch
         uses: actions/checkout@v4
         with:
           ref: claude/visualizer-app-shell-06nnvp
-          path: _branches/databricks
+          path: _branches/db-engineering
 
       - name: Checkout snowflake branch
         uses: actions/checkout@v4
@@ -74,11 +74,14 @@ jobs:
           mkdir -p /tmp/site-root/python
           cp -r _branches/python/python-companion/. /tmp/site-root/python/
 
-          mkdir -p /tmp/site-root/databricks
-          cp -r _branches/databricks/db-engineering-visualizer/. /tmp/site-root/databricks/
+          mkdir -p /tmp/site-root/db-engineering
+          cp -r _branches/db-engineering/db-engineering-visualizer/. /tmp/site-root/db-engineering/
 
           mkdir -p /tmp/site-root/snowflake
           cp -r _branches/snowflake/snowflake-visualizer/. /tmp/site-root/snowflake/
+
+          mkdir -p /tmp/site-root/databricks
+          cp -r databricks-visualizer/. /tmp/site-root/databricks/
 
           cp landing/index.html /tmp/site-root/index.html
           touch /tmp/site-root/.nojekyll
