@@ -1,46 +1,103 @@
-name: Deploy GitHub Pages
+name: Deploy All Visualizers to GitHub Pages
 
 on:
   push:
     branches:
-      - gh-pages
+      - claude/apache-flink-visualizer-f5tmg5
+      - claude/visual-design-build-plan-l636r4
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout gh-pages content
+      - name: Checkout flink+kafka branch
         uses: actions/checkout@v4
         with:
-          ref: gh-pages
+          ref: claude/apache-flink-visualizer-f5tmg5
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Checkout iceberg branch
+        uses: actions/checkout@v4
         with:
-          path: '.'
+          ref: claude/iceberg-visualizer-v77ua8
+          path: _branches/iceberg
 
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Checkout dbt branch
+        uses: actions/checkout@v4
         with:
-          timeout: 1200000
+          ref: claude/dbt-learning-module-e1393i
+          path: _branches/dbt
+
+      - name: Checkout python branch
+        uses: actions/checkout@v4
+        with:
+          ref: claude/python-pyspark-companion
+          path: _branches/python
+
+      - name: Checkout db-engineering branch
+        uses: actions/checkout@v4
+        with:
+          ref: claude/visualizer-app-shell-06nnvp
+          path: _branches/db-engineering
+
+      - name: Checkout snowflake branch
+        uses: actions/checkout@v4
+        with:
+          ref: claude/new-project-branch-i29f9y
+          path: _branches/snowflake
+
+      - name: Checkout db-internals branch
+        uses: actions/checkout@v4
+        with:
+          ref: claude/visual-design-build-plan-l636r4
+          path: _branches/db-internals
+
+      - name: Stage all visualizers
+        run: |
+          mkdir -p /tmp/site-root/flink
+          cp -r flink-visualizer/. /tmp/site-root/flink/
+
+          mkdir -p /tmp/site-root/kafka
+          cp -r kafka-visualizer/. /tmp/site-root/kafka/
+
+          mkdir -p /tmp/site-root/iceberg
+          cp -r _branches/iceberg/iceberg-visualizer/. /tmp/site-root/iceberg/
+
+          mkdir -p /tmp/site-root/dbt
+          cp -r _branches/dbt/dbt-visualizer/. /tmp/site-root/dbt/
+
+          mkdir -p /tmp/site-root/python
+          cp -r _branches/python/python-companion/. /tmp/site-root/python/
+
+          mkdir -p /tmp/site-root/db-engineering
+          cp -r _branches/db-engineering/db-engineering-visualizer/. /tmp/site-root/db-engineering/
+
+          mkdir -p /tmp/site-root/snowflake
+          cp -r _branches/snowflake/snowflake-visualizer/. /tmp/site-root/snowflake/
+
+          mkdir -p /tmp/site-root/databricks
+          cp -r databricks-visualizer/. /tmp/site-root/databricks/
+
+          mkdir -p /tmp/site-root/db-internals
+          cp -r _branches/db-internals/db-internals-visualizer/. /tmp/site-root/db-internals/
+
+          cp _branches/db-internals/landing/index.html /tmp/site-root/index.html
+          touch /tmp/site-root/.nojekyll
+
+          echo "Staged:"
+          ls /tmp/site-root/
+
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: /tmp/site-root
+          publish_branch: gh-pages
+          force_orphan: true
