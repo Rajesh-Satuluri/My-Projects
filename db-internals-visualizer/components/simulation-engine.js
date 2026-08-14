@@ -26,6 +26,17 @@ export class SimulationEngine {
     this._playing = false;
     this._timer   = null;
     this._listeners = {};
+    this._canvas  = null;   // set via attach() for the (state, canvas) render API
+  }
+
+  /**
+   * New-API binding: attach a canvas so onRender is called as (state, canvas).
+   * Triggers an initial render at the reset state. Returns the engine.
+   */
+  attach(canvas) {
+    this._canvas = canvas;
+    this.reset();
+    return this;
   }
 
   // ── Public API ────────────────────────────────────────────────────────────
@@ -57,6 +68,7 @@ export class SimulationEngine {
     if (this.steps[this._step]?.mutate) this.steps[this._step].mutate(this._state);
     this._render();
     this._emit('change');
+    if (this._step >= 0) this._emit('step', this._step);
   }
 
   previous() {
@@ -68,6 +80,7 @@ export class SimulationEngine {
     this._rebuildTo(this._step);
     this._render();
     this._emit('change');
+    if (this._step >= 0) this._emit('step', this._step);
   }
 
   jumpTo(stepIdx) {
@@ -77,6 +90,7 @@ export class SimulationEngine {
     this._step = stepIdx;
     this._render();
     this._emit('change');
+    if (this._step >= 0) this._emit('step', this._step);
   }
 
   get isPlaying()   { return this._playing; }
@@ -132,12 +146,15 @@ export class SimulationEngine {
   }
 
   _render() {
-    if (this.onRender)  this.onRender(this._state, this._step, this.steps);
+    if (this.onRender) {
+      if (this._canvas) this.onRender(this._state, this._canvas, this._step, this.steps);
+      else              this.onRender(this._state, this._step, this.steps);
+    }
     if (this.onMetrics) this.onMetrics(this._state, this._step);
   }
 
-  _emit(event) {
-    (this._listeners[event] || []).forEach(fn => fn(this));
+  _emit(event, arg) {
+    (this._listeners[event] || []).forEach(fn => fn(arg !== undefined ? arg : this));
   }
 
   // ── Static helpers (call after engine is bound to DOM) ────────────────────
@@ -147,10 +164,22 @@ export class SimulationEngine {
    * Buttons must have ids: sim-prev, sim-play, sim-pause, sim-next, sim-reset.
    * Returns an unsubscribe function.
    */
-  static renderControls(container, engine) {
+  static renderControls(a, b) {
+    // New API: renderControls(engine) → returns a ready-to-append element.
+    if (a instanceof SimulationEngine) {
+      const ctrl = document.createElement('div');
+      ctrl.className = 'canvas-controls';
+      SimulationEngine._wireControls(ctrl, a);
+      return ctrl;
+    }
+    // Old API: renderControls(container, engine) → fills container, returns unsub.
+    const container = a, engine = b;
     const ctrl = container.querySelector('.canvas-controls');
     if (!ctrl) return () => {};
+    return SimulationEngine._wireControls(ctrl, engine);
+  }
 
+  static _wireControls(ctrl, engine) {
     ctrl.innerHTML = `
       <button class="ctrl-btn" id="sim-reset" title="Reset">↺ Reset</button>
       <button class="ctrl-btn" id="sim-prev"  title="Previous step">⏮ Prev</button>
@@ -202,10 +231,22 @@ export class SimulationEngine {
    * Render a scrubber timeline inside `container.querySelector('.sim-timeline')`.
    * Returns an unsubscribe function.
    */
-  static renderTimeline(container, engine) {
+  static renderTimeline(a, b) {
+    // New API: renderTimeline(engine [, steps]) → returns a ready-to-append element.
+    if (a instanceof SimulationEngine) {
+      const tl = document.createElement('div');
+      tl.className = 'sim-timeline';
+      SimulationEngine._wireTimeline(tl, a);
+      return tl;
+    }
+    // Old API: renderTimeline(container, engine) → fills container, returns unsub.
+    const container = a, engine = b;
     const tl = container.querySelector('.sim-timeline');
     if (!tl) return () => {};
+    return SimulationEngine._wireTimeline(tl, engine);
+  }
 
+  static _wireTimeline(tl, engine) {
     function rebuild(eng) {
       tl.innerHTML = eng.steps.map((s, i) => {
         let cls = 'sim-step';
