@@ -43,7 +43,13 @@ export function renderNav(activeId, doneSet) {
         </div>
       `).join('')}
     `;
-  }).join('');
+  }).join('') + `
+    <div class="nav-group-header">Review</div>
+    <div class="nav-item ${activeId === 'study' ? 'active' : ''}" data-module="study" role="button" tabindex="0">
+      <span class="nav-icon">📚</span>
+      <span class="nav-label">Study Hub</span>
+      <span class="nav-number">★</span>
+    </div>`;
 
   list.querySelectorAll('.nav-item').forEach(el => {
     el.addEventListener('click', () => {

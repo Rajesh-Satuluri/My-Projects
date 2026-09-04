@@ -1,8 +1,15 @@
 import { MODULES, renderNav, updateProgress } from './components/nav.js';
+import { initCommandPalette } from './components/command-palette.js';
+import { renderPager } from './components/pager.js';
+import { toast } from './components/toast.js';
+import { maybeRunTour } from './components/tour.js';
+import { createQuiz, initQuiz } from './components/quiz.js';
+import { QUIZ_BANK } from './data/quiz-bank.js';
 
 // ── Module loaders (lazy) ─────────────────────────────────────────────────
 const LOADERS = {
   m01: () => import('./modules/m01-intro.js'),
+  study: () => import('./modules/study.js'),
   m02: () => import('./modules/m02-placeholder.js'),
   m03: () => import('./modules/m03-placeholder.js'),
   m04: () => import('./modules/m04-placeholder.js'),
@@ -43,6 +50,10 @@ async function navigate(id) {
   const mod = MODULES.find(m => m.id === id);
   updateBreadcrumb(mod);
   renderNav(id, done);
+  if (id === 'study') {
+    const bc = document.getElementById('breadcrumb');
+    if (bc) bc.innerHTML = `<span class="breadcrumb-group">Review</span><span class="breadcrumb-sep">›</span><span class="breadcrumb-title">📚 Study Hub</span>`;
+  }
 
   try {
     const module = await LOADERS[id]();
@@ -50,14 +61,19 @@ async function navigate(id) {
     canvas.innerHTML = '';
     activeCleanup = module.mount(canvas) || null;
 
-    // Mark done after 30s of viewing
-    if (!done.has(id)) {
+    // Auto-inject the "Test Yourself" quiz (where a bank exists) + Prev/Next pager.
+    enhanceModule(id);
+
+    // Mark real modules done after 30s of viewing (Study Hub is excluded).
+    if (mod && !done.has(id)) {
       setTimeout(() => {
         if (activeId === id) {
           done.add(id);
           localStorage.setItem('flink_done', JSON.stringify([...done]));
           renderNav(id, done);
           updateProgress(done);
+          toast(`Module complete — ${mod.title}`, { icon: '✅' });
+          if (done.size === MODULES.length) toast('All 19 modules complete!', { icon: '🏆', duration: 4200 });
         }
       }, 30000);
     }
@@ -70,6 +86,21 @@ async function navigate(id) {
       <p class="welcome-sub">This module is being built in the next iteration.</p>
     </div>`;
   }
+}
+
+// Inject the quiz section (if a bank exists for this module) and the pager.
+function enhanceModule(id) {
+  const canvas = document.getElementById('module-canvas');
+  const page = canvas.querySelector('.module-page');
+  if (page && QUIZ_BANK[id]) {
+    const holder = document.createElement('div');
+    holder.innerHTML = createQuiz(id, QUIZ_BANK[id]);
+    if (holder.firstElementChild) {
+      page.appendChild(holder.firstElementChild);
+      initQuiz(page);
+    }
+  }
+  renderPager(id);
 }
 
 function updateBreadcrumb(mod) {
@@ -191,7 +222,34 @@ document.addEventListener('keydown', e => {
   mq.addEventListener('change', ev => { if (!ev.matches) closeNav(); });
 })();
 
+// ── Swipe between modules (touch) ───────────────────────────────────────────
+(() => {
+  const canvas = document.getElementById('module-canvas');
+  if (!canvas) return;
+  let x0 = null, y0 = null;
+  canvas.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) { x0 = null; return; }
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+  }, { passive: true });
+  canvas.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - x0, dy = t.clientY - y0;
+    x0 = null;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return; // not a horizontal swipe
+    // Don't hijack swipes that belong to horizontally-scrollable children.
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    if (el && el.closest('table, .timeline-wrap, .compare-table, pre, .code-block, .quiz-opts, [data-no-swipe]')) return;
+    const idx = MODULES.findIndex(m => m.id === activeId);
+    if (idx === -1) return;
+    if (dx < 0 && idx < MODULES.length - 1) window.location.hash = MODULES[idx + 1].id;
+    else if (dx > 0 && idx > 0) window.location.hash = MODULES[idx - 1].id;
+  }, { passive: true });
+})();
+
 // ── Boot ──────────────────────────────────────────────────────────────────
 window.addEventListener('hashchange', onHashChange);
 renderNav(null, done);
 onHashChange();
+initCommandPalette();
+setTimeout(() => maybeRunTour(), 1000);
