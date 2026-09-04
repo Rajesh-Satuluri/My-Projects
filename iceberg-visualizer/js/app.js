@@ -308,6 +308,75 @@
     }
   }
 
+  /* ── Off-canvas nav drawer (tablet / touch) ──────────────── */
+  const _drawerMQ = window.matchMedia('(max-width: 1024px)');
+
+  function _openDrawer() {
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('nav-backdrop');
+    const toggle = document.getElementById('nav-toggle');
+    if (!sidebar) return;
+    sidebar.classList.add('drawer-open');
+    backdrop?.classList.add('visible');
+    toggle?.setAttribute('aria-expanded', 'true');
+  }
+
+  function _closeDrawer() {
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('nav-backdrop');
+    const toggle = document.getElementById('nav-toggle');
+    if (!sidebar) return;
+    sidebar.classList.remove('drawer-open');
+    backdrop?.classList.remove('visible');
+    toggle?.setAttribute('aria-expanded', 'false');
+  }
+
+  // Keep desktop "collapsed" rail and drawer mode from colliding:
+  // in drawer mode the sidebar is always full-width; leaving drawer
+  // mode restores the saved collapse preference.
+  function _syncDrawerMode() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+    if (_drawerMQ.matches) {
+      sidebar.classList.remove('collapsed');
+    } else {
+      _closeDrawer();
+      if (localStorage.getItem('iv-sidebar-collapsed') === '1') {
+        sidebar.classList.add('collapsed');
+      }
+    }
+  }
+
+  function _initDrawer() {
+    const toggle = document.getElementById('nav-toggle');
+    const backdrop = document.getElementById('nav-backdrop');
+    const sidebar = document.getElementById('sidebar');
+
+    toggle?.addEventListener('click', () => {
+      if (sidebar?.classList.contains('drawer-open')) _closeDrawer();
+      else _openDrawer();
+    });
+    backdrop?.addEventListener('click', _closeDrawer);
+
+    // Close after choosing a destination while in drawer mode.
+    document.getElementById('sidebar-nav')?.addEventListener('click', (e) => {
+      if (e.target.closest('a.nav-item') && _drawerMQ.matches) _closeDrawer();
+    });
+
+    // Esc closes the drawer.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && sidebar?.classList.contains('drawer-open')) _closeDrawer();
+    });
+
+    // React to width changes (rotation, window resize).
+    const onChange = () => _syncDrawerMode();
+    if (_drawerMQ.addEventListener) _drawerMQ.addEventListener('change', onChange);
+    else _drawerMQ.addListener(onChange); // older Safari
+    _syncDrawerMode();
+
+    IV._closeDrawer = _closeDrawer;
+  }
+
   /* ── Theme toggle ────────────────────────────────────────── */
   function _initThemeToggle() {
     const btn = document.getElementById('theme-toggle');
@@ -352,6 +421,7 @@
     _buildNav();
     _initSidebarSearch();
     _initSidebarToggle();
+    _initDrawer();
     _initThemeToggle();
     _initShortcutsModal();
     _wireNavCards();

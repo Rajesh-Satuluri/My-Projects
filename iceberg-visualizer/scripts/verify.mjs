@@ -66,8 +66,9 @@ function startServer() {
 }
 
 const VIEWPORTS = [
-  { name: 'desktop',        width: 1440, height: 900 },
-  { name: 'tablet-portrait', width: 810, height: 1080 },
+  { name: 'desktop',          width: 1440, height: 900 },
+  { name: 'tablet-landscape', width: 1080, height: 810 },
+  { name: 'tablet-portrait',  width: 810,  height: 1080 },
 ];
 const THEMES = ['dark', 'light'];
 
@@ -117,6 +118,34 @@ async function main() {
       }
       await page.close();
     }
+  }
+
+  // ── Drawer behavior at tablet width ──────────────────────────
+  {
+    const page = await browser.newPage({ viewport: { width: 810, height: 1080 } });
+    await page.goto(base + '/#home', { waitUntil: 'networkidle' });
+    const togVisible = await page.isVisible('#nav-toggle');
+    if (!togVisible) failures.push('[drawer] hamburger not visible at 810px');
+    await page.click('#nav-toggle');
+    await page.waitForTimeout(200);
+    let open = await page.evaluate(() => document.getElementById('sidebar').classList.contains('drawer-open')
+      && document.getElementById('nav-backdrop').classList.contains('visible'));
+    if (!open) failures.push('[drawer] did not open on hamburger click');
+    await page.click('#nav-backdrop', { position: { x: 700, y: 500 } });
+    await page.waitForTimeout(200);
+    const closed = await page.evaluate(() => !document.getElementById('sidebar').classList.contains('drawer-open'));
+    if (!closed) failures.push('[drawer] backdrop click did not close drawer');
+    checks += 3;
+    await page.close();
+  }
+
+  // Hamburger must be hidden on desktop.
+  {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    await page.goto(base + '/#home', { waitUntil: 'networkidle' });
+    if (await page.isVisible('#nav-toggle')) failures.push('[drawer] hamburger visible on desktop (should be hidden)');
+    checks++;
+    await page.close();
   }
 
   await browser.close();
