@@ -259,9 +259,9 @@ async function main() {
     if (await page.isVisible('.ty-modal.is-open')) failures.push('[quiz] Escape did not close the modal');
 
     // On a screen without a bank the button is hidden.
-    await page.goto(base + '/#update', { waitUntil: 'networkidle' });
+    await page.goto(base + '/#engine-integrations', { waitUntil: 'networkidle' });
     await page.waitForTimeout(150);
-    if (await page.isVisible('#quiz-toggle')) failures.push('[quiz] button visible on a screen with no bank (#update)');
+    if (await page.isVisible('#quiz-toggle')) failures.push('[quiz] button visible on a screen with no bank (#engine-integrations)');
 
     // Study Deck: filters narrow the result set.
     await page.goto(base + '/#study', { waitUntil: 'networkidle' });

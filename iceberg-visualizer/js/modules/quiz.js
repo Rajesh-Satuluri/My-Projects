@@ -246,6 +246,133 @@
       correct: 2,
       explanation: 'Every write produces: (1) the data files, (2) one new manifest file (.avro) listing the data files, (3) a new manifest list (.avro) listing all manifests for the new snapshot, and (4) a new version of metadata.json with the new snapshot and updated current-snapshot-id. The manifest list always references ALL manifests (new + inherited from parent snapshot).',
     },
+    {
+      q: 'ShopKart must apply a heavy hourly UPDATE on orders.events but reads must stay fast. Which delete/update mode fits, and why?',
+      options: [
+        'Merge-on-Read — cheap writes, and reads are unaffected',
+        'Copy-on-Write — rewrites touched files so reads never merge deletes',
+        'Merge-on-Read — because reads merge delete files at query time for free',
+        'Neither; UPDATE is not supported on Iceberg',
+      ],
+      correct: 1,
+      explanation: 'Copy-on-Write rewrites the affected data files, so readers never pay a merge cost — ideal when reads must be fast and writes can absorb the rewrite. Merge-on-Read is the opposite trade-off (cheap writes, merge-on-read cost).',
+    },
+    {
+      q: 'ShopKart runs rewriteDataFiles nightly. What target file size is a sensible default for analytical Parquet?',
+      options: ['1–4 MB', '128–512 MB', '2–4 GB', '10 KB'],
+      correct: 1,
+      explanation: 'Compaction typically targets ~128–512 MB files — large enough to amortize open/planning overhead, small enough for parallelism and pruning. Tiny files kill planning; multi-GB files hurt parallelism and pruning granularity.',
+    },
+    {
+      q: 'Two Flink jobs commit to the same table at the same instant. Under Iceberg optimistic concurrency, what happens?',
+      options: [
+        'Both silently succeed and one set of data is lost',
+        'One wins the atomic pointer swap; the other detects the conflict and retries against the new state',
+        'The table locks until one finishes',
+        'The table is corrupted',
+      ],
+      correct: 1,
+      explanation: 'Iceberg uses OCC: exactly one writer wins the atomic compare-and-swap of the metadata pointer. The loser re-reads the current snapshot and retries (or fails per its conflict policy). No lock service is required.',
+    },
+    {
+      q: 'ShopKart partitions orders by customer_id, which is very high-cardinality. Which transform avoids millions of tiny partitions?',
+      options: [
+        'identity(customer_id)',
+        'bucket(64, customer_id)',
+        'day(customer_id)',
+        'truncate(1, customer_id)',
+      ],
+      correct: 1,
+      explanation: 'bucket(N, col) hashes a high-cardinality column into a fixed number of buckets, giving even file sizes and good pruning without exploding the partition count. identity() on customer_id would create a partition per customer.',
+    },
+    {
+      q: 'What does a sort order (or Z-order clustering) primarily improve?',
+      options: [
+        'Write throughput',
+        'Data locality so column min/max stats prune more files for range/point queries',
+        'Snapshot expiration speed',
+        'Catalog lookups',
+      ],
+      correct: 1,
+      explanation: 'Sorting/clustering co-locates similar values, tightening per-file min/max bounds. Tighter bounds mean the planner skips more files for filtered queries — a big win on selective predicates.',
+    },
+    {
+      q: 'ShopKart wants to validate a nightly load before analysts see it. Which Iceberg feature enables write-audit-publish?',
+      options: [
+        'Snapshot expiration',
+        'Branches and tags (write to a branch, audit, then fast-forward main)',
+        'Hidden partitioning',
+        'Copy-on-Write',
+      ],
+      correct: 1,
+      explanation: 'Branches let you stage writes on a named ref (e.g. audit), run quality checks, then atomically publish by fast-forwarding main. Tags mark immutable milestones (e.g. quarter-end) for compliance.',
+    },
+    {
+      q: 'Which query reads ShopKart orders as they existed last Tuesday?',
+      options: [
+        'SELECT * FROM orders AS PAST(\'last tuesday\')',
+        "SELECT * FROM orders TIMESTAMP AS OF '2026-08-25 00:00:00'",
+        'SELECT * FROM orders ROLLBACK 7',
+        'SELECT * FROM orders.snapshot(7d)',
+      ],
+      correct: 1,
+      explanation: 'Time travel uses TIMESTAMP AS OF <ts> or VERSION AS OF <snapshot-id>. It reads the historical snapshot without moving the current pointer, so live queries are unaffected.',
+    },
+    {
+      q: 'An analyst renamed a column last year, then dropped and re-added a different column with the same name. Old Parquet files still read correctly because…',
+      options: [
+        'Iceberg rewrote all old files on rename',
+        'Columns are tracked by permanent integer IDs, not names',
+        'Parquet stores the table name mapping',
+        'The catalog keeps a name history',
+      ],
+      correct: 1,
+      explanation: 'Iceberg assigns each column a permanent ID. Reads resolve by ID, so renames/reorders/re-adds never require rewriting data and never confuse an old file with a same-named new column.',
+    },
+    {
+      q: 'Where does Iceberg store the per-column min/max/null statistics used to skip data files?',
+      options: [
+        'metadata.json',
+        'The manifest files (one entry per data file)',
+        'The manifest list',
+        'The catalog',
+      ],
+      correct: 1,
+      explanation: 'Manifest files hold per-data-file column stats (lower/upper bounds, null counts). The manifest list holds partition-range summaries per manifest. Two levels of pruning: manifest-level, then file-level.',
+    },
+    {
+      q: 'ShopKart\'s streaming pipeline commits every 30 seconds and planning has crept to minutes. Root cause and fix?',
+      options: [
+        'Too few columns; add more',
+        'Manifest/small-file explosion from frequent commits; run rewriteManifests + rewriteDataFiles and commit less often',
+        'The catalog is down; restart it',
+        'Schema drift; freeze the schema',
+      ],
+      correct: 1,
+      explanation: 'High-frequency micro-batches create many tiny files and manifests, inflating planning. Consolidate with rewriteManifests, compact with rewriteDataFiles, and reduce commit frequency (larger checkpoints).',
+    },
+    {
+      q: 'What is the role of the sequence number assigned to each snapshot in Iceberg v2?',
+      options: [
+        'It compresses data',
+        'It orders operations so delete files apply only to data files written at or before them',
+        'It names the Parquet files',
+        'It is the catalog port number',
+      ],
+      correct: 1,
+      explanation: 'Sequence numbers give a global ordering. A delete file with sequence number N applies to data files with sequence number ≤ N, which is how Merge-on-Read resolves which rows a delete affects.',
+    },
+    {
+      q: 'INSERT OVERWRITE with dynamic partition mode on ShopKart\'s daily-partitioned table replaces…',
+      options: [
+        'The whole table every run',
+        'Only the partitions the new data lands in',
+        'Nothing — it always appends',
+        'Only metadata.json',
+      ],
+      correct: 1,
+      explanation: 'Dynamic overwrite replaces only the partitions produced by the query (e.g. today\'s date), leaving history intact. Static overwrite replaces everything matching the overwrite filter.',
+    },
   ];
 
   /* ── Render ──────────────────────────────────────────────── */

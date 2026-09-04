@@ -451,6 +451,203 @@ write.delete.mode = <span class="hi-str">'merge-on-read'</span>
 write.pos-delete.enabled = <span class="hi-kw">true</span>`,
       shopkart: '<strong>ShopKart:</strong> The GDPR "right to be forgotten" workflow uses equality delete files (delete by customer_id). The CDC upsert pipeline uses positional deletes (faster write, precise row targeting). Both coexist in the same table.',
     },
+    {
+      q: 'Copy-on-Write vs Merge-on-Read: how do they differ and when do you choose each?',
+      tags: ['intermediate', 'advanced'],
+      answer: `Both implement row-level UPDATE/DELETE; they trade write cost against read cost.
+
+<strong>Copy-on-Write (CoW):</strong> rewrites every data file that contains an affected row, minus/with the changes. Writes are expensive (whole-file rewrite), but reads are as fast as a plain scan — no delete merging.
+<strong>Merge-on-Read (MoR):</strong> writes small delete files (position or equality) plus any new data files. Writes are cheap and fast, but every read must merge deletes against data files, so read cost grows until you compact.
+
+<strong>Choose CoW when</strong> reads dominate and updates are infrequent/bulk (e.g. nightly restatements).
+<strong>Choose MoR when</strong> writes are frequent/low-latency (streaming CDC, GDPR deletes) — then schedule regular compaction to keep reads fast.`,
+      code: `<span class="hi-cm">-- Per-operation or per-table</span>
+<span class="hi-kw">ALTER TABLE</span> shopkart.orders.events <span class="hi-kw">SET</span> <span class="hi-kw">TBLPROPERTIES</span> (
+  <span class="hi-str">'write.update.mode'</span> = <span class="hi-str">'merge-on-read'</span>,
+  <span class="hi-str">'write.delete.mode'</span> = <span class="hi-str">'merge-on-read'</span>,
+  <span class="hi-str">'write.merge.mode'</span>  = <span class="hi-str">'copy-on-write'</span>
+);</span>`,
+      shopkart: '<strong>ShopKart:</strong> streaming CDC into orders.events uses MoR for sub-second commits; the analytics-facing orders_curated table uses CoW so BI dashboards never pay a merge cost. A 2 AM compaction job rewrites MoR deletes away.',
+    },
+    {
+      q: 'Walk through how an Iceberg commit stays atomic and how conflicts are detected.',
+      tags: ['advanced', 'senior'],
+      answer: `Iceberg uses <strong>optimistic concurrency control (OCC)</strong> over an atomic pointer swap — no lock service.
+
+<strong>1.</strong> The writer reads the current metadata.json and remembers its snapshot id (the base).
+<strong>2.</strong> It writes new data files, manifest file(s), and a manifest list <em>speculatively</em> — none of this is visible yet.
+<strong>3.</strong> It asks the catalog to swap the table pointer from base → new metadata, conditional on the base still being current (compare-and-swap).
+<strong>4.</strong> If the base is still current, the swap succeeds — that instant is the commit. If another writer committed first, the CAS fails.
+<strong>5.</strong> On failure the writer re-reads the new current snapshot, re-validates its changes against it (e.g. did the other commit touch the same partitions?), and retries.
+
+Conflict validation depends on the operation's isolation level (serializable vs snapshot) and what the write asserted (appends rarely conflict; overwrites/deletes on the same partition can).`,
+      shopkart: '<strong>ShopKart:</strong> during Black Friday, 40+ concurrent Spark writers hit orders.events. Appends almost never conflict (they only add files); the occasional MERGE conflict retries in <1s. No central lock, no downtime.',
+    },
+    {
+      q: 'Your Spark planning time jumped from seconds to 20+ minutes. Diagnose and fix.',
+      tags: ['advanced', 'senior'],
+      answer: `Almost always a <strong>metadata explosion</strong> — too many manifests and/or tiny data files from high-frequency commits (streaming micro-batches).
+
+<strong>Diagnose:</strong> inspect the metadata tables — <code>files</code> (count + avg size), <code>manifests</code> (count), <code>snapshots</code> (commit frequency). Millions of small files or tens of thousands of manifests is the smoking gun.
+
+<strong>Fix:</strong>
+<strong>1.</strong> <code>rewriteManifests</code> — consolidate many small manifests into a few large ones (cuts planning directly).
+<strong>2.</strong> <code>rewriteDataFiles</code> (compaction) — merge small files toward ~128–512 MB.
+<strong>3.</strong> Reduce commit frequency — larger Flink/Spark checkpoints so each commit adds fewer, bigger files.
+<strong>4.</strong> <code>expireSnapshots</code> — drop old snapshots so their manifests are collectable.`,
+      code: `<span class="hi-cm">-- Consolidate manifests, then compact files</span>
+<span class="hi-kw">CALL</span> catalog.system.<span class="hi-fn">rewrite_manifests</span>(<span class="hi-str">'shopkart.orders.events'</span>);
+<span class="hi-kw">CALL</span> catalog.system.<span class="hi-fn">rewrite_data_files</span>(
+  table => <span class="hi-str">'shopkart.orders.events'</span>,
+  options => <span class="hi-kw">map</span>(<span class="hi-str">'target-file-size-bytes'</span>, <span class="hi-str">'536870912'</span>)
+);</span>`,
+      shopkart: '<strong>ShopKart:</strong> a Flink job checkpointing every 10s produced ~4M manifests. rewrite_manifests + a 512 MB compaction dropped planning from 22 min to 9 s; checkpoint interval was raised to 2 min to stop recurrence.',
+    },
+    {
+      q: 'Compare Apache Iceberg, Delta Lake, and Apache Hudi at a high level.',
+      tags: ['senior'],
+      answer: `All three are open table formats adding ACID + time travel over columnar files. Key differences:
+
+<strong>Iceberg:</strong> immutable snapshot tree with a manifest hierarchy. Engine-agnostic (Spark, Flink, Trino, Dremio, Snowflake, BigQuery), strong hidden partitioning + partition/schema evolution, REST catalog spec. Scales to millions of files via metadata pruning.
+<strong>Delta Lake:</strong> transaction log (_delta_log) of JSON/Parquet actions replayed from checkpoints. Tightly integrated with Spark/Databricks; strong tooling; historically Spark-centric (broadening via delta-kernel + UniForm).
+<strong>Hudi:</strong> record-key centric with primary keys, upsert/CDC as first-class, Copy-on-Write and Merge-on-Read table types, built-in indexing and incremental pulls. Great for streaming upsert workloads.
+
+<strong>Rule of thumb:</strong> Iceberg for multi-engine lakehouse + huge tables; Delta for Databricks-centric shops; Hudi for heavy record-level streaming upserts.`,
+      shopkart: '<strong>ShopKart:</strong> chose Iceberg because the same tables are queried by Spark (ETL), Trino (ad-hoc), and Snowflake (BI) — the engine-neutral catalog and metadata format avoided lock-in.',
+    },
+    {
+      q: 'How do you ingest a stream into Iceberg with exactly-once semantics?',
+      tags: ['advanced', 'senior'],
+      answer: `Exactly-once comes from tying the engine's checkpoint to Iceberg's atomic commit.
+
+<strong>Flink:</strong> the Iceberg sink is a two-phase commit participant. Files are written during the checkpoint; the Iceberg snapshot commit happens on checkpoint completion. If a task fails, the incomplete files are simply never committed (orphans) — no partial snapshot, no duplicates.
+<strong>Spark Structured Streaming:</strong> each micro-batch commits one snapshot; the batch id is tracked so a replayed batch does not double-commit.
+
+<strong>Costs to manage:</strong> frequent commits ⇒ small files/manifests. Tune checkpoint interval, enable fanout/target file size, and schedule compaction. Clean up orphan files from failed writes with <code>remove_orphan_files</code>.`,
+      code: `<span class="hi-cm">-- Flink: commit on checkpoint = exactly-once</span>
+env.<span class="hi-fn">enableCheckpointing</span>(<span class="hi-str">120000</span>); <span class="hi-cm">// 2 min → fewer, bigger commits</span>
+FlinkSink.<span class="hi-fn">forRowData</span>(stream)
+  .<span class="hi-fn">tableLoader</span>(loader)
+  .<span class="hi-fn">upsert</span>(<span class="hi-kw">true</span>)
+  .<span class="hi-fn">append</span>();</span>`,
+      shopkart: '<strong>ShopKart:</strong> clickstream lands via Flink with 2-minute checkpoints (exactly-once), then a Spark job compacts hourly. Duplicate events are impossible even across task restarts.',
+    },
+    {
+      q: 'What catalog options exist, and why is the REST catalog significant?',
+      tags: ['intermediate'],
+      answer: `The catalog maps table name → current metadata.json and performs the atomic commit. Options:
+
+<strong>Hive Metastore:</strong> classic, ubiquitous, but a shared-DB bottleneck and Hive-centric.
+<strong>AWS Glue:</strong> managed metastore on AWS; convenient but AWS-bound.
+<strong>Hadoop/FileSystem:</strong> pointer file in the table dir; simplest, but weak multi-writer guarantees on some object stores.
+<strong>JDBC:</strong> catalog state in a relational DB.
+<strong>Nessie:</strong> git-like catalog with branches/tags across tables.
+<strong>REST catalog:</strong> a <em>specification</em> — an HTTP API any engine can call and any provider can implement.
+
+<strong>Why REST matters:</strong> it decouples engines from a specific metastore. Providers (Tabular/Polaris, Unity, Nessie, Gravitino) implement one API; Spark/Flink/Trino/Snowflake all speak it. It also enables server-side commit coordination, credential vending, and governance.`,
+      shopkart: '<strong>ShopKart:</strong> migrated from Hive Metastore to a REST catalog so Trino, Spark, and Snowflake share one governed catalog with centralized access control and no metastore DB contention.',
+    },
+    {
+      q: 'Explain Iceberg branching and tagging, and the write-audit-publish pattern.',
+      tags: ['advanced'],
+      answer: `<strong>Branch:</strong> a named, mutable reference to a snapshot — an isolated line of commits.
+<strong>Tag:</strong> a named, immutable reference to a specific snapshot — for milestones/compliance.
+
+<strong>Write-Audit-Publish (WAP):</strong>
+<strong>1. Write</strong> the nightly load to a staging branch (e.g. <code>audit</code>) instead of main — production readers never see it.
+<strong>2. Audit</strong> — run data-quality checks against the branch (row counts, null rates, referential checks).
+<strong>3. Publish</strong> — if checks pass, fast-forward main to the branch atomically. If they fail, discard the branch; main was never touched.
+
+This gives you staged, all-or-nothing publishing without copying data.`,
+      code: `<span class="hi-kw">ALTER TABLE</span> orders.events <span class="hi-kw">CREATE BRANCH</span> audit;
+<span class="hi-cm">-- write + validate on the branch, then:</span>
+<span class="hi-kw">CALL</span> catalog.system.<span class="hi-fn">fast_forward</span>(<span class="hi-str">'orders.events'</span>, <span class="hi-str">'main'</span>, <span class="hi-str">'audit'</span>);
+<span class="hi-cm">-- compliance milestone</span>
+<span class="hi-kw">ALTER TABLE</span> orders.events <span class="hi-kw">CREATE TAG</span> <span class="hi-str">\`q3-2026-close\`</span> <span class="hi-kw">RETAIN</span> <span class="hi-str">2555</span> DAYS;</span>`,
+      shopkart: '<strong>ShopKart:</strong> finance tables use WAP — the nightly close writes to an audit branch, a dbt test suite validates it, and only green runs fast-forward to main. Quarter-end snapshots are tagged for 7-year retention.',
+    },
+    {
+      q: 'What are sort orders and clustering (Z-order), and why do they matter?',
+      tags: ['advanced'],
+      answer: `A <strong>sort order</strong> tells writers how to order rows within data files. <strong>Clustering / Z-ordering</strong> interleaves multiple columns so nearby values co-locate in multi-dimensional space.
+
+<strong>Why it matters:</strong> pruning depends on per-file min/max stats. If a filter column is scattered across all files, every file's min/max spans the whole range and nothing prunes. If rows are sorted/clustered on that column, each file covers a narrow range, so the planner skips most files for selective queries.
+
+Sort orders are metadata; you set them and compaction/writes honor them. Z-order is applied during rewriteDataFiles for multi-column locality.`,
+      code: `<span class="hi-kw">ALTER TABLE</span> orders.events <span class="hi-kw">WRITE ORDERED BY</span> event_date, country_code;
+
+<span class="hi-cm">-- Multi-dimensional clustering during compaction</span>
+<span class="hi-kw">CALL</span> catalog.system.<span class="hi-fn">rewrite_data_files</span>(
+  table => <span class="hi-str">'orders.events'</span>,
+  strategy => <span class="hi-str">'sort'</span>,
+  sort_order => <span class="hi-str">'zorder(country_code, customer_id)'</span>
+);</span>`,
+      shopkart: '<strong>ShopKart:</strong> queries filter by country_code + date. Z-ordering on those columns cut files scanned per query by ~85%, turning 12 s dashboards into sub-second ones.',
+    },
+    {
+      q: 'What are Puffin files and table statistics used for in Iceberg?',
+      tags: ['senior'],
+      answer: `<strong>Puffin</strong> is Iceberg's format for auxiliary statistics and indexes stored alongside a table. The most common blob is an <strong>NDV (number of distinct values) sketch</strong> — a Theta/HLL sketch per column.
+
+<strong>Why it matters:</strong> cost-based optimizers (Trino, Spark CBO) need cardinality estimates to pick join orders and strategies. Column min/max in manifests help pruning, but they do not give distinct counts. Puffin sketches provide fast, approximate NDV so the optimizer plans joins well on huge tables.
+
+You generate them with an analyze/compute-stats action; the optimizer reads the Puffin blobs referenced from metadata.`,
+      code: `<span class="hi-cm">-- Compute NDV sketches for the optimizer</span>
+<span class="hi-kw">CALL</span> catalog.system.<span class="hi-fn">compute_table_stats</span>(
+  table => <span class="hi-str">'shopkart.orders.events'</span>,
+  columns => <span class="hi-kw">array</span>(<span class="hi-str">'customer_id'</span>, <span class="hi-str">'product_id'</span>)
+);</span>`,
+      shopkart: '<strong>ShopKart:</strong> after computing NDV sketches, Trino reordered a 5-table join on orders — the CBO now builds the hash side from the smaller relation, cutting a reporting query from 90 s to 14 s.',
+    },
+    {
+      q: 'How do time travel, rollback, and snapshot retention work together?',
+      tags: ['intermediate'],
+      answer: `<strong>Time travel</strong> reads a historical snapshot with <code>VERSION AS OF &lt;snapshot-id&gt;</code> or <code>TIMESTAMP AS OF &lt;ts&gt;</code> — the current pointer is untouched.
+<strong>Rollback</strong> makes a past snapshot current again by writing a new metadata.json that points to it — an O(1) metadata operation, no data movement.
+<strong>Retention</strong> bounds how far back you can go: <code>expireSnapshots</code> drops snapshots older than the window and garbage-collects files no live snapshot references.
+
+The tension: long retention enables deep time travel/rollback but keeps more files (storage + planning cost); short retention reclaims storage but limits history and can break long-running readers. Tag important snapshots so retention never expires them.`,
+      code: `<span class="hi-cm">-- Read + rollback</span>
+<span class="hi-kw">SELECT</span> * <span class="hi-kw">FROM</span> orders.events <span class="hi-kw">TIMESTAMP AS OF</span> <span class="hi-str">'2026-08-25 00:00:00'</span>;
+<span class="hi-kw">CALL</span> catalog.system.<span class="hi-fn">rollback_to_snapshot</span>(<span class="hi-str">'orders.events'</span>, <span class="hi-str">3821904756</span>);
+<span class="hi-cm">-- Retention: keep 30 days, min 5 snapshots</span>
+<span class="hi-kw">CALL</span> catalog.system.<span class="hi-fn">expire_snapshots</span>(<span class="hi-str">'orders.events'</span>, <span class="hi-kw">TIMESTAMP</span> <span class="hi-str">'2026-07-26 00:00:00'</span>, <span class="hi-str">5</span>);</span>`,
+      shopkart: '<strong>ShopKart:</strong> a bad batch double-counted revenue; on-call rolled back orders.events to the prior snapshot in seconds while the pipeline was fixed — no restore-from-backup needed.',
+    },
+    {
+      q: 'In Iceberg v2, how are delete files resolved against data files?',
+      tags: ['senior'],
+      answer: `Every snapshot (and the files it adds) carries a monotonically increasing <strong>sequence number</strong>. Delete files also carry one, and that ordering is how deletes apply.
+
+<strong>Rule:</strong> a delete file with sequence number <em>S</em> applies to data files with sequence number <strong>≤ S</strong>. This ensures a delete only affects rows that existed when the delete was written, and never rows inserted afterward.
+
+Two delete kinds:
+<strong>Position deletes</strong> — (file_path, row_position) pairs; precise and cheap to apply, used by MoR update/delete on known rows.
+<strong>Equality deletes</strong> — column-value predicates (e.g. customer_id = X); apply wherever they match across qualifying data files, used for CDC/GDPR where positions are unknown.
+
+At read time the engine loads the relevant delete files for each data file (by sequence number + partition) and filters rows out during the scan.`,
+      shopkart: '<strong>ShopKart:</strong> GDPR erasure emits equality deletes on customer_id; the CDC pipeline emits position deletes for updated orders. Sequence numbers guarantee a re-inserted order after an erasure is not wrongly deleted.',
+    },
+    {
+      q: 'What is hidden partitioning, and how does it avoid classic Hive partitioning pitfalls?',
+      tags: ['beginner', 'intermediate'],
+      answer: `In Hive, partitioning is a physical directory layout and users must filter on the exact partition column (e.g. a separate <code>dt</code> string). Forget it and you full-scan; get the format wrong and you miss partitions.
+
+<strong>Hidden partitioning:</strong> Iceberg stores a <em>partition transform</em> (e.g. <code>day(event_ts)</code>) in metadata and derives partition values itself. Users filter on the natural column (<code>event_ts</code>) and Iceberg prunes automatically. Benefits:
+
+<strong>No leaky partition column</strong> — no synthetic <code>dt</code> to maintain or mis-format.
+<strong>Correct pruning</strong> — the engine applies the transform to the predicate, so filters always prune.
+<strong>Partition evolution</strong> — you can change the transform later without rewriting old data.
+
+Transforms: identity, bucket(N), truncate(W), year/month/day/hour.`,
+      code: `<span class="hi-kw">CREATE TABLE</span> orders.events (event_ts <span class="hi-kw">timestamp</span>, ...)
+<span class="hi-kw">USING</span> iceberg <span class="hi-kw">PARTITIONED BY</span> (<span class="hi-fn">days</span>(event_ts));
+
+<span class="hi-cm">-- User filters the natural column; Iceberg prunes partitions</span>
+<span class="hi-kw">SELECT</span> * <span class="hi-kw">FROM</span> orders.events
+<span class="hi-kw">WHERE</span> event_ts &gt;= <span class="hi-str">'2026-08-01'</span> <span class="hi-kw">AND</span> event_ts &lt; <span class="hi-str">'2026-08-02'</span>;</span>`,
+      shopkart: '<strong>ShopKart:</strong> the old Hive table needed a <code>dt=YYYY-MM-DD</code> column; analysts who filtered on the raw timestamp scanned everything. Hidden partitioning removed that footgun entirely.',
+    },
   ];
 
   /* ── Render ──────────────────────────────────────────────── */
@@ -496,7 +693,7 @@ write.pos-delete.enabled = <span class="hi-kw">true</span>`,
   <div class="int-header">
     <div class="int-header-left">
       <h1>Interview Mode</h1>
-      <p>Apache Iceberg — 12 senior-level questions. Click any question to reveal the answer.</p>
+      <p>Apache Iceberg — ${QA.length} interview questions across all levels. Click any question to reveal the answer.</p>
     </div>
     <div class="int-header-right">
       <div class="int-filter-row">
