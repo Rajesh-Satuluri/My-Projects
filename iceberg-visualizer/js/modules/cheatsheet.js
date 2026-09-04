@@ -468,9 +468,14 @@
 
     container.innerHTML = `
 <div class="cs-page">
-  <div class="cs-header">
-    <h1>Cheat Sheets</h1>
-    <p>Apache Iceberg — quick reference for DDL, DML, time travel, maintenance, and properties</p>
+  <div class="cs-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <h1>Cheat Sheets</h1>
+      <p>Apache Iceberg — quick reference for DDL, DML, time travel, maintenance, and properties</p>
+    </div>
+    <button class="btn-secondary cs-print" type="button" onclick="window.print()" title="Print or save as PDF" style="flex-shrink:0">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:6px"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>Print / Save PDF
+    </button>
   </div>
   <div class="cs-tabs">
     ${TABS.map((t, i) => `<button class="cs-tab${i === 0 ? ' active' : ''}" data-tab="${t.id}">${t.label}</button>`).join('')}

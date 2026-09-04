@@ -242,6 +242,40 @@ async function main() {
     await page.close();
   }
 
+  // ── Content architecture (Test Yourself + Study Deck) ────────
+  {
+    const page = await mkPage({ viewport: { width: 1440, height: 900 } });
+    await page.goto(base + '/#insert', { waitUntil: 'networkidle' });
+    await page.waitForTimeout(200);
+    const ty = await page.evaluate(() => {
+      const s = document.querySelector('.iv-ty');
+      return { present: !!s, opts: s ? s.querySelectorAll('.iv-ty__opt').length : 0 };
+    });
+    if (!ty.present) failures.push('[test-yourself] not appended on a screen with a bank');
+    if (ty.present && ty.opts < 2) failures.push('[test-yourself] rendered no options');
+    if (ty.present) {
+      await page.click('.iv-ty__q .iv-ty__opt');
+      await page.waitForTimeout(120);
+      const graded = await page.evaluate(() => {
+        const q = document.querySelector('.iv-ty__q');
+        return !!q.querySelector('.iv-ty__opt.is-correct') && !q.querySelector('.iv-ty__exp').hidden;
+      });
+      if (!graded) failures.push('[test-yourself] grading did not reveal correct answer/explanation');
+    }
+
+    // Study Deck: filters narrow the result set.
+    await page.goto(base + '/#study', { waitUntil: 'networkidle' });
+    await page.waitForTimeout(200);
+    const total = await page.evaluate(() => document.querySelectorAll('.study-card').length);
+    if (total < 5) failures.push(`[study] expected many cards, got ${total}`);
+    await page.selectOption('#study-diff', 'advanced');
+    await page.waitForTimeout(120);
+    const adv = await page.evaluate(() => document.querySelectorAll('.study-card').length);
+    if (!(adv > 0 && adv < total)) failures.push(`[study] difficulty filter ineffective (${adv} of ${total})`);
+    checks += 4;
+    await page.close();
+  }
+
   await browser.close();
   server.close();
 

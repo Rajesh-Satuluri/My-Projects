@@ -71,6 +71,7 @@
       items: [
         { id: 'interview',  label: 'Interview Mode', icon: 'message-square', available: true },
         { id: 'quiz',       label: 'Quiz Mode',      icon: 'check-square',   available: true },
+        { id: 'study',      label: 'Study Deck',     icon: 'book',           available: true },
         { id: 'cheatsheet', label: 'Cheat Sheets',   icon: 'file-text',      available: true },
       ],
     },
