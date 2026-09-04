@@ -148,6 +148,47 @@ async function main() {
     await page.close();
   }
 
+  // ── Event bus + deep links + resume ──────────────────────────
+  {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    await page.goto(base + '/#home', { waitUntil: 'networkidle' });
+
+    // Event bus fires on navigation.
+    const busId = await page.evaluate(() => new Promise(res => {
+      document.addEventListener('app:navigate', e => res(e.detail.id), { once: true });
+      location.hash = '#architecture';
+      setTimeout(() => res('(none)'), 1000);
+    }));
+    if (busId !== 'architecture') failures.push(`[bus] app:navigate detail was "${busId}", expected "architecture"`);
+
+    // Find an animated screen and deep-link to a step.
+    let deepOk = false;
+    for (const id of ['insert', 'read-path', 'write-path', 'create-table', 'architecture']) {
+      await page.goto(`${base}/#${id}`, { waitUntil: 'networkidle' });
+      await page.waitForTimeout(150);
+      const total = await page.evaluate(() => (window.IcebergViz.AnimationControls._engine || {}).totalSteps || 0);
+      if (total > 2) {
+        await page.goto(`${base}/#${id}/2`, { waitUntil: 'networkidle' });
+        await page.waitForTimeout(250);
+        const cur = await page.evaluate(() => (window.IcebergViz.AnimationControls._engine || {}).currentStep);
+        if (cur === 2) deepOk = true;
+        else failures.push(`[deep-link] #${id}/2 → currentStep ${cur}, expected 2`);
+        break;
+      }
+    }
+    if (!deepOk) failures.push('[deep-link] could not verify step seek on any animated screen');
+
+    // Resume: last screen restored when hash is empty.
+    await page.evaluate(() => { try { localStorage.setItem('iv-last-screen', 'quiz'); } catch (e) {} });
+    await page.goto(base + '/', { waitUntil: 'networkidle' });
+    await page.waitForTimeout(200);
+    const resumed = await page.evaluate(() => location.hash);
+    if (resumed !== '#quiz') failures.push(`[resume] expected #quiz, got "${resumed}"`);
+
+    checks += 3;
+    await page.close();
+  }
+
   await browser.close();
   server.close();
 

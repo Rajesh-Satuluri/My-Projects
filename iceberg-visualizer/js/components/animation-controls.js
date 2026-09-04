@@ -59,6 +59,13 @@
       this._unsubscribers.push(
         this._engine.on('statechange', () => this._sync()),
         this._engine.on('stepchange', () => this._sync()),
+        // Mirror the current step into the URL so a paused animation is
+        // shareable/bookmarkable (#screen/step). App wires the handler.
+        this._engine.on('stepchange', (i) => {
+          if (window.IcebergViz && typeof window.IcebergViz._syncStepToUrl === 'function') {
+            window.IcebergViz._syncStepToUrl(i);
+          }
+        }),
       );
     },
 

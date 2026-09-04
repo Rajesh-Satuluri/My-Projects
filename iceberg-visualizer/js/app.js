@@ -215,10 +215,40 @@
   let _currentModuleId = null;
   let _currentModuleInstance = null;
 
+  /* ── localStorage-safe helpers ───────────────────────────── */
+  function _lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function _lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  /* ── Hash parsing: #screen or #screen/step ───────────────── */
+  function _parseHash() {
+    const raw = location.hash.replace(/^#/, '').trim();
+    if (!raw) return { id: '', step: null };
+    const [id, stepStr] = raw.split('/');
+    const step = stepStr != null ? parseInt(stepStr, 10) : null;
+    return { id, step: Number.isNaN(step) ? null : step };
+  }
+
+  /* ── Seek the active animation engine (deep-link support) ── */
+  function _seek(step) {
+    if (step == null || step < 0) return;
+    const eng = IV.AnimationControls && IV.AnimationControls._engine;
+    if (eng && step < eng.totalSteps) eng.goto(step);
+  }
+
+  /* ── Mirror the current animation step into the URL ───────── */
+  IV._syncStepToUrl = function (i) {
+    if (!_currentModuleId) return;
+    const base = '#' + _currentModuleId;
+    const next = i >= 0 ? base + '/' + i : base;
+    // replaceState does not fire hashchange → no navigate loop.
+    if (location.hash !== next) history.replaceState(null, '', next);
+  };
+
   /* ── Navigate to a module ────────────────────────────────── */
-  function navigate(id) {
+  function navigate(id, step) {
     id = id || 'home';
-    if (id === _currentModuleId) return;
+    // Same screen, just a different deep-linked step: seek, don't re-render.
+    if (id === _currentModuleId) { _seek(step); return; }
 
     // Destroy previous module
     if (_currentModuleInstance && typeof _currentModuleInstance.destroy === 'function') {
@@ -243,6 +273,8 @@
       _currentModuleInstance = null;
       _setActiveNav(id);
       _setBreadcrumb(id);
+      _lsSet('iv-last-screen', id);
+      document.dispatchEvent(new CustomEvent('app:navigate', { detail: { id } }));
       return;
     }
 
@@ -267,15 +299,31 @@
     container.scrollTop = 0;
     window.scrollTo(0, 0);
 
-    if (location.hash !== '#' + id) {
+    if (_parseHash().id !== id) {
       history.pushState(null, '', '#' + id);
+    }
+
+    // Resume + decoupled feature bus (progress, pager, etc. listen here).
+    _lsSet('iv-last-screen', id);
+    document.dispatchEvent(new CustomEvent('app:navigate', { detail: { id } }));
+
+    // Deep-linked step (#screen/step): seek after the module has rendered
+    // and registered its engine. Retry once next frame if not ready yet.
+    if (step != null) {
+      _seek(step);
+      requestAnimationFrame(() => _seek(step));
     }
   }
 
   /* ── Hash router ─────────────────────────────────────────── */
   function _routeFromHash() {
-    const hash = location.hash.replace('#', '').trim();
-    navigate(hash || 'home');
+    const { id, step } = _parseHash();
+    if (!id) {
+      // First load with no hash: resume last screen, else home.
+      navigate(_lsGet('iv-last-screen') || 'home');
+      return;
+    }
+    navigate(id, step);
   }
 
   /* ── Sidebar search ──────────────────────────────────────── */
