@@ -7,6 +7,49 @@
 /* The [hidden] attribute must always win over component display rules below. */
 [hidden] { display: none !important; }
 
+/* ── Collapsible sidebar navigation (Phase 6) ──────────────────────────────── */
+.nav-tools { display: flex; gap: 6px; align-items: center; padding: 6px 12px 2px; }
+.nav-filter {
+  flex: 1; min-width: 0;
+  padding: 7px 10px;
+  font-size: 12.5px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+.nav-filter::placeholder { color: var(--text-muted); }
+.nav-filter:focus { outline: none; border-color: var(--accent); }
+.nav-collapse-all { width: 30px; height: 30px; flex-shrink: 0; font-size: 13px; }
+
+/* Turn the group header into a full-width disclosure button (keeps styles.css typography). */
+.nav-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.nav-group-header:hover { color: var(--text-secondary); }
+.nav-chevron { font-size: 9px; color: var(--text-muted); transition: transform var(--transition); }
+.nav-group.collapsed .nav-chevron { transform: rotate(-90deg); }
+
+/* Animate expand/collapse with grid-template-rows (no JS height measuring). */
+.nav-group-items {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--transition-slow);
+}
+.nav-group.collapsed .nav-group-items { grid-template-rows: 0fr; }
+.nav-group-inner { overflow: hidden; min-height: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-group-items { transition: none; }
+}
+
 kbd {
   font-family: var(--font-mono);
   font-size: 11px;

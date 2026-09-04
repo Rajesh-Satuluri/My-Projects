@@ -25,42 +25,114 @@ export const MODULES = [
   { id: 'm19', title: 'Uber Pipeline',           icon: '🗺️', group: 'End-to-End',     num: '19' },
 ];
 
+// Synthetic entries that live in the sidebar but aren't numbered modules.
+const REVIEW = [{ id: 'study', title: 'Study Hub', icon: '📚', group: 'Review', num: '★' }];
+
+const COLLAPSE_KEY = 'flink_nav_collapsed';
+function loadCollapsed() {
+  try { return new Set(JSON.parse(localStorage.getItem(COLLAPSE_KEY) || '[]')); }
+  catch (e) { return new Set(); }
+}
+function saveCollapsed(set) {
+  try { localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...set])); } catch (e) {}
+}
+
+function buildGroups() {
+  const order = [...new Set(MODULES.map(m => m.group))];
+  const groups = order.map(name => ({ name, items: MODULES.filter(m => m.group === name) }));
+  groups.push({ name: 'Review', items: REVIEW });
+  return groups;
+}
+
 export function renderNav(activeId, doneSet) {
   const list = document.getElementById('nav-list');
   if (!list) return;
 
-  const groups = [...new Set(MODULES.map(m => m.group))];
-  list.innerHTML = groups.map(group => {
-    const items = MODULES.filter(m => m.group === group);
-    return `
-      <div class="nav-group-header">${group}</div>
-      ${items.map(m => `
-        <div class="nav-item ${m.id === activeId ? 'active' : ''} ${doneSet.has(m.id) ? 'done' : ''}"
-             data-module="${m.id}" role="button" tabindex="0">
-          <span class="nav-icon">${m.icon}</span>
-          <span class="nav-label">${m.title}</span>
-          <span class="nav-number">${m.num}</span>
-        </div>
-      `).join('')}
-    `;
-  }).join('') + `
-    <div class="nav-group-header">Review</div>
-    <div class="nav-item ${activeId === 'study' ? 'active' : ''}" data-module="study" role="button" tabindex="0">
-      <span class="nav-icon">📚</span>
-      <span class="nav-label">Study Hub</span>
-      <span class="nav-number">★</span>
-    </div>`;
+  const collapsed = loadCollapsed();
+  const groups = buildGroups();
 
+  list.innerHTML = `
+    <div class="nav-tools">
+      <input class="nav-filter" type="text" placeholder="Filter modules…" aria-label="Filter modules" />
+      <button class="icon-btn nav-collapse-all" title="Collapse / expand all" aria-label="Collapse or expand all sections">⇕</button>
+    </div>
+    ${groups.map(g => {
+      const isCol = collapsed.has(g.name);
+      return `
+      <div class="nav-group ${isCol ? 'collapsed' : ''}" data-group="${g.name}">
+        <button class="nav-group-header" aria-expanded="${!isCol}">
+          <span class="nav-group-name">${g.name}</span>
+          <span class="nav-chevron">▾</span>
+        </button>
+        <div class="nav-group-items"><div class="nav-group-inner">
+          ${g.items.map(m => `
+            <div class="nav-item ${m.id === activeId ? 'active' : ''} ${doneSet.has(m.id) ? 'done' : ''}"
+                 data-module="${m.id}" role="button" tabindex="0">
+              <span class="nav-icon">${m.icon}</span>
+              <span class="nav-label">${m.title}</span>
+              <span class="nav-number">${m.num}</span>
+            </div>`).join('')}
+        </div></div>
+      </div>`;
+    }).join('')}
+  `;
+
+  // Navigate on item click / keyboard.
   list.querySelectorAll('.nav-item').forEach(el => {
-    el.addEventListener('click', () => {
-      const id = el.dataset.module;
-      window.location.hash = id;
-    });
+    el.addEventListener('click', () => { window.location.hash = el.dataset.module; });
     el.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        const id = el.dataset.module;
-        window.location.hash = id;
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.location.hash = el.dataset.module; }
+    });
+  });
+
+  // Toggle a single section.
+  list.querySelectorAll('.nav-group-header').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const group = btn.closest('.nav-group');
+      const nowCollapsed = group.classList.toggle('collapsed');
+      btn.setAttribute('aria-expanded', String(!nowCollapsed));
+      const set = loadCollapsed();
+      nowCollapsed ? set.add(group.dataset.group) : set.delete(group.dataset.group);
+      saveCollapsed(set);
+    });
+  });
+
+  // Collapse-all / expand-all.
+  list.querySelector('.nav-collapse-all')?.addEventListener('click', () => {
+    const gs = [...list.querySelectorAll('.nav-group')];
+    const allCollapsed = gs.every(g => g.classList.contains('collapsed'));
+    const set = new Set();
+    gs.forEach(g => {
+      const collapse = !allCollapsed;
+      g.classList.toggle('collapsed', collapse);
+      g.querySelector('.nav-group-header')?.setAttribute('aria-expanded', String(!collapse));
+      if (collapse) set.add(g.dataset.group);
+    });
+    saveCollapsed(set);
+  });
+
+  // Filter: hide non-matching items, auto-expand groups with matches, restore on clear.
+  const filter = list.querySelector('.nav-filter');
+  filter?.addEventListener('input', () => {
+    const q = filter.value.trim().toLowerCase();
+    const stored = loadCollapsed();
+    list.querySelectorAll('.nav-group').forEach(group => {
+      let anyVisible = false;
+      group.querySelectorAll('.nav-item').forEach(item => {
+        const match = !q || item.querySelector('.nav-label').textContent.toLowerCase().includes(q);
+        item.hidden = !match;
+        if (match) anyVisible = true;
+      });
+      const header = group.querySelector('.nav-group-header');
+      if (q) {
+        group.hidden = !anyVisible;
+        group.classList.remove('collapsed');
+        header?.setAttribute('aria-expanded', 'true');
+      } else {
+        group.hidden = false;
+        const isCol = stored.has(group.dataset.group);
+        group.classList.toggle('collapsed', isCol);
+        header?.setAttribute('aria-expanded', String(!isCol));
       }
     });
   });
@@ -69,6 +141,7 @@ export function renderNav(activeId, doneSet) {
 export function updateProgress(doneSet) {
   const count = document.getElementById('progress-count');
   const fill  = document.getElementById('progress-fill');
-  if (count) count.textContent = `${doneSet.size} / ${MODULES.length}`;
-  if (fill)  fill.style.width  = `${(doneSet.size / MODULES.length) * 100}%`;
+  const real  = [...doneSet].filter(id => MODULES.some(m => m.id === id)).length;
+  if (count) count.textContent = `${real} / ${MODULES.length}`;
+  if (fill)  fill.style.width  = `${(real / MODULES.length) * 100}%`;
 }
