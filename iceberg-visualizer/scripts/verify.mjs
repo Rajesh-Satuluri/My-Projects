@@ -216,18 +216,6 @@ async function main() {
     await page.waitForTimeout(200);
     if (await page.evaluate(() => location.hash) !== '#time-travel') failures.push('[palette] Enter did not navigate to selection');
 
-    // Pager present and navigates forward.
-    await page.goto(base + '/#insert', { waitUntil: 'networkidle' });
-    await page.waitForTimeout(150);
-    const hasPager = await page.evaluate(() => !!document.querySelector('#module-container .iv-pager'));
-    if (!hasPager) failures.push('[pager] not rendered');
-    else {
-      await page.click('.iv-pager__next');
-      await page.waitForTimeout(150);
-      const moved = await page.evaluate(() => location.hash);
-      if (moved === '#insert') failures.push('[pager] next did not navigate');
-    }
-
     // Progress: meter exists and marks the current screen visited.
     const prog = await page.evaluate(() => {
       const m = document.getElementById('iv-progress');
@@ -238,30 +226,19 @@ async function main() {
     if (prog.done < 1) failures.push('[progress] no nav items marked visited');
 
     if (ferr.length) failures.push('[features] console/page errors: ' + ferr.join(' | '));
-    checks += 5;
+    checks += 4;
     await page.close();
   }
 
-  // ── Content architecture (Test Yourself + Study Deck) ────────
+  // ── Content architecture (Study Deck; quiz lives here, not injected) ──
   {
     const page = await mkPage({ viewport: { width: 1440, height: 900 } });
+    // Animation modules must NOT have injected content squishing them.
     await page.goto(base + '/#insert', { waitUntil: 'networkidle' });
     await page.waitForTimeout(200);
-    const ty = await page.evaluate(() => {
-      const s = document.querySelector('.iv-ty');
-      return { present: !!s, opts: s ? s.querySelectorAll('.iv-ty__opt').length : 0 };
-    });
-    if (!ty.present) failures.push('[test-yourself] not appended on a screen with a bank');
-    if (ty.present && ty.opts < 2) failures.push('[test-yourself] rendered no options');
-    if (ty.present) {
-      await page.click('.iv-ty__q .iv-ty__opt');
-      await page.waitForTimeout(120);
-      const graded = await page.evaluate(() => {
-        const q = document.querySelector('.iv-ty__q');
-        return !!q.querySelector('.iv-ty__opt.is-correct') && !q.querySelector('.iv-ty__exp').hidden;
-      });
-      if (!graded) failures.push('[test-yourself] grading did not reveal correct answer/explanation');
-    }
+    const injected = await page.evaluate(() =>
+      !!document.querySelector('#module-container .iv-ty, #module-container .iv-pager'));
+    if (injected) failures.push('[modules] quiz/pager was injected into an animation module (must not be)');
 
     // Study Deck: filters narrow the result set.
     await page.goto(base + '/#study', { waitUntil: 'networkidle' });
@@ -272,7 +249,7 @@ async function main() {
     await page.waitForTimeout(120);
     const adv = await page.evaluate(() => document.querySelectorAll('.study-card').length);
     if (!(adv > 0 && adv < total)) failures.push(`[study] difficulty filter ineffective (${adv} of ${total})`);
-    checks += 4;
+    checks += 3;
     await page.close();
   }
 

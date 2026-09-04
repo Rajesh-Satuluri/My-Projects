@@ -2,8 +2,7 @@
    Question Bank — per-screen MCQs, keyed by screen id.
    Shape: { screenId: [{ q, options, correct, explanation, difficulty }] }
    difficulty: 'basic' | 'intermediate' | 'advanced'
-   A "Test Yourself" section auto-appears on any screen with a bank
-   (js/features/test-yourself.js); the Study Deck aggregates them all.
+   Consumed by the Study Deck (js/modules/study.js) and Quiz Mode.
    ============================================================ */
 window.IcebergViz = window.IcebergViz || {};
 
