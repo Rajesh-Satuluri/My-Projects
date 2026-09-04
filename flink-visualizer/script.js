@@ -165,6 +165,32 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft'  && idx > 0)                  window.location.hash = MODULES[idx-1].id;
 });
 
+// ── Mobile navigation drawer ───────────────────────────────────────────────
+(() => {
+  const mq = window.matchMedia('(max-width: 1024px)');
+  const openNav  = () => document.body.classList.add('nav-open');
+  const closeNav = () => document.body.classList.remove('nav-open');
+
+  document.getElementById('nav-open')?.addEventListener('click', openNav);
+  document.getElementById('nav-backdrop')?.addEventListener('click', closeNav);
+
+  // On mobile, the in-drawer hamburger closes the drawer instead of collapsing it.
+  document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+    if (mq.matches) closeNav();
+  });
+
+  // Close on Escape.
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
+
+  // Auto-close after choosing a module on mobile.
+  document.getElementById('nav-list')?.addEventListener('click', e => {
+    if (mq.matches && e.target.closest('.nav-item')) closeNav();
+  });
+
+  // If the viewport grows back to desktop, make sure the drawer state is cleared.
+  mq.addEventListener('change', ev => { if (!ev.matches) closeNav(); });
+})();
+
 // ── Boot ──────────────────────────────────────────────────────────────────
 window.addEventListener('hashchange', onHashChange);
 renderNav(null, done);
