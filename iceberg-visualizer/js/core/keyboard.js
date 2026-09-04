@@ -98,9 +98,8 @@
         document.querySelectorAll('.modal-backdrop.visible').forEach(m => m.classList.remove('visible'));
       }, 'General');
 
-      this.register('ctrl+k', 'Focus search', () => {
-        const inp = document.getElementById('sidebar-search');
-        if (inp) { inp.focus(); inp.select(); }
+      this.register('ctrl+k', 'Open command palette', () => {
+        if (window.IcebergViz._openPalette) window.IcebergViz._openPalette();
       }, 'General');
 
       // Two-key sequences (g + letter) handled via a simple state machine

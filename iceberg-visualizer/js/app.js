@@ -485,4 +485,11 @@
   }
 
   window.IcebergViz.navigate = navigate;
+
+  /* ── Nav registry accessors (used by palette, pager, progress) ── */
+  IV.getScreens = () => NAV_GROUPS.flatMap(g =>
+    g.items.filter(it => it.available !== false)
+           .map(it => ({ id: it.id, label: it.label, icon: it.icon, group: g.label })));
+  IV.getNavGroups = () => NAV_GROUPS;
+  IV.currentScreenId = () => _currentModuleId;
 })();

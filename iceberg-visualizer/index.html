@@ -49,6 +49,7 @@
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/animations.css" />
   <link rel="stylesheet" href="css/responsive.css" />
+  <link rel="stylesheet" href="css/enhancements.css" />
 
   <style>
     /* ── Bridge styles: IDs used by JS that layout.css doesn't cover ── */
@@ -491,6 +492,7 @@
 <script src="js/core/animation-engine.js"></script>
 <script src="js/core/tooltip.js"></script>
 <script src="js/core/keyboard.js"></script>
+<script src="js/core/toast.js"></script>
 
 <!-- UI Components -->
 <script src="js/components/code-viewer.js"></script>
@@ -534,8 +536,15 @@
 <script src="js/modules/quiz.js"></script>
 <script src="js/modules/cheatsheet.js"></script>
 
-<!-- App bootstrap (must be last) -->
+<!-- App bootstrap (registers navigate + nav registry) -->
 <script src="js/app.js"></script>
+
+<!-- Features (decoupled; wire via app:navigate + IV accessors) -->
+<script src="js/features/command-palette.js"></script>
+<script src="js/features/progress.js"></script>
+<script src="js/features/pager.js"></script>
+<script src="js/features/gestures.js"></script>
+<script src="js/features/tour.js"></script>
 
 </body>
 </html>

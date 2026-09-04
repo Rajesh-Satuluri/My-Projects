@@ -79,8 +79,15 @@ async function main() {
   const failures = [];
   let checks = 0;
 
+  // Suppress the first-run tour so it never interferes with checks.
+  async function mkPage(opts) {
+    const p = await browser.newPage(opts || {});
+    await p.addInitScript(() => { try { localStorage.setItem('iv-tour-done', '1'); } catch (e) {} });
+    return p;
+  }
+
   // Discover screen ids once.
-  const disco = await browser.newPage();
+  const disco = await mkPage();
   await disco.goto(base + '/#home', { waitUntil: 'networkidle' });
   const ids = await disco.$$eval('a.nav-item[data-nav-id]', els => els.map(e => e.dataset.navId));
   await disco.close();
@@ -88,7 +95,7 @@ async function main() {
 
   for (const theme of THEMES) {
     for (const vp of VIEWPORTS) {
-      const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+      const page = await mkPage({ viewport: { width: vp.width, height: vp.height } });
       const errors = [];
       page.on('pageerror', e => errors.push('pageerror: ' + e.message));
       page.on('console', m => { if (m.type() === 'error') errors.push('console.error: ' + m.text()); });
@@ -122,7 +129,7 @@ async function main() {
 
   // ── Drawer behavior at tablet width ──────────────────────────
   {
-    const page = await browser.newPage({ viewport: { width: 810, height: 1080 } });
+    const page = await mkPage({ viewport: { width: 810, height: 1080 } });
     await page.goto(base + '/#home', { waitUntil: 'networkidle' });
     const togVisible = await page.isVisible('#nav-toggle');
     if (!togVisible) failures.push('[drawer] hamburger not visible at 810px');
@@ -141,7 +148,7 @@ async function main() {
 
   // Hamburger must be hidden on desktop.
   {
-    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    const page = await mkPage({ viewport: { width: 1440, height: 900 } });
     await page.goto(base + '/#home', { waitUntil: 'networkidle' });
     if (await page.isVisible('#nav-toggle')) failures.push('[drawer] hamburger visible on desktop (should be hidden)');
     checks++;
@@ -150,7 +157,7 @@ async function main() {
 
   // ── Event bus + deep links + resume ──────────────────────────
   {
-    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    const page = await mkPage({ viewport: { width: 1440, height: 900 } });
     await page.goto(base + '/#home', { waitUntil: 'networkidle' });
 
     // Event bus fires on navigation.
@@ -186,6 +193,52 @@ async function main() {
     if (resumed !== '#quiz') failures.push(`[resume] expected #quiz, got "${resumed}"`);
 
     checks += 3;
+    await page.close();
+  }
+
+  // ── UX power features (palette, pager, progress) ─────────────
+  {
+    const page = await mkPage({ viewport: { width: 1440, height: 900 } });
+    const ferr = [];
+    page.on('pageerror', e => ferr.push('pageerror: ' + e.message));
+    page.on('console', m => { if (m.type() === 'error') ferr.push(m.text()); });
+    await page.goto(base + '/#home', { waitUntil: 'networkidle' });
+
+    // Command palette: Ctrl+K opens, typing filters, Enter navigates.
+    await page.keyboard.press('Control+k');
+    await page.waitForTimeout(150);
+    if (!(await page.isVisible('.cp-backdrop.is-open'))) failures.push('[palette] did not open on Ctrl+K');
+    await page.type('#cp-input', 'time trav');
+    await page.waitForTimeout(120);
+    const top = await page.evaluate(() => document.querySelector('.cp-item .cp-title')?.textContent || '');
+    if (!/time travel/i.test(top)) failures.push(`[palette] fuzzy "time trav" top result was "${top}"`);
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(200);
+    if (await page.evaluate(() => location.hash) !== '#time-travel') failures.push('[palette] Enter did not navigate to selection');
+
+    // Pager present and navigates forward.
+    await page.goto(base + '/#insert', { waitUntil: 'networkidle' });
+    await page.waitForTimeout(150);
+    const hasPager = await page.evaluate(() => !!document.querySelector('#module-container .iv-pager'));
+    if (!hasPager) failures.push('[pager] not rendered');
+    else {
+      await page.click('.iv-pager__next');
+      await page.waitForTimeout(150);
+      const moved = await page.evaluate(() => location.hash);
+      if (moved === '#insert') failures.push('[pager] next did not navigate');
+    }
+
+    // Progress: meter exists and marks the current screen visited.
+    const prog = await page.evaluate(() => {
+      const m = document.getElementById('iv-progress');
+      const done = document.querySelectorAll('a.nav-item.nav-done').length;
+      return { hasMeter: !!m, done };
+    });
+    if (!prog.hasMeter) failures.push('[progress] sidebar meter missing');
+    if (prog.done < 1) failures.push('[progress] no nav items marked visited');
+
+    if (ferr.length) failures.push('[features] console/page errors: ' + ferr.join(' | '));
+    checks += 5;
     await page.close();
   }
 
