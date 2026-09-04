@@ -5,7 +5,9 @@ import { renderPager } from './components/pager.js';
 import { toast } from './components/toast.js';
 import { maybeRunTour } from './components/tour.js';
 import { createQuiz, initQuiz } from './components/quiz.js';
+import { createSelfExplain, initSelfExplain } from './components/self-explain.js';
 import { QUIZ_BANK } from './data/quiz-bank.js';
+import { SELF_EXPLAIN } from './data/self-explain.js';
 
 // ── State ──────────────────────────────────────────────────────────────────
 const done = new Set(JSON.parse(localStorage.getItem('kafka-done') || '[]'));
@@ -86,6 +88,11 @@ async function navigate(id) {
 function enhanceModule(id) {
   const canvas = document.getElementById('module-canvas');
   const page = canvas.querySelector('.module-page');
+  if (page && SELF_EXPLAIN[id]) {
+    const holder = document.createElement('div');
+    holder.innerHTML = createSelfExplain(id, SELF_EXPLAIN[id]);
+    if (holder.firstElementChild) { page.appendChild(holder.firstElementChild); initSelfExplain(page); }
+  }
   if (page && QUIZ_BANK[id]) {
     const holder = document.createElement('div');
     holder.innerHTML = createQuiz(id, QUIZ_BANK[id]);
