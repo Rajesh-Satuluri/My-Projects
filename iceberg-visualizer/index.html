@@ -353,6 +353,11 @@
         </div>
       </div>
       <div class="topbar-right">
+        <button id="quiz-toggle" class="btn-icon" title="Test yourself on this topic" data-tooltip="Test yourself" aria-label="Test yourself on this topic" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
+            <path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+          </svg>
+        </button>
         <button id="theme-toggle" class="btn-icon" title="Toggle light/dark theme" data-tooltip="Toggle theme" aria-label="Toggle theme">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
             <circle cx="12" cy="12" r="4"/>
@@ -565,6 +570,7 @@
 <!-- Features (decoupled; wire via app:navigate + IV accessors) -->
 <script src="js/features/command-palette.js"></script>
 <script src="js/features/progress.js"></script>
+<script src="js/features/test-yourself.js"></script>
 <script src="js/features/gestures.js"></script>
 <script src="js/features/tour.js"></script>
 

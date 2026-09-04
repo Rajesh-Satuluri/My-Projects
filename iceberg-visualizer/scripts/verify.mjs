@@ -230,15 +230,38 @@ async function main() {
     await page.close();
   }
 
-  // ── Content architecture (Study Deck; quiz lives here, not injected) ──
+  // ── Test Yourself modal + Study Deck ─────────────────────────
   {
     const page = await mkPage({ viewport: { width: 1440, height: 900 } });
-    // Animation modules must NOT have injected content squishing them.
+
+    // On an animation screen with a bank: button shows, modal opens,
+    // grades — and NOTHING is injected into the module (no layout break).
     await page.goto(base + '/#insert', { waitUntil: 'networkidle' });
     await page.waitForTimeout(200);
     const injected = await page.evaluate(() =>
       !!document.querySelector('#module-container .iv-ty, #module-container .iv-pager'));
-    if (injected) failures.push('[modules] quiz/pager was injected into an animation module (must not be)');
+    if (injected) failures.push('[modules] quiz was injected into an animation module (must not be)');
+    if (!(await page.isVisible('#quiz-toggle'))) failures.push('[quiz] topbar button not shown on a screen with a bank');
+    await page.click('#quiz-toggle');
+    await page.waitForTimeout(150);
+    if (!(await page.isVisible('.ty-modal.is-open'))) failures.push('[quiz] modal did not open');
+    const opts = await page.evaluate(() => document.querySelectorAll('.ty-modal .iv-ty__opt').length);
+    if (opts < 2) failures.push('[quiz] modal rendered no options');
+    await page.click('.ty-modal .iv-ty__q .iv-ty__opt');
+    await page.waitForTimeout(120);
+    const graded = await page.evaluate(() => {
+      const q = document.querySelector('.ty-modal .iv-ty__q');
+      return !!q.querySelector('.iv-ty__opt.is-correct') && !q.querySelector('.iv-ty__exp').hidden;
+    });
+    if (!graded) failures.push('[quiz] grading did not reveal correct answer/explanation');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(120);
+    if (await page.isVisible('.ty-modal.is-open')) failures.push('[quiz] Escape did not close the modal');
+
+    // On a screen without a bank the button is hidden.
+    await page.goto(base + '/#update', { waitUntil: 'networkidle' });
+    await page.waitForTimeout(150);
+    if (await page.isVisible('#quiz-toggle')) failures.push('[quiz] button visible on a screen with no bank (#update)');
 
     // Study Deck: filters narrow the result set.
     await page.goto(base + '/#study', { waitUntil: 'networkidle' });
@@ -249,7 +272,7 @@ async function main() {
     await page.waitForTimeout(120);
     const adv = await page.evaluate(() => document.querySelectorAll('.study-card').length);
     if (!(adv > 0 && adv < total)) failures.push(`[study] difficulty filter ineffective (${adv} of ${total})`);
-    checks += 3;
+    checks += 8;
     await page.close();
   }
 
