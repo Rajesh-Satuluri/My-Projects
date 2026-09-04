@@ -138,6 +138,85 @@
   --z-notification: 500;
 }
 
+/* ── Light theme ────────────────────────────────────────────────
+   Only color-carrying tokens are redefined; every component styles
+   through these tokens so the whole app re-themes from this block.
+   Applied when the toggle stamps data-theme="light" on <html>. */
+:root[data-theme="light"] {
+  --bg-0: #eaeef2;
+  --bg-1: #ffffff;
+  --bg-2: #f6f8fa;
+  --bg-3: #eef1f4;
+  --bg-4: #e2e7ec;
+  --bg-5: #d0d7de;
+
+  --border-subtle: #eaeef2;
+  --border-default: #d0d7de;
+  --border-muted: #afb8c1;
+  --border-emphasis: #8c959f;
+
+  --text-primary: #1f2328;
+  --text-secondary: #59636e;
+  --text-muted: #818b98;
+  --text-disabled: #afb8c1;
+  --text-inverse: #ffffff;
+  --text-on-accent: #ffffff;
+
+  --blue: #0969da; --blue-dim: #0550ae; --blue-subtle: rgba(9, 105, 218, 0.1);
+  --orange: #bc4c00; --orange-dim: #953800; --orange-subtle: rgba(188, 76, 0, 0.1);
+  --green: #1a7f37; --green-dim: #116329; --green-subtle: rgba(26, 127, 55, 0.1);
+  --red: #cf222e; --red-dim: #a40e26; --red-subtle: rgba(207, 34, 46, 0.1);
+  --purple: #8250df; --purple-dim: #6639ba; --purple-subtle: rgba(130, 80, 223, 0.1);
+  --yellow: #9a6700; --yellow-dim: #7d4e00; --yellow-subtle: rgba(154, 103, 0, 0.1);
+  --teal: #0f6b62; --teal-dim: #0c574f; --teal-subtle: rgba(15, 107, 98, 0.1);
+
+  --iceberg: #1a7fd4;
+  --iceberg-dark: #0969da;
+  --iceberg-glow: rgba(26, 127, 212, 0.2);
+
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-hover: rgba(246, 248, 250, 0.92);
+
+  --shadow-xs: 0 1px 2px rgba(31, 35, 40, 0.06);
+  --shadow-sm: 0 2px 6px rgba(31, 35, 40, 0.08);
+  --shadow-md: 0 4px 16px rgba(31, 35, 40, 0.10);
+  --shadow-lg: 0 8px 32px rgba(31, 35, 40, 0.12);
+  --shadow-xl: 0 16px 48px rgba(31, 35, 40, 0.16);
+  --shadow-glow: 0 0 20px rgba(26, 127, 212, 0.18);
+  --shadow-glow-orange: 0 0 20px rgba(188, 76, 0, 0.18);
+}
+
+/* First-visit system preference when JS is unavailable to set a theme.
+   (With JS on, the no-flash head script resolves saved || system.) */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]):not([data-theme="light"]) {
+    --bg-0: #eaeef2; --bg-1: #ffffff; --bg-2: #f6f8fa; --bg-3: #eef1f4;
+    --bg-4: #e2e7ec; --bg-5: #d0d7de;
+    --border-subtle: #eaeef2; --border-default: #d0d7de;
+    --border-muted: #afb8c1; --border-emphasis: #8c959f;
+    --text-primary: #1f2328; --text-secondary: #59636e; --text-muted: #818b98;
+    --text-disabled: #afb8c1; --text-inverse: #ffffff; --text-on-accent: #ffffff;
+    --blue: #0969da; --blue-dim: #0550ae; --blue-subtle: rgba(9, 105, 218, 0.1);
+    --orange: #bc4c00; --orange-dim: #953800; --orange-subtle: rgba(188, 76, 0, 0.1);
+    --green: #1a7f37; --green-dim: #116329; --green-subtle: rgba(26, 127, 55, 0.1);
+    --red: #cf222e; --red-dim: #a40e26; --red-subtle: rgba(207, 34, 46, 0.1);
+    --purple: #8250df; --purple-dim: #6639ba; --purple-subtle: rgba(130, 80, 223, 0.1);
+    --yellow: #9a6700; --yellow-dim: #7d4e00; --yellow-subtle: rgba(154, 103, 0, 0.1);
+    --teal: #0f6b62; --teal-dim: #0c574f; --teal-subtle: rgba(15, 107, 98, 0.1);
+    --iceberg: #1a7fd4; --iceberg-dark: #0969da; --iceberg-glow: rgba(26, 127, 212, 0.2);
+    --glass-bg: rgba(255, 255, 255, 0.8); --glass-border: rgba(0, 0, 0, 0.08);
+    --glass-hover: rgba(246, 248, 250, 0.92);
+    --shadow-xs: 0 1px 2px rgba(31, 35, 40, 0.06);
+    --shadow-sm: 0 2px 6px rgba(31, 35, 40, 0.08);
+    --shadow-md: 0 4px 16px rgba(31, 35, 40, 0.10);
+    --shadow-lg: 0 8px 32px rgba(31, 35, 40, 0.12);
+    --shadow-xl: 0 16px 48px rgba(31, 35, 40, 0.16);
+    --shadow-glow: 0 0 20px rgba(26, 127, 212, 0.18);
+    --shadow-glow-orange: 0 0 20px rgba(188, 76, 0, 0.18);
+  }
+}
+
 /* ── Reset ──────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
