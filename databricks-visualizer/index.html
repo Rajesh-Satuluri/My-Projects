@@ -2,9 +2,38 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Databricks Visualizer — Amazon Edition</title>
+  <meta name="description" content="Interactive Databricks & Lakehouse learning platform — Delta Lake, clusters, Unity Catalog, and more, from fundamentals to interview-ready." />
+  <meta name="theme-color" content="#FF6900" />
+
+  <!-- Icons & PWA -->
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- Social cards -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Databricks Visualizer — Amazon Edition" />
+  <meta property="og:description" content="Interactive Databricks & Lakehouse learning platform — zero to interview-ready." />
+  <meta property="og:image" content="og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Databricks Visualizer — Amazon Edition" />
+  <meta name="twitter:description" content="Interactive Databricks & Lakehouse learning platform — zero to interview-ready." />
+  <meta name="twitter:image" content="og.png" />
+
+  <!-- No-flash theme: apply saved theme before first paint -->
+  <script>
+    try {
+      var t = localStorage.getItem('databricks-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  </script>
+
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="responsive.css" />
+  <link rel="stylesheet" href="enhancements.css" />
 </head>
 <body>
   <div id="app">
@@ -38,6 +67,9 @@
 
     <main id="content">
       <div id="module-header">
+        <button id="nav-open" class="icon-btn" aria-label="Open navigation menu" title="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
         <div id="breadcrumb"></div>
         <div class="header-actions">
           <button id="theme-toggle" class="icon-btn" title="Toggle theme">
@@ -58,6 +90,7 @@
       <div id="module-canvas"></div>
     </main>
 
+    <div id="nav-backdrop"></div>
   </div>
 
   <div id="tooltip" class="tooltip hidden"></div>
