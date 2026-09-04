@@ -35,7 +35,7 @@
     },
     {
       id: 'read-ops',
-      label: 'Read Operations',
+      label: 'Read & Query',
       items: [
         { id: 'read-path',     label: 'Read Path',     icon: 'search',   available: true },
         { id: 'write-path',    label: 'Write Path',    icon: 'edit',     available: true },
@@ -67,7 +67,7 @@
     },
     {
       id: 'learn',
-      label: 'Learning',
+      label: 'Learn & Practice',
       items: [
         { id: 'interview',  label: 'Interview Mode', icon: 'message-square', available: true },
         { id: 'quiz',       label: 'Quiz Mode',      icon: 'check-square',   available: true },
@@ -118,32 +118,76 @@
     return `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" width="10" height="10" aria-hidden="true"><path d="M3 4l3 3 3-3"/></svg>`;
   }
 
+  /* ── Collapsed-group persistence ─────────────────────────── */
+  const NAV_COLLAPSE_KEY = 'iv-nav-collapsed';
+  function _getCollapsedGroups() {
+    try { return new Set(JSON.parse(localStorage.getItem(NAV_COLLAPSE_KEY) || '[]')); }
+    catch (e) { return new Set(); }
+  }
+  function _saveCollapsedGroups() {
+    const ids = [...document.querySelectorAll('.nav-group.collapsed')].map(s => s.dataset.group);
+    _lsSet(NAV_COLLAPSE_KEY, JSON.stringify(ids));
+  }
+  function _updateCollapseAllBtn() {
+    const btn = document.getElementById('nav-collapse-all');
+    if (!btn) return;
+    const groups = document.querySelectorAll('.nav-group');
+    const anyOpen = [...groups].some(g => !g.classList.contains('collapsed'));
+    btn.dataset.mode = anyOpen ? 'collapse' : 'expand';
+    btn.textContent = anyOpen ? 'Collapse all' : 'Expand all';
+  }
+
   /* ── Build sidebar navigation ────────────────────────────── */
   function _buildNav() {
     const nav = document.getElementById('sidebar-nav');
     if (!nav) return;
     nav.innerHTML = '';
 
+    const collapsed = _getCollapsedGroups();
+
+    // Collapse-all / Expand-all toolbar
+    const tools = document.createElement('div');
+    tools.className = 'nav-tools';
+    tools.innerHTML = `<button id="nav-collapse-all" class="nav-tools-btn" type="button"></button>`;
+    tools.querySelector('button').addEventListener('click', () => {
+      const collapseAll = document.getElementById('nav-collapse-all').dataset.mode !== 'expand';
+      document.querySelectorAll('.nav-group').forEach(section => {
+        section.classList.toggle('collapsed', collapseAll);
+        const h = section.querySelector('.nav-group-header');
+        if (h) h.setAttribute('aria-expanded', String(!collapseAll));
+      });
+      _saveCollapsedGroups();
+      _updateCollapseAllBtn();
+    });
+    nav.appendChild(tools);
+
     NAV_GROUPS.forEach(group => {
       const section = document.createElement('div');
-      section.className = 'nav-group';
+      section.className = 'nav-group' + (collapsed.has(group.id) ? ' collapsed' : '');
       section.dataset.group = group.id;
 
-      // Group header
-      const groupHeader = document.createElement('div');
+      // Group header (a real button for a11y)
+      const groupHeader = document.createElement('button');
+      groupHeader.type = 'button';
       groupHeader.className = 'nav-group-header';
+      groupHeader.setAttribute('aria-expanded', String(!collapsed.has(group.id)));
       groupHeader.innerHTML = `
         <span class="nav-group-label">${group.label}</span>
         <span class="nav-group-chevron">${_chevronSvg()}</span>
       `;
       groupHeader.addEventListener('click', () => {
-        section.classList.toggle('collapsed');
+        const isCollapsed = section.classList.toggle('collapsed');
+        groupHeader.setAttribute('aria-expanded', String(!isCollapsed));
+        _saveCollapsedGroups();
+        _updateCollapseAllBtn();
       });
       section.appendChild(groupHeader);
 
-      // Items container
+      // Animatable container: grid-rows 1fr↔0fr, items inside an overflow-hidden inner
       const itemsContainer = document.createElement('div');
       itemsContainer.className = 'nav-group-items';
+      const inner = document.createElement('div');
+      inner.className = 'nav-group-inner';
 
       group.items.forEach(item => {
         const a = document.createElement('a');
@@ -161,12 +205,15 @@
             _showComingSoon(item.label);
           });
         }
-        itemsContainer.appendChild(a);
+        inner.appendChild(a);
       });
 
+      itemsContainer.appendChild(inner);
       section.appendChild(itemsContainer);
       nav.appendChild(section);
     });
+
+    _updateCollapseAllBtn();
   }
 
   /* ── Active nav highlight ────────────────────────────────── */
@@ -338,8 +385,21 @@
         a.style.display = !q || label.includes(q) ? '' : 'none';
       });
       if (q) {
-        document.querySelectorAll('.nav-group').forEach(g => g.classList.remove('collapsed'));
+        // Auto-expand while searching so matches are never hidden (temporary).
+        document.querySelectorAll('.nav-group').forEach(g => {
+          g.classList.remove('collapsed');
+          g.querySelector('.nav-group-header')?.setAttribute('aria-expanded', 'true');
+        });
+      } else {
+        // Restore the persisted collapse state when the query is cleared.
+        const saved = _getCollapsedGroups();
+        document.querySelectorAll('.nav-group').forEach(g => {
+          const c = saved.has(g.dataset.group);
+          g.classList.toggle('collapsed', c);
+          g.querySelector('.nav-group-header')?.setAttribute('aria-expanded', String(!c));
+        });
       }
+      _updateCollapseAllBtn();
     });
   }
 

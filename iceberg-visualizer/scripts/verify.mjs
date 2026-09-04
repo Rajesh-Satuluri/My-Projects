@@ -276,6 +276,42 @@ async function main() {
     await page.close();
   }
 
+  // ── Navigation polish (collapse + persistence + collapse-all) ─
+  {
+    const page = await mkPage({ viewport: { width: 1440, height: 900 } });
+    await page.goto(base + '/#home', { waitUntil: 'networkidle' });
+
+    // Toggle first group collapsed; header aria-expanded reflects it.
+    await page.locator('.nav-group').first().locator('.nav-group-header').click();
+    await page.waitForTimeout(120);
+    let st = await page.evaluate(() => {
+      const g = document.querySelector('div.nav-group');
+      return { collapsed: g.classList.contains('collapsed'), aria: g.querySelector('.nav-group-header').getAttribute('aria-expanded') };
+    });
+    if (!st.collapsed || st.aria !== 'false') failures.push('[nav] group did not collapse / aria wrong');
+
+    // Persist across reload.
+    await page.goto(base + '/#home', { waitUntil: 'networkidle' });
+    await page.waitForTimeout(120);
+    const persisted = await page.evaluate(() => document.querySelector('div.nav-group').classList.contains('collapsed'));
+    if (!persisted) failures.push('[nav] collapsed state not persisted across reload');
+
+    // Collapse-all then expand-all.
+    await page.click('#nav-collapse-all');
+    await page.waitForTimeout(120);
+    const allCollapsed = await page.evaluate(() =>
+      [...document.querySelectorAll('.nav-group')].every(g => g.classList.contains('collapsed')));
+    await page.click('#nav-collapse-all');
+    await page.waitForTimeout(120);
+    const allOpen = await page.evaluate(() =>
+      [...document.querySelectorAll('.nav-group')].every(g => !g.classList.contains('collapsed')));
+    if (!allCollapsed) failures.push('[nav] collapse-all did not collapse every group');
+    if (!allOpen) failures.push('[nav] expand-all did not expand every group');
+
+    checks += 4;
+    await page.close();
+  }
+
   await browser.close();
   server.close();
 

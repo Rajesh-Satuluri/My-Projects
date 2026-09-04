@@ -102,11 +102,31 @@
     }
     a.nav-item.active .nav-badge { display: none; }
 
-    /* Nav group items container (app.js uses nav-group-items) */
-    .nav-group-items { display: block; }
-    .nav-group.collapsed .nav-group-items { display: none; }
+    /* Nav group items container — animate open/close with grid rows */
+    .nav-group-items {
+      display: grid;
+      grid-template-rows: 1fr;
+      transition: grid-template-rows var(--ease-slow);
+    }
+    .nav-group.collapsed .nav-group-items { grid-template-rows: 0fr; }
+    .nav-group-inner { overflow: hidden; min-height: 0; }
     .nav-group-chevron { color: var(--text-muted); transition: transform .15s; flex-shrink: 0; display: flex; align-items: center; }
     .nav-group.collapsed .nav-group-chevron { transform: rotate(-90deg); }
+
+    /* Group header as a full-width button */
+    .nav-group-header {
+      width: 100%; background: none; border: none; text-align: left;
+      font: inherit; color: inherit; cursor: pointer;
+    }
+
+    /* Collapse-all / expand-all toolbar */
+    .nav-tools { display: flex; justify-content: flex-end; padding: 2px 12px 6px; }
+    .nav-tools-btn {
+      background: none; border: none; cursor: pointer; color: var(--text-muted);
+      font-size: 11px; padding: 3px 6px; border-radius: 4px;
+    }
+    .nav-tools-btn:hover { background: var(--bg-3); color: var(--text-secondary); }
+    .sidebar.collapsed .nav-tools { display: none; }
     .sidebar.collapsed .nav-group-label,
     .sidebar.collapsed .nav-group-chevron { display: none; }
 

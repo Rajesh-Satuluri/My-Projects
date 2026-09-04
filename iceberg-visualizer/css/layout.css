@@ -184,7 +184,8 @@
 }
 
 .nav-group.collapsed .group-chevron { transform: rotate(-90deg); }
-.nav-group.collapsed .nav-group-items { display: none; }
+/* Collapse animation handled via grid-template-rows in the head bridge
+   styles (see index.html) — no display:none so the transition can run. */
 
 .sidebar.collapsed .nav-group-header {
   justify-content: center;
