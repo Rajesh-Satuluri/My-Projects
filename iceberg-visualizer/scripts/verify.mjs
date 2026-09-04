@@ -312,6 +312,24 @@ async function main() {
     await page.close();
   }
 
+  // ── Accessibility spot-check: icon-only controls have names ──
+  {
+    const page = await mkPage({ viewport: { width: 810, height: 1080 } });
+    await page.goto(base + '/#architecture', { waitUntil: 'networkidle' });
+    const unnamed = await page.evaluate(() => {
+      const sels = ['.btn-icon', '.anim-btn', '#nav-toggle', '.sidebar-toggle-btn'];
+      const bad = [];
+      document.querySelectorAll(sels.join(',')).forEach(b => {
+        const name = (b.getAttribute('aria-label') || b.getAttribute('title') || b.textContent || '').trim();
+        if (!name) bad.push(b.className || b.id);
+      });
+      return bad;
+    });
+    if (unnamed.length) failures.push('[a11y] icon controls without accessible name: ' + unnamed.join(', '));
+    checks++;
+    await page.close();
+  }
+
   await browser.close();
   server.close();
 
