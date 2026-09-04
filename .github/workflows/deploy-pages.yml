@@ -16,6 +16,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Syntax-check iceberg-visualizer JS
+        run: node iceberg-visualizer/scripts/check-syntax.mjs
+
       - name: Stage site
         run: |
           mkdir -p /tmp/site

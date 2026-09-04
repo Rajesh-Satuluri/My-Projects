@@ -665,15 +665,17 @@ File Footer:
       s.textContent = `
         /* Stats strip */
         .me-stats-strip {
-          display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          gap: 12px; margin-bottom: 20px;
         }
         .me-stat {
           background: var(--bg-1); border: 1px solid var(--border);
-          border-radius: 10px; padding: 12px 18px; flex: 1; min-width: 100px;
+          border-radius: 10px; padding: 12px 14px; min-width: 0;
           text-align: center;
         }
         .me-stat-value { font-size: 22px; font-weight: 700; font-family: var(--font-mono); }
-        .me-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: .04em; }
+        .me-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: .04em; overflow-wrap: anywhere; }
 
         /* Three-column layout */
         .me-layout {
