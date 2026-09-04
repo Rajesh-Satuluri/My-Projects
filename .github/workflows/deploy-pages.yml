@@ -1,4 +1,4 @@
-name: Deploy Iceberg Visualizer to GitHub Pages
+name: Deploy My-Projects portfolio to GitHub Pages
 
 on:
   push:
@@ -24,11 +24,25 @@ jobs:
       - name: Syntax-check iceberg-visualizer JS
         run: node iceberg-visualizer/scripts/check-syntax.mjs
 
-      - name: Stage site
+      - name: Stage full portfolio
         run: |
           mkdir -p /tmp/site
-          cp -r iceberg-visualizer/. /tmp/site/
-          cp -r python-companion /tmp/site/
+          # Portfolio landing page + .nojekyll
+          cp index.html .nojekyll /tmp/site/
+          # Static project sites (each self-contained under its own path)
+          for d in databricks db-engineering db-internals dbt flink kafka python snowflake python-companion; do
+            cp -r "$d" /tmp/site/
+          done
+          # Enhanced Iceberg Visualizer served at /iceberg/ (dev files stripped)
+          rm -rf /tmp/site/iceberg
+          cp -r iceberg-visualizer /tmp/site/iceberg
+          rm -rf /tmp/site/iceberg/node_modules \
+                 /tmp/site/iceberg/scripts \
+                 /tmp/site/iceberg/.verify-artifacts \
+                 /tmp/site/iceberg/package.json \
+                 /tmp/site/iceberg/package-lock.json \
+                 /tmp/site/iceberg/.gitignore \
+                 /tmp/site/iceberg/ENHANCEMENTS.md
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v3
