@@ -219,13 +219,15 @@ body.sidebar-open #nav-toggle .ham i:nth-child(3) { top: 6px; transform: rotate(
 #module-container [class$="-canvas"] > svg {
   width: 100%;
   height: 100%;
-  max-width: min(100%, 1200px) !important;
+  max-width: min(100%, 1500px) !important;
   max-height: 100% !important;
 }
-/* Reclaim a little width from the step sidebar. */
+/* Trim the canvas padding a touch so the diagram claims more room. */
+#module-container [class$="-canvas"] { padding: 10px !important; }
+/* Reclaim width from the step sidebar (landscape diagrams fill taller). */
 #module-container [class$="-outer"]:has(> [class$="-canvas"]) > [class$="-sidebar"],
 #module-container [class$="-outer"]:has(> [class$="-canvas"]) > [class$="-side"] {
-  width: 320px;
+  width: 300px;
 }
 
 /* Narrow / portrait (iPad 9th gen portrait, small laptops): stack the

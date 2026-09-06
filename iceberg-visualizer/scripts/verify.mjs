@@ -154,12 +154,22 @@ async function main() {
     await page.close();
   }
 
-  // Hamburger must be hidden on desktop.
+  // Hamburger is now a universal control: visible on desktop, where it
+  // collapses / expands the persistent sidebar (drawer only at ≤1024).
   {
     const page = await mkPage({ viewport: { width: 1440, height: 900 } });
     await page.goto(base + '/#home', { waitUntil: 'networkidle' });
-    if (await page.isVisible('#nav-toggle')) failures.push('[drawer] hamburger visible on desktop (should be hidden)');
-    checks++;
+    if (!(await page.isVisible('#nav-toggle'))) failures.push('[nav] hamburger not visible on desktop');
+    const before = await page.evaluate(() => document.getElementById('sidebar').classList.contains('collapsed'));
+    await page.click('#nav-toggle');
+    await page.waitForTimeout(150);
+    const after = await page.evaluate(() => document.getElementById('sidebar').classList.contains('collapsed'));
+    if (before === after) failures.push('[nav] desktop hamburger did not toggle sidebar collapse');
+    // It must NOT open the off-canvas drawer on desktop.
+    if (await page.evaluate(() => document.getElementById('sidebar').classList.contains('drawer-open'))) {
+      failures.push('[nav] desktop hamburger wrongly opened the drawer');
+    }
+    checks += 3;
     await page.close();
   }
 

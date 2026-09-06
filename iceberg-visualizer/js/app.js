@@ -503,7 +503,17 @@
     const toggle = document.getElementById('nav-toggle');
     const sidebar = document.getElementById('sidebar');
     toggle?.addEventListener('click', () => {
-      if (sidebar?.classList.contains('drawer-open')) _closeDrawer(); else _openDrawer();
+      if (_drawerMQ.matches) {
+        // Tablet / portrait: open or close the off-canvas drawer.
+        if (sidebar?.classList.contains('drawer-open')) _closeDrawer(); else _openDrawer();
+      } else if (sidebar) {
+        // Desktop: collapse / expand the persistent sidebar (reclaims
+        // width so landscape diagrams fill the canvas), and persist it.
+        const collapsed = sidebar.classList.toggle('collapsed');
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        _lsSet('tv-sidebar-collapsed', collapsed ? '1' : '0');
+        toggle.setAttribute('aria-expanded', String(!collapsed));
+      }
     });
     document.getElementById('nav-backdrop')?.addEventListener('click', _closeDrawer);
     document.getElementById('sidebar-nav')?.addEventListener('click', (e) => {

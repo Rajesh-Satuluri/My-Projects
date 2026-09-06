@@ -24,8 +24,11 @@
   .sidebar { height: 100dvh; }
 }
 
-/* ── Nav drawer scaffolding (inert on desktop) ──────────────── */
-#nav-toggle { display: none; }
+/* ── Nav toggle: a universal top-left control on every device ──
+   Visible at all widths. On desktop it collapses/expands the
+   persistent sidebar; at ≤1024px it opens/closes the drawer
+   (see app.js _initDrawer). */
+#nav-toggle { display: inline-flex; margin-right: 4px; }
 
 .nav-backdrop {
   position: fixed;
