@@ -1,0 +1,132 @@
+/* ============================================================
+   Multi-format layer — per-format brand recoloring, premium
+   motion tokens, format switcher, route progress bar, and the
+   universal interaction polish from UIUX-POLISH-SPEC.md.
+   Loaded AFTER main.css so the [data-format] blocks win the
+   cascade over the base/light token blocks.
+   ============================================================ */
+
+/* ── Premium motion tokens (additive; existing --ease-* kept) ── */
+:root {
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --dur-slow: 320ms;
+  --dur-cat: 280ms;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --ease-accel: cubic-bezier(.4, 0, 1, 1);
+  --ease-cat: cubic-bezier(.33, 0, .2, 1);
+  --lift: 0 6px 20px rgba(0, 0, 0, .22);
+
+  /* Section left-edge accent stripes (scannability) */
+  --stripe-neutral: #33455f;
+  --stripe-a: #4f8cff;
+  --stripe-b: #22d3ee;
+  --stripe-c: #fbbf24;
+  --stripe-d: #a78bfa;
+
+  /* Achievement / streak accents (learning surfaces, Phase D) */
+  --success: #10b981; --success-2: #2dd4bf; --success-glow: rgba(16, 185, 129, .28);
+  --flame-1: #fbbf24; --flame-2: #fb5a5a;
+}
+
+/* ── Per-format brand recoloring ──────────────────────────────
+   Sets --brand* (used by the new premium CSS) and aliases the
+   legacy --iceberg* tokens so every existing component recolors
+   per active format, in both light and dark themes. */
+:root,
+:root[data-format="iceberg"] {
+  --brand: #4aaeff; --brand-2: #a371f7; --brand-strong: #1a7fd4;
+  --brand-glow: rgba(74, 174, 255, .30);
+  --brand-gradient: linear-gradient(135deg, #4aaeff 0%, #a371f7 100%);
+  --brand-gradient-warm: linear-gradient(135deg, #f97316 0%, #e3b341 100%);
+}
+:root[data-format="delta"] {
+  --brand: #ff5a3c; --brand-2: #ffb020; --brand-strong: #d23b1f;
+  --brand-glow: rgba(255, 90, 60, .30);
+  --brand-gradient: linear-gradient(135deg, #ff5a3c 0%, #ffb020 100%);
+  --brand-gradient-warm: linear-gradient(135deg, #ff5a3c 0%, #ffb020 100%);
+}
+:root[data-format="compare"] {
+  --brand: #8b94a3; --brand-2: #4aaeff; --brand-strong: #6b7280;
+  --brand-glow: rgba(139, 148, 163, .30);
+  --brand-gradient: linear-gradient(135deg, #4aaeff 0%, #ff5a3c 100%);
+  --brand-gradient-warm: linear-gradient(135deg, #4aaeff 0%, #ff5a3c 100%);
+}
+/* Alias legacy tokens → brand (recolors all existing components).
+   Uses [data-format] (specificity 0,1,1) placed after main.css's
+   light-theme block so it wins in both light and dark themes. */
+:root[data-format] {
+  --iceberg: var(--brand);
+  --iceberg-dark: var(--brand-strong);
+  --iceberg-glow: var(--brand-glow);
+  --iceberg-gradient: var(--brand-gradient);
+  --iceberg-gradient-warm: var(--brand-gradient-warm);
+}
+
+/* ── Route progress bar (top; perceptual) ─────────────────────── */
+.nav-progress {
+  position: fixed; top: 0; left: 0; height: 2px; width: 0;
+  z-index: 600;
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  box-shadow: 0 0 8px var(--brand-glow);
+  opacity: 0; pointer-events: none;
+  transition: width .18s var(--ease), opacity .24s var(--ease);
+}
+.nav-progress.run { opacity: 1; }
+.nav-progress.done { opacity: 0; }
+
+/* ── Content rise-in on each route change ─────────────────────── */
+@keyframes tvMainEnter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+#module-container.main-enter { animation: tvMainEnter 170ms var(--ease); }
+
+/* ── Universal interaction polish (hover-lift + press-settle) ─── */
+.btn-primary, .btn-secondary, .nav-tools-btn, .fmt-seg {
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease), filter var(--dur-fast) var(--ease);
+}
+.btn-primary:hover, .btn-secondary:hover { transform: translateY(-1px); box-shadow: var(--lift); }
+.btn-primary:active, .btn-secondary:active, .btn-icon:active, .fmt-seg:active { transform: translateY(1px) scale(.99); }
+a.nav-item { transition: background .12s, color .12s, transform var(--dur-fast) var(--ease); }
+a.nav-item:hover { transform: translateX(3px); }
+
+/* Glowing active-nav accent bar (upgrade the existing ::before) */
+a.nav-item.active { background: var(--brand-glow); color: var(--brand); }
+a.nav-item.active::before { background: var(--brand); box-shadow: 0 0 8px var(--brand-glow); }
+
+/* Focus-visible rings adopt the brand accent */
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 6px; }
+button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
+
+/* ── Format switcher ──────────────────────────────────────────── */
+.format-switcher { padding: 10px 12px 4px; }
+.format-switcher.single .fmt-static {
+  display: block;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase;
+  color: var(--brand);
+}
+.sidebar.collapsed .format-switcher { display: none; }
+.fmt-track {
+  display: flex; gap: 3px; padding: 3px;
+  background: var(--bg-3); border: 1px solid var(--border-default);
+  border-radius: var(--radius-full);
+}
+.fmt-seg {
+  flex: 1; padding: 5px 8px; border-radius: var(--radius-full);
+  font-size: 11.5px; font-weight: 700; color: var(--text-secondary);
+  background: transparent; border: none; cursor: pointer; white-space: nowrap;
+}
+.fmt-seg:hover { color: var(--text-primary); }
+.fmt-seg.active {
+  background: var(--brand); color: var(--text-on-accent, #06111f);
+  box-shadow: 0 0 12px var(--brand-glow);
+}
+.fmt-seg--compare.active { background: var(--brand-gradient); }
+
+/* ── Reduced motion (belt-and-suspenders over main.css) ───────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important; scroll-behavior: auto !important;
+  }
+}

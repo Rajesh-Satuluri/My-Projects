@@ -48,7 +48,7 @@ async function main() {
   const base = `http://127.0.0.1:${server.address().port}`;
   const browser = await chromium.launch(EXEC ? { executablePath: EXEC } : {});
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  await page.addInitScript(() => { try { localStorage.setItem('iv-tour-done', '1'); } catch (e) {} });
+  await page.addInitScript(() => { try { localStorage.setItem('iv-tour-done','1'); localStorage.setItem('tv-iceberg-tour-done','1'); localStorage.setItem('tv-migrated','1'); } catch (e) {} });
 
   const errors = [];
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));

@@ -82,7 +82,7 @@ async function main() {
   // Suppress the first-run tour so it never interferes with checks.
   async function mkPage(opts) {
     const p = await browser.newPage(opts || {});
-    await p.addInitScript(() => { try { localStorage.setItem('iv-tour-done', '1'); } catch (e) {} });
+    await p.addInitScript(() => { try { localStorage.setItem('iv-tour-done','1'); localStorage.setItem('tv-iceberg-tour-done','1'); localStorage.setItem('tv-migrated','1'); } catch (e) {} });
     return p;
   }
 
@@ -186,11 +186,11 @@ async function main() {
     if (!deepOk) failures.push('[deep-link] could not verify step seek on any animated screen');
 
     // Resume: last screen restored when hash is empty.
-    await page.evaluate(() => { try { localStorage.setItem('iv-last-screen', 'quiz'); } catch (e) {} });
+    await page.evaluate(() => { try { localStorage.setItem('tv-iceberg-last-screen', 'quiz'); } catch (e) {} });
     await page.goto(base + '/', { waitUntil: 'networkidle' });
     await page.waitForTimeout(200);
     const resumed = await page.evaluate(() => location.hash);
-    if (resumed !== '#quiz') failures.push(`[resume] expected #quiz, got "${resumed}"`);
+    if (resumed !== '#iceberg/quiz') failures.push(`[resume] expected #iceberg/quiz, got "${resumed}"`);
 
     checks += 3;
     await page.close();
@@ -214,7 +214,7 @@ async function main() {
     if (!/time travel/i.test(top)) failures.push(`[palette] fuzzy "time trav" top result was "${top}"`);
     await page.keyboard.press('Enter');
     await page.waitForTimeout(200);
-    if (await page.evaluate(() => location.hash) !== '#time-travel') failures.push('[palette] Enter did not navigate to selection');
+    if (await page.evaluate(() => location.hash) !== '#iceberg/time-travel') failures.push('[palette] Enter did not navigate to selection');
 
     // Progress: meter exists and marks the current screen visited.
     const prog = await page.evaluate(() => {
