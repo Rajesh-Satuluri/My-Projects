@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Lab — Curriculum Outline</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">AI</div>
+        <div class="brand-text">
+          <strong>AI Lab</strong>
+          <span>Curriculum outline</span>
+        </div>
+      </div>
+      <nav id="nav" class="nav"></nav>
+      <a href="#systems" class="nav-item nav-item-systems">
+        <span class="nav-code">§</span>
+        <span class="nav-title">Cross-cutting systems</span>
+      </a>
+    </aside>
+
+    <main class="content">
+      <header class="page-head">
+        <p class="eyebrow">Coverage contract — titles only, no content yet</p>
+        <h1>Interactive AI Engineering Laboratory</h1>
+        <p class="lede">
+          Every concept the platform must eventually teach, seeded up front so
+          nothing goes missing. Each item below is a <em>pending</em> stub —
+          content is authored later, starting with the Transformer golden slice.
+        </p>
+        <div class="stats">
+          <div class="stat"><span id="stat-concepts" class="stat-n">0</span><span class="stat-l">concepts</span></div>
+          <div class="stat"><span id="stat-modules" class="stat-n">0</span><span class="stat-l">modules</span></div>
+          <div class="stat"><span id="stat-systems" class="stat-n">0</span><span class="stat-l">systems</span></div>
+        </div>
+        <input id="filter" class="filter" type="search" placeholder="Filter concepts…  (e.g. attention, PCA, RAG)" />
+      </header>
+      <div id="outline" class="outline"></div>
+      <footer class="page-foot">
+        Structure from the master-prompt curriculum (Modules 0–23) + cross-cutting systems (§24–36).
+      </footer>
+    </main>
+  </div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
