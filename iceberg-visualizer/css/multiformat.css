@@ -130,3 +130,49 @@ button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
     transition-duration: .001ms !important; scroll-behavior: auto !important;
   }
 }
+
+/* ============================================================
+   IT-4b — visual-deepening additions
+   ============================================================ */
+
+/* Light-theme brand tuning: darker accents read better on warm paper.
+   Higher specificity ([data-theme][data-format]) beats the format block. */
+:root[data-theme="light"][data-format="iceberg"] { --brand: #1a7fd4; --brand-strong: #0a5fbf; }
+:root[data-theme="light"][data-format="delta"]   { --brand: #e0431f; --brand-strong: #b8320f; }
+:root[data-theme="light"][data-format="compare"] { --brand: #5a6472; --brand-strong: #434b57; }
+
+/* Hamburger → X morph (mobile/tablet nav toggle) */
+#nav-toggle .ham { position: relative; display: inline-block; width: 18px; height: 14px; }
+#nav-toggle .ham i {
+  position: absolute; left: 0; right: 0; height: 2px; border-radius: 2px; background: currentColor;
+  transition: transform var(--dur) var(--ease-cat), opacity var(--dur-fast) var(--ease), top var(--dur) var(--ease-cat);
+}
+#nav-toggle .ham i:nth-child(1) { top: 0; }
+#nav-toggle .ham i:nth-child(2) { top: 6px; }
+#nav-toggle .ham i:nth-child(3) { top: 12px; }
+#nav-toggle:active .ham { transform: scale(.9); }
+body.sidebar-open #nav-toggle .ham i:nth-child(1) { top: 6px; transform: rotate(45deg); }
+body.sidebar-open #nav-toggle .ham i:nth-child(2) { opacity: 0; transform: scaleX(.4); }
+body.sidebar-open #nav-toggle .ham i:nth-child(3) { top: 6px; transform: rotate(-45deg); }
+
+/* Copy-button brightness pulse (premium micro-feedback) */
+.code-block-copy { transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), filter var(--dur-fast) var(--ease); }
+.code-block-copy:active { filter: brightness(1.4); }
+.code-block-copy.copied { color: var(--green); }
+
+/* Home / nav cards lift on hover (only elements that opt in via [data-nav]) */
+[data-nav] { transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
+[data-nav]:hover { transform: translateY(-2px); box-shadow: var(--lift); }
+
+/* Left-edge accent stripe utility (scannability; opt-in via [data-key]) */
+.section, .tv-stripe { box-shadow: inset 3px 0 0 var(--stripe-neutral); }
+.section[data-key="logic"], [data-key="logic"] { box-shadow: inset 3px 0 0 var(--stripe-a); }
+.section[data-key="code"], [data-key="code"] { box-shadow: inset 3px 0 0 var(--stripe-b); }
+.section[data-key="complexity"], [data-key="complexity"] { box-shadow: inset 3px 0 0 var(--stripe-c); }
+.section[data-key="recall"], [data-key="recall"] { box-shadow: inset 3px 0 0 var(--stripe-d); }
+
+/* Uppercase micro-label utility (the premium tell) */
+.tv-micro {
+  font-size: 10.5px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase;
+  color: var(--text-muted);
+}

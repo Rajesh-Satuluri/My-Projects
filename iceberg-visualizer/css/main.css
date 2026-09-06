@@ -5,27 +5,31 @@
 
 /* ── Design Tokens ─────────────────────────────────────────── */
 :root {
-  /* Background layers */
-  --bg-0: #090d14;
-  --bg-1: #0d1117;
-  --bg-2: #161b22;
-  --bg-3: #21262d;
-  --bg-4: #2d333b;
-  --bg-5: #373e47;
+  /* Background layers (premium navy-tinted dark, per UIUX-POLISH-SPEC) */
+  --bg-0: #0a0e17;
+  --bg-1: #0e1420;
+  --bg-2: #131b2b;
+  --bg-3: #1a2334;
+  --bg-4: #223047;
+  --bg-5: #2b3a52;
 
   /* Borders */
-  --border-subtle: #1c2128;
-  --border-default: #30363d;
-  --border-muted: #484f58;
-  --border-emphasis: #6e7681;
+  --border-subtle: #1a2536;
+  --border-default: #223047;
+  --border-muted: #33455f;
+  --border-emphasis: #46587a;
 
   /* Text */
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
-  --text-muted: #6e7681;
-  --text-disabled: #484f58;
-  --text-inverse: #0d1117;
-  --text-on-accent: #ffffff;
+  --text-primary: #e6edf7;
+  --text-secondary: #b3c0d6;
+  --text-muted: #7e8da8;
+  --text-disabled: #55627a;
+  --text-inverse: #0a0e17;
+  --text-on-accent: #06111f;
+
+  /* Code slab — stays dark in both themes (deliberate readable slab) */
+  --code-bg: #0b1017;
+  --indent-guide: rgba(255, 255, 255, .09);
 
   /* Accents */
   --blue: #58a6ff;
@@ -72,12 +76,12 @@
   --shadow-glow-orange: 0 0 20px rgba(249, 115, 22, 0.3);
 
   /* Radius */
-  --radius-xs: 3px;
-  --radius-sm: 6px;
-  --radius: 8px;
-  --radius-md: 10px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-xs: 4px;
+  --radius-sm: 9px;
+  --radius: 12px;
+  --radius-md: 13px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
   --radius-2xl: 24px;
   --radius-full: 9999px;
 
@@ -143,22 +147,23 @@
    through these tokens so the whole app re-themes from this block.
    Applied when the toggle stamps data-theme="light" on <html>. */
 :root[data-theme="light"] {
-  --bg-0: #eaeef2;
+  /* Warm-neutral paper (per UIUX-POLISH-SPEC) — softer, more premium than blue-white */
+  --bg-0: #f3f1ec;
   --bg-1: #ffffff;
-  --bg-2: #f6f8fa;
-  --bg-3: #eef1f4;
-  --bg-4: #e2e7ec;
-  --bg-5: #d0d7de;
+  --bg-2: #f7f5f0;
+  --bg-3: #edeae2;
+  --bg-4: #e6e2d8;
+  --bg-5: #d8d3c6;
 
-  --border-subtle: #eaeef2;
-  --border-default: #d0d7de;
-  --border-muted: #afb8c1;
-  --border-emphasis: #8c959f;
+  --border-subtle: #edeae2;
+  --border-default: #e2ded4;
+  --border-muted: #cfc9bb;
+  --border-emphasis: #b3ab99;
 
-  --text-primary: #1f2328;
-  --text-secondary: #59636e;
-  --text-muted: #818b98;
-  --text-disabled: #afb8c1;
+  --text-primary: #1f2430;
+  --text-secondary: #46505f;
+  --text-muted: #78808e;
+  --text-disabled: #b3ab99;
   --text-inverse: #ffffff;
   --text-on-accent: #ffffff;
 
@@ -191,12 +196,12 @@
    (With JS on, the no-flash head script resolves saved || system.) */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]):not([data-theme="light"]) {
-    --bg-0: #eaeef2; --bg-1: #ffffff; --bg-2: #f6f8fa; --bg-3: #eef1f4;
-    --bg-4: #e2e7ec; --bg-5: #d0d7de;
-    --border-subtle: #eaeef2; --border-default: #d0d7de;
-    --border-muted: #afb8c1; --border-emphasis: #8c959f;
-    --text-primary: #1f2328; --text-secondary: #59636e; --text-muted: #818b98;
-    --text-disabled: #afb8c1; --text-inverse: #ffffff; --text-on-accent: #ffffff;
+    --bg-0: #f3f1ec; --bg-1: #ffffff; --bg-2: #f7f5f0; --bg-3: #edeae2;
+    --bg-4: #e6e2d8; --bg-5: #d8d3c6;
+    --border-subtle: #edeae2; --border-default: #e2ded4;
+    --border-muted: #cfc9bb; --border-emphasis: #b3ab99;
+    --text-primary: #1f2430; --text-secondary: #46505f; --text-muted: #78808e;
+    --text-disabled: #b3ab99; --text-inverse: #ffffff; --text-on-accent: #06111f;
     --blue: #0969da; --blue-dim: #0550ae; --blue-subtle: rgba(9, 105, 218, 0.1);
     --orange: #bc4c00; --orange-dim: #953800; --orange-subtle: rgba(188, 76, 0, 0.1);
     --green: #1a7f37; --green-dim: #116329; --green-subtle: rgba(26, 127, 55, 0.1);
