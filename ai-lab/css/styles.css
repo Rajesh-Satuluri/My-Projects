@@ -264,13 +264,30 @@ body.reading .topbar { position: sticky; }
 .reader-title { font-family: var(--display); font-size: clamp(28px, 4.5vw, 42px); font-weight: 700; letter-spacing: -.02em; line-height: 1.08; margin: 0 0 12px; }
 .reader-sub { font-size: 17px; color: var(--ink-2); margin: 0; line-height: 1.5; }
 
-.depthbar { position: sticky; top: 62px; z-index: 20; display: flex; align-items: center; gap: 14px;
-  background: rgba(10,11,16,.86); backdrop-filter: blur(10px); border: 1px solid var(--line);
-  border-radius: 12px; padding: 11px 16px; margin: 6px 0 30px; }
-.depth-label { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
-.depth-range { flex: 1; accent-color: var(--rose); height: 4px; }
-.depth-name { font-family: var(--display); font-weight: 600; font-size: 14px; min-width: 108px; text-align: right; }
-.depth-num { font-family: var(--mono); font-size: 12px; color: var(--rose); background: rgba(255,143,107,.12); padding: 2px 9px; border-radius: 20px; }
+/* read-depth bar: presets cap how far down you read (default Full) + page TOC */
+.readbar { position: sticky; top: 62px; z-index: 20; display: flex; align-items: center; gap: 16px;
+  flex-wrap: wrap; background: rgba(10,11,16,.9); backdrop-filter: blur(10px);
+  border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin: 6px 0 32px; }
+.readbar-left { display: flex; align-items: center; gap: 12px; }
+.readbar-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+.preset-group { display: inline-flex; background: var(--bg-2); border: 1px solid var(--line); border-radius: 9px; padding: 3px; gap: 2px; }
+.preset { font: inherit; font-size: 13px; font-weight: 500; color: var(--ink-3); background: none; border: 0; padding: 6px 14px; border-radius: 7px; cursor: pointer; transition: color .12s, background .12s; }
+.preset:hover { color: var(--ink); }
+.preset.on { color: #0a0a12; background: linear-gradient(120deg, #ffd68a, #ff9f6e); font-weight: 600; }
+.toc { margin-left: auto; position: relative; }
+.toc summary { cursor: pointer; font-size: 13px; color: var(--ink-2); list-style: none; padding: 6px 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg-2); }
+.toc summary::-webkit-details-marker { display: none; }
+.toc summary::before { content: "☰ "; color: var(--ink-3); }
+.toc[open] summary { border-color: var(--accent); }
+.toc nav { position: absolute; right: 0; top: calc(100% + 6px); width: 300px; max-height: 60vh; overflow-y: auto;
+  background: var(--bg-1); border: 1px solid var(--line-2); border-radius: 12px; padding: 8px; display: flex; flex-direction: column; box-shadow: var(--shadow); }
+.toc nav a { font-size: 13px; color: var(--ink-2); padding: 8px 11px; border-radius: 7px; }
+.toc nav a:hover { background: var(--bg-3); color: var(--ink); }
+
+/* small depth tag appended to section headings — shows the deepening arc */
+.depth-tag { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--ink-3); background: var(--bg-2); border: 1px solid var(--line); padding: 2px 8px; border-radius: 20px; margin-left: 10px; vertical-align: middle; font-weight: 400; }
+.blkwrap { scroll-margin-top: 130px; }
 
 .blocks { display: flex; flex-direction: column; gap: 26px; }
 .blk { animation: blkin .25s ease; }

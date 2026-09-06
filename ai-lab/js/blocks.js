@@ -28,6 +28,10 @@ function inline(s) {
       const end = str.indexOf("**", i + 2);
       if (end > i) { out += `<strong>${esc(str.slice(i + 2, end))}</strong>`; i = end + 2; continue; }
     }
+    if (ch === "*" && str[i + 1] !== "*") {
+      const end = str.indexOf("*", i + 1);
+      if (end > i) { out += `<em>${esc(str.slice(i + 1, end))}</em>`; i = end + 1; continue; }
+    }
     out += esc(ch);
     i++;
   }

@@ -1,21 +1,31 @@
 // =============================================================================
 // AI LAB — concept reader
-// Renders a concept (ordered typed blocks) with a depth control, then runs the
-// KaTeX + Prism post-pass and wires interactive blocks.
+// A concept is ONE continuous explanation, ordered from basic intuition down to
+// deep internals. By default the whole thing is shown. The optional "read depth"
+// control only *trims how far down you go* — it never swaps in a different
+// explanation. Blocks are cumulative: Full = everything, top to bottom.
 // =============================================================================
 import { renderBlock } from "./blocks.js";
 
-const DEPTHS = [
-  "Intuition", "Visual", "Technical", "Mathematical", "Implementation",
-  "Production", "Engineering", "Architecture", "Interview", "Principal",
+// depth (1–10, master-prompt §7) → short tag shown on section headings
+const DEPTH_TAG = {
+  1: "Intuition", 2: "Intuition", 3: "Technical", 4: "Mathematics",
+  5: "Implementation", 6: "Production", 7: "Engineering", 8: "Architecture",
+  9: "Interview", 10: "Principal",
+};
+
+// three friendly presets — a CEILING on how deep to read. Default = Full.
+const PRESETS = [
+  { id: "essentials", label: "Essentials", cap: 3, hint: "intuition → technical" },
+  { id: "standard", label: "Standard", cap: 6, hint: "adds math, code, production" },
+  { id: "full", label: "Full", cap: 10, hint: "everything, incl. interview & principal" },
 ];
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 
-let currentDepth = Number(localStorage.getItem("ailab:depth") || 5);
-
-function progressKey(slug) { return "ailab:seen:" + slug; }
+let presetId = localStorage.getItem("ailab:preset") || "full";
+function cap() { return (PRESETS.find((p) => p.id === presetId) || PRESETS[2]).cap; }
 
 export function renderConcept(concept, ctx) {
   const el = $("#reader-body");
@@ -36,11 +46,14 @@ export function renderConcept(concept, ctx) {
       ${concept.subtitle ? `<p class="reader-sub">${concept.subtitle}</p>` : ""}
     </header>
 
-    <div class="depthbar">
-      <span class="depth-label">Depth</span>
-      <input type="range" min="1" max="10" value="${currentDepth}" class="depth-range" id="depthRange" />
-      <span class="depth-name" id="depthName">${DEPTHS[currentDepth - 1]}</span>
-      <span class="depth-num">L${currentDepth}</span>
+    <div class="readbar">
+      <div class="readbar-left">
+        <span class="readbar-label">Read depth</span>
+        <div class="preset-group" id="presetGroup">
+          ${PRESETS.map((p) => `<button class="preset${p.id === presetId ? " on" : ""}" data-preset="${p.id}" title="${p.hint}">${p.label}</button>`).join("")}
+        </div>
+      </div>
+      <details class="toc"><summary>On this page</summary><nav id="tocNav"></nav></details>
     </div>
 
     <article class="blocks" id="blocks"></article>
@@ -51,32 +64,66 @@ export function renderConcept(concept, ctx) {
     </nav>`;
 
   paintBlocks(concept);
-  $("#depthRange").addEventListener("input", (e) => {
-    currentDepth = Number(e.target.value);
-    localStorage.setItem("ailab:depth", currentDepth);
-    $("#depthName").textContent = DEPTHS[currentDepth - 1];
-    $(".depth-num").textContent = "L" + currentDepth;
+
+  $("#presetGroup").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-preset]");
+    if (!btn) return;
+    presetId = btn.dataset.preset;
+    localStorage.setItem("ailab:preset", presetId);
+    $$(".preset", $("#presetGroup")).forEach((b) => b.classList.toggle("on", b.dataset.preset === presetId));
     paintBlocks(concept);
   });
 
-  try { localStorage.setItem(progressKey(concept.slug), "1"); } catch (e) {}
+  try { localStorage.setItem("ailab:seen:" + concept.slug, "1"); } catch (e) {}
   window.scrollTo(0, 0);
 }
 
 function paintBlocks(concept) {
   const host = $("#blocks");
-  const visible = concept.blocks.filter((b) => (b.d || 1) <= currentDepth);
-  if (!visible.length) {
-    host.innerHTML = `<div class="depth-empty">Nothing at this depth yet — raise the depth to reveal more of this concept.</div>`;
-    return;
-  }
-  host.innerHTML = visible.map(renderBlock).join("");
+  const visible = concept.blocks.filter((b) => (b.d || 1) <= cap());
+
+  host.innerHTML = visible
+    .map((b, i) => `<div class="blkwrap" id="blk-${i}" data-depth="${b.d || 1}">${renderBlock(b)}</div>`)
+    .join("");
+
+  // add a small depth tag onto each block that has a visible heading
+  visible.forEach((b, i) => {
+    if (!b.d) return;
+    const wrap = $("#blk-" + i, host);
+    const heading = wrap && wrap.querySelector(".blk-h, .hook-q, .eq-h, .pr-scenario, .ki-tag");
+    if (heading && wrap.querySelector(".blk-h")) {
+      const tag = document.createElement("span");
+      tag.className = "depth-tag";
+      tag.textContent = DEPTH_TAG[b.d] || "";
+      wrap.querySelector(".blk-h").appendChild(tag);
+    }
+  });
+
+  buildToc(visible, host);
   postPass(host);
   wireExec(host);
 }
 
+function buildToc(visible, host) {
+  const nav = $("#tocNav");
+  if (!nav) return;
+  const items = [];
+  visible.forEach((b, i) => {
+    const label = b.h || (b.type === "hook" ? "Opening question" : null);
+    if (label) items.push(`<a href="#blk-${i}" data-target="blk-${i}">${escapeHtml(stripTex(label))}</a>`);
+  });
+  nav.innerHTML = items.join("") || "<span class='toc-empty'>—</span>";
+  nav.addEventListener("click", (e) => {
+    const a = e.target.closest("[data-target]");
+    if (!a) return;
+    e.preventDefault();
+    const t = document.getElementById(a.dataset.target);
+    if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
+    const det = a.closest("details"); if (det) det.open = false;
+  });
+}
+
 function postPass(container) {
-  // KaTeX
   if (window.renderMathInElement) {
     try {
       window.renderMathInElement(container, {
@@ -88,10 +135,7 @@ function postPass(container) {
       });
     } catch (e) {}
   }
-  // Prism
-  if (window.Prism) {
-    try { window.Prism.highlightAllUnder(container); } catch (e) {}
-  }
+  if (window.Prism) { try { window.Prism.highlightAllUnder(container); } catch (e) {} }
 }
 
 function wireExec(container) {
@@ -107,13 +151,14 @@ function wireExec(container) {
     $(".exec-btn[data-exec-next]", box).addEventListener("click", () => {
       if (at < steps.length) at++;
       paint();
-      if (at <= steps.length && steps[at - 1]) steps[at - 1].scrollIntoView({ block: "center", behavior: "smooth" });
+      if (steps[at - 1]) steps[at - 1].scrollIntoView({ block: "center", behavior: "smooth" });
     });
     $(".exec-btn[data-exec-reset]", box).addEventListener("click", () => { at = 0; paint(); });
     paint();
   });
 }
 
+function stripTex(s) { return String(s).replace(/\$[^$]*\$/g, "").replace(/\s+/g, " ").trim(); }
 function escapeHtml(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
