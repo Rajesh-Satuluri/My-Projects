@@ -393,6 +393,72 @@ export const PATHS = [
   "Principal AI Engineer",
 ];
 
+// -----------------------------------------------------------------------------
+// TRACKS — the 6-part journey. Groups the 24 modules into a narrative arc so
+// the curriculum reads as a path, not a flat list. Order is the learning order.
+// -----------------------------------------------------------------------------
+export const TRACKS = [
+  {
+    id: "t1",
+    n: "01",
+    title: "Foundations",
+    tagline: "The mathematics and data intuition everything else is built on.",
+    icon: "△",
+    hue: 210,
+    modules: ["m0", "m1", "m2"],
+  },
+  {
+    id: "t2",
+    n: "02",
+    title: "Classical Machine Learning",
+    tagline: "The algorithms, the evaluation, the trade-offs — the working engineer's toolkit.",
+    icon: "◈",
+    hue: 158,
+    modules: ["m3", "m4", "m5", "m6"],
+  },
+  {
+    id: "t3",
+    n: "03",
+    title: "Language & Neural Networks",
+    tagline: "From words-as-vectors to deep networks to the bottleneck that forced a rethink.",
+    icon: "❋",
+    hue: 275,
+    modules: ["m7", "m8", "m9", "m10"],
+  },
+  {
+    id: "t4",
+    n: "04",
+    title: "Transformers",
+    tagline: "“Attention Is All You Need,” rebuilt from zero until you can mentally execute one.",
+    icon: "★",
+    hue: 350,
+    crown: true,
+    modules: ["m11"],
+  },
+  {
+    id: "t5",
+    n: "05",
+    title: "LLMs & Applications",
+    tagline: "How large language models generate, and how to engineer real products around them.",
+    icon: "◇",
+    hue: 24,
+    modules: ["m12", "m13", "m14", "m15", "m16"],
+  },
+  {
+    id: "t6",
+    n: "06",
+    title: "Production & Systems",
+    tagline: "Serving, infrastructure, cost, failure, observability, and end-to-end system design.",
+    icon: "⬡",
+    hue: 190,
+    modules: ["m17", "m18", "m19", "m20", "m21", "m22", "m23"],
+  },
+];
+
+export function moduleById(id) {
+  return MODULES.find((m) => m.id === id);
+}
+
 // Category metadata for coloring the outline.
 export const KINDS = {
   foundations: { label: "Foundations", hue: 210 },
