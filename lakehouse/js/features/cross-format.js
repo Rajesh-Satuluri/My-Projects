@@ -18,20 +18,20 @@
   // Any subset of formats may appear. delete-compare is offered as a
   // bonus "watch it run" jump from the delete concept.
   const CONCEPTS = [
-    { label: 'Introduction',      iceberg: 'why-iceberg',        delta: 'why-delta',       compare: 'overview' },
-    { label: 'Architecture',      iceberg: 'architecture',       delta: 'architecture',    compare: 'metadata-model' },
+    { label: 'Introduction',      iceberg: 'why-iceberg',        delta: 'why-delta',       hudi: 'why-hudi',      compare: 'overview' },
+    { label: 'Architecture',      iceberg: 'architecture',       delta: 'architecture',    hudi: 'architecture', compare: 'metadata-model' },
     { label: 'CREATE TABLE',      iceberg: 'create-table',       delta: 'create-table' },
-    { label: 'Insert / Append',   iceberg: 'insert',             delta: 'insert' },
-    { label: 'Update',            iceberg: 'update',             delta: 'update',          compare: 'writes-deletes' },
-    { label: 'Delete',            iceberg: 'delete',             delta: 'delete',          compare: 'writes-deletes', animated: 'delete-compare' },
+    { label: 'Insert / Append',   iceberg: 'insert',             delta: 'insert',          hudi: 'insert' },
+    { label: 'Update / Upsert',   iceberg: 'update',             delta: 'update',          hudi: 'upsert',       compare: 'writes-deletes' },
+    { label: 'Delete',            iceberg: 'delete',             delta: 'delete',          hudi: 'delete',       compare: 'writes-deletes', animated: 'delete-compare' },
     { label: 'Merge',             iceberg: 'merge',              delta: 'merge' },
-    { label: 'Overwrite',         iceberg: 'overwrite',          delta: 'overwrite' },
+    { label: 'Overwrite',         iceberg: 'overwrite',          delta: 'overwrite',       hudi: 'insert-overwrite' },
     { label: 'Read Path',         iceberg: 'read-path',          delta: 'read-path' },
     { label: 'Write Path',        iceberg: 'write-path',         delta: 'write-path' },
-    { label: 'Query Planner',     iceberg: 'query-planner',      delta: 'query-planner' },
+    { label: 'Query Planner',     iceberg: 'query-planner',      delta: 'query-planner',   hudi: 'query-planner' },
     { label: 'Time Travel',       iceberg: 'time-travel',        delta: 'time-travel',     compare: 'time-travel' },
     { label: 'Schema Evolution',  iceberg: 'schema-evolution',   delta: 'schema-evolution' },
-    { label: 'Concurrency',       iceberg: 'concurrency',        delta: 'concurrency',     compare: 'concurrency' },
+    { label: 'Concurrency',       iceberg: 'concurrency',        delta: 'concurrency',     hudi: 'concurrency',  compare: 'concurrency' },
     { label: 'Partitioning',      iceberg: 'hidden-partitioning', delta: 'partitioning',   compare: 'layout' },
     { label: 'Engine Integrations', iceberg: 'engine-integrations', delta: 'engine-integrations', compare: 'ecosystem' },
     { label: 'Interview Mode',    iceberg: 'interview',          delta: 'interview' },
@@ -40,11 +40,12 @@
     { label: 'Cheat Sheets',      iceberg: 'cheatsheet',         delta: 'cheatsheet' },
   ];
 
-  const FORMAT_ORDER = ['iceberg', 'delta', 'compare'];
-  const SHORT = { iceberg: 'Iceberg', delta: 'Delta', compare: 'Compare' };
+  const FORMAT_ORDER = ['iceberg', 'delta', 'hudi', 'compare'];
+  const SHORT = { iceberg: 'Iceberg', delta: 'Delta', hudi: 'Hudi', compare: 'Compare' };
   const MARK = {
     iceberg: '<svg viewBox="0 0 24 24" width="11" height="11" aria-hidden="true"><polygon points="12,4 20,20 4,20" fill="#4aaeff"/></svg>',
     delta:   '<svg viewBox="0 0 24 24" width="11" height="11" aria-hidden="true"><polygon points="12,4 20,20 4,20" fill="#ff5a3c"/></svg>',
+    hudi:    '<svg viewBox="0 0 24 24" width="11" height="11" aria-hidden="true"><rect x="4" y="6" width="16" height="12" rx="2" fill="#14b8a6"/></svg>',
     compare: '<span style="font-weight:800">⇄</span>',
   };
 

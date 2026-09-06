@@ -61,5 +61,66 @@
         difficulty: 'intermediate',
       },
     ],
+    'indexing': [
+      {
+        q: 'What does a Hudi index map?',
+        options: ['Column → data type', 'Record key → the file group holding it', 'Partition → size', 'Instant → action'],
+        correct: 1,
+        explanation: 'The index maps each record key to its file group, so upserts and deletes target the right files instead of scanning the whole table.',
+        difficulty: 'basic',
+      },
+      {
+        q: 'Which index gives O(1) routing by hashing keys into a fixed number of file groups?',
+        options: ['Bloom index', 'Bucket index', 'Simple index', 'No index'],
+        correct: 1,
+        explanation: 'The bucket index hashes keys into a fixed number of buckets (file groups), so routing needs no probe — great for high-throughput streaming.',
+        difficulty: 'intermediate',
+      },
+    ],
+    'incremental-query': [
+      {
+        q: 'An incremental query returns what?',
+        options: ['The whole table', 'Only records changed between two instants', 'Only the schema', 'Only deleted rows'],
+        correct: 1,
+        explanation: 'Incremental queries read just the records changed between a begin and end instant — Hudi’s signature for efficient downstream pipelines.',
+        difficulty: 'intermediate',
+      },
+    ],
+    'query-types': [
+      {
+        q: 'On a Merge-on-Read table, which query type reads base files only (fastest, may lag)?',
+        options: ['Snapshot', 'Read-optimized', 'Incremental', 'Time-travel'],
+        correct: 1,
+        explanation: 'The read-optimized query reads only compacted base files — fastest columnar reads, but it may miss un-compacted updates until compaction runs.',
+        difficulty: 'intermediate',
+      },
+    ],
+    'compaction': [
+      {
+        q: 'What does compaction do on a Merge-on-Read table?',
+        options: ['Deletes old commits', 'Merges Avro log files into a new base Parquet file', 'Changes the schema', 'Rebalances partitions'],
+        correct: 1,
+        explanation: 'Compaction merges a file group’s log files into a fresh base file (a new file slice), so reads no longer pay a merge cost.',
+        difficulty: 'intermediate',
+      },
+    ],
+    'concurrency': [
+      {
+        q: 'Hudi multi-writer concurrency uses which model?',
+        options: ['Table-level locks for the whole write', 'Optimistic concurrency control with an external lock provider at commit', 'No coordination', 'Two-phase commit'],
+        correct: 1,
+        explanation: 'Multiple writers use OCC: they write optimistically and, at commit, take a brief lock (Zookeeper/HMS/DynamoDB/filesystem); overlapping file groups cause the later writer to abort and retry.',
+        difficulty: 'advanced',
+      },
+    ],
+    'savepoint-restore': [
+      {
+        q: 'How do savepoint/restore differ from a time-travel query?',
+        options: ['They are identical', 'Time travel reads the past; restore resets the table to a past instant', 'Restore only reads data', 'Savepoints delete data'],
+        correct: 1,
+        explanation: 'A time-travel query views an old instant without moving the head; restore actually rolls the table back. A savepoint pins an instant so cleaning keeps its files for recovery.',
+        difficulty: 'intermediate',
+      },
+    ],
   });
 })();
