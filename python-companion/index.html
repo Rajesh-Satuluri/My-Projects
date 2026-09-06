@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>PyRef — Python & PySpark Coding Companion</title>
+<meta name="description" content="Interactive Python, NumPy, Pandas & PySpark quick-reference. Browse 100+ cards with signatures, examples, time/space complexity, interview tips, and common mistakes."/>
+<style>
+/* ── Design tokens ── */
+:root {
+  --bg-0:#090d14;--bg-1:#0d1117;--bg-2:#161b22;--bg-3:#21262d;--bg-4:#2d333b;--bg-5:#373e47;
+  --border-subtle:#1c2128;--border-default:#30363d;--border-muted:#484f58;
+  --text-primary:#e6edf3;--text-secondary:#8b949e;--text-muted:#6e7681;
+  --blue:#58a6ff;--green:#3fb950;--green-dim:#238636;--green-subtle:rgba(63,185,80,.12);
+  --red:#f85149;--red-subtle:rgba(248,81,73,.12);
+  --orange:#f97316;--orange-subtle:rgba(249,115,22,.12);
+  --yellow:#e3b341;--yellow-subtle:rgba(227,179,65,.12);
+  --teal:#2dd4bf;--teal-subtle:rgba(45,212,191,.12);
+  --purple:#a371f7;--purple-subtle:rgba(163,113,247,.12);
+  --blue-subtle:rgba(88,166,255,.12);
+  --python:#3b82f6;--python-dim:#1d4ed8;--python-subtle:rgba(59,130,246,.12);
+  --numpy:#f59e0b;--numpy-subtle:rgba(245,158,11,.12);
+  --pandas:#10b981;--pandas-subtle:rgba(16,185,129,.12);
+  --pyspark:#f97316;--pyspark-subtle:rgba(249,115,22,.12);
+  --syn-kw:#ff7b72;--syn-bi:#79c0ff;--syn-fn:#d2a8ff;
+  --syn-str:#a5d6ff;--syn-num:#79c0ff;--syn-cm:#6e7681;--syn-op:#f97316;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.45);--shadow-lg:0 8px 32px rgba(0,0,0,.6);
+  --radius-xs:3px;--radius-sm:6px;--radius:8px;--radius-md:10px;--radius-lg:14px;--radius-full:9999px;
+  --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --font-mono:"SF Mono","Cascadia Code","Fira Code","JetBrains Mono",Consolas,monospace;
+  --ease-fast:100ms ease;--ease-base:200ms ease;--ease-slow:300ms ease;
+}
+@media (prefers-color-scheme:light){
+  :root{
+    --bg-0:#ffffff;--bg-1:#f6f8fa;--bg-2:#ffffff;--bg-3:#f0f2f5;--bg-4:#e6eaef;--bg-5:#d0d7de;
+    --border-subtle:#eaeef2;--border-default:#d0d7de;--border-muted:#adb5bd;
+    --text-primary:#1c2128;--text-secondary:#424a53;--text-muted:#6e7681;
+    --green:#1a7f37;--green-dim:#116329;--green-subtle:rgba(26,127,55,.1);
+    --red:#d1242f;--red-subtle:rgba(209,36,47,.1);
+    --orange:#bc4c00;--orange-subtle:rgba(188,76,0,.1);
+    --yellow:#9a6700;--yellow-subtle:rgba(154,103,0,.1);
+    --teal:#0f766e;--teal-subtle:rgba(15,118,110,.1);
+    --purple:#8250df;--purple-subtle:rgba(130,80,223,.1);
+    --blue:#0969da;--blue-subtle:rgba(9,105,218,.1);
+    --python:#1d4ed8;--python-dim:#1e3a8a;--python-subtle:rgba(29,78,216,.08);
+    --numpy:#b45309;--numpy-subtle:rgba(180,83,9,.08);
+    --pandas:#059669;--pandas-subtle:rgba(5,150,105,.08);
+    --pyspark:#c2580a;--pyspark-subtle:rgba(194,88,10,.08);
+    --syn-kw:#cf222e;--syn-bi:#0550ae;--syn-fn:#6639ba;
+    --syn-str:#0a3069;--syn-num:#0550ae;--syn-cm:#6e7681;--syn-op:#953800;
+    --shadow-sm:0 2px 8px rgba(0,0,0,.09);--shadow-lg:0 8px 32px rgba(0,0,0,.14);
+  }
+}
+:root[data-theme="dark"]{
+  --bg-0:#090d14;--bg-1:#0d1117;--bg-2:#161b22;--bg-3:#21262d;--bg-4:#2d333b;--bg-5:#373e47;
+  --border-subtle:#1c2128;--border-default:#30363d;--border-muted:#484f58;
+  --text-primary:#e6edf3;--text-secondary:#8b949e;--text-muted:#6e7681;
+  --green:#3fb950;--green-dim:#238636;--green-subtle:rgba(63,185,80,.12);
+  --red:#f85149;--red-subtle:rgba(248,81,73,.12);
+  --orange:#f97316;--orange-subtle:rgba(249,115,22,.12);
+  --yellow:#e3b341;--yellow-subtle:rgba(227,179,65,.12);
+  --teal:#2dd4bf;--teal-subtle:rgba(45,212,191,.12);
+  --purple:#a371f7;--purple-subtle:rgba(163,113,247,.12);
+  --blue:#58a6ff;--blue-subtle:rgba(88,166,255,.12);
+  --python:#3b82f6;--python-subtle:rgba(59,130,246,.12);
+  --numpy:#f59e0b;--numpy-subtle:rgba(245,158,11,.12);
+  --pandas:#10b981;--pandas-subtle:rgba(16,185,129,.12);
+  --pyspark:#f97316;--pyspark-subtle:rgba(249,115,22,.12);
+  --syn-kw:#ff7b72;--syn-bi:#79c0ff;--syn-fn:#d2a8ff;
+  --syn-str:#a5d6ff;--syn-num:#79c0ff;--syn-cm:#6e7681;--syn-op:#f97316;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.45);--shadow-lg:0 8px 32px rgba(0,0,0,.6);
+}
+:root[data-theme="light"]{
+  --bg-0:#ffffff;--bg-1:#f6f8fa;--bg-2:#ffffff;--bg-3:#f0f2f5;--bg-4:#e6eaef;--bg-5:#d0d7de;
+  --border-subtle:#eaeef2;--border-default:#d0d7de;--border-muted:#adb5bd;
+  --text-primary:#1c2128;--text-secondary:#424a53;--text-muted:#6e7681;
+  --green:#1a7f37;--green-subtle:rgba(26,127,55,.1);
+  --red:#d1242f;--red-subtle:rgba(209,36,47,.1);
+  --orange:#bc4c00;--orange-subtle:rgba(188,76,0,.1);
+  --yellow:#9a6700;--yellow-subtle:rgba(154,103,0,.1);
+  --teal:#0f766e;--teal-subtle:rgba(15,118,110,.1);
+  --purple:#8250df;--purple-subtle:rgba(130,80,223,.1);
+  --blue:#0969da;--blue-subtle:rgba(9,105,218,.1);
+  --python:#1d4ed8;--python-subtle:rgba(29,78,216,.08);
+  --numpy:#b45309;--numpy-subtle:rgba(180,83,9,.08);
+  --pandas:#059669;--pandas-subtle:rgba(5,150,105,.08);
+  --pyspark:#c2580a;--pyspark-subtle:rgba(194,88,10,.08);
+  --syn-kw:#cf222e;--syn-bi:#0550ae;--syn-fn:#6639ba;
+  --syn-str:#0a3069;--syn-num:#0550ae;--syn-cm:#6e7681;--syn-op:#953800;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.09);--shadow-lg:0 8px 32px rgba(0,0,0,.14);
+}
+
+/* ── Reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:var(--font-ui);font-size:14px;background:var(--bg-1);color:var(--text-primary);line-height:1.5;overflow:hidden;height:100vh}
+button{font-family:var(--font-ui);cursor:pointer;border:none;background:none;color:inherit}
+ul,ol{list-style:none}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+img,svg{display:block;max-width:100%}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg-5);border-radius:var(--radius-full)}
+:focus-visible{outline:2px solid var(--python);outline-offset:2px}
+::selection{background:var(--python-subtle);color:var(--text-primary)}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--bg-3);color:var(--orange);padding:1px 5px;border-radius:var(--radius-xs);border:1px solid var(--border-default)}
+
+/* ── App shell ── */
+#app{display:flex;height:100vh;overflow:hidden;background:var(--bg-1)}
+
+/* ── Sidebar ── */
+.sidebar{width:248px;min-width:248px;height:100vh;display:flex;flex-direction:column;background:var(--bg-2);border-right:1px solid var(--border-default);overflow:hidden;transition:width var(--ease-slow),min-width var(--ease-slow);z-index:10;flex-shrink:0}
+.sidebar.collapsed{width:52px;min-width:52px}
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 14px;height:52px;border-bottom:1px solid var(--border-default);flex-shrink:0;overflow:hidden}
+.brand-logo{width:28px;height:28px;border-radius:var(--radius-sm);background:var(--python-subtle);border:1px solid var(--python);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;line-height:1}
+.brand-text{display:flex;flex-direction:column;overflow:hidden;transition:opacity var(--ease-base)}
+.brand-name{font-size:16px;font-weight:800;letter-spacing:-.03em;color:var(--text-primary);line-height:1.1}
+.brand-name .accent{color:var(--python)}
+.brand-tagline{font-size:10px;color:var(--text-muted);letter-spacing:.02em;white-space:nowrap}
+.sidebar.collapsed .brand-text{opacity:0;pointer-events:none}
+.sidebar-collapse-btn{margin-left:auto;width:26px;height:26px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--text-muted);flex-shrink:0;transition:background var(--ease-fast),color var(--ease-fast),transform var(--ease-base)}
+.sidebar-collapse-btn:hover{background:var(--bg-3);color:var(--text-primary)}
+.sidebar.collapsed .sidebar-collapse-btn{transform:rotate(180deg);margin-left:0}
+.lang-tabs{display:flex;border-bottom:1px solid var(--border-default);padding:0 6px;flex-shrink:0;overflow:hidden}
+.lang-tab{flex:1;padding:8px 4px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted);border-bottom:2px solid transparent;cursor:pointer;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color var(--ease-fast),border-color var(--ease-fast)}
+.lang-tab:hover{color:var(--text-secondary)}
+.lang-tab.active[data-lang="python"]{color:var(--python);border-bottom-color:var(--python)}
+.lang-tab.active[data-lang="numpy"]{color:var(--numpy);border-bottom-color:var(--numpy)}
+.lang-tab.active[data-lang="pandas"]{color:var(--pandas);border-bottom-color:var(--pandas)}
+.lang-tab.active[data-lang="pyspark"]{color:var(--pyspark);border-bottom-color:var(--pyspark)}
+.sidebar.collapsed .lang-tabs{display:none}
+.cat-nav{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 0 8px}
+.cat-group{margin-bottom:2px}
+.cat-group-label{display:flex;align-items:center;gap:6px;padding:8px 14px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);cursor:pointer;list-style:none;transition:color var(--ease-fast);white-space:nowrap;overflow:hidden}
+.cat-group-label::-webkit-details-marker{display:none}
+.cat-group-label:hover{color:var(--text-secondary)}
+.cat-group-chevron{margin-left:auto;width:12px;height:12px;flex-shrink:0;color:var(--text-muted);transition:transform var(--ease-base)}
+details.cat-group:not([open]) .cat-group-chevron{transform:rotate(-90deg)}
+.cat-item{display:flex;align-items:center;justify-content:space-between;padding:5px 14px 5px 20px;font-size:13px;color:var(--text-secondary);cursor:pointer;text-decoration:none;transition:background var(--ease-fast),color var(--ease-fast);white-space:nowrap;overflow:hidden}
+.cat-item:hover{background:var(--bg-3);color:var(--text-primary);text-decoration:none}
+.cat-item.active{background:var(--python-subtle);color:var(--python);font-weight:600}
+.cat-badge{font-size:10px;font-variant-numeric:tabular-nums;color:var(--text-muted);background:var(--bg-3);padding:1px 6px;border-radius:var(--radius-full);flex-shrink:0}
+.cat-item.active .cat-badge{background:var(--python-subtle);color:var(--python)}
+.sidebar.collapsed .cat-nav{display:none}
+.sidebar-footer{border-top:1px solid var(--border-default);padding:8px 10px;display:flex;gap:6px;flex-shrink:0}
+.footer-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:6px;border-radius:var(--radius-sm);font-size:11px;font-weight:600;color:var(--text-muted);background:var(--bg-3);border:1px solid var(--border-default);cursor:pointer;transition:color var(--ease-fast),background var(--ease-fast);white-space:nowrap;overflow:hidden}
+.footer-btn:hover{color:var(--text-primary);background:var(--bg-4)}
+.sidebar.collapsed .footer-btn span{display:none}
+.sidebar.collapsed .sidebar-footer{padding:8px 6px}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:52px;display:flex;align-items:center;gap:10px;padding:0 20px;border-bottom:1px solid var(--border-default);background:var(--bg-2);flex-shrink:0}
+.search-trigger{flex:1;max-width:520px;display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;background:var(--bg-3);border:1px solid var(--border-default);border-radius:var(--radius-md);cursor:text;transition:border-color var(--ease-fast),box-shadow var(--ease-fast)}
+.search-trigger:hover{border-color:var(--border-muted)}
+.search-icon{color:var(--text-muted);flex-shrink:0}
+.search-placeholder{flex:1;font-size:13px;color:var(--text-muted);pointer-events:none}
+.search-kbd{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);background:var(--bg-4);border:1px solid var(--border-default);border-radius:4px;padding:1px 5px;flex-shrink:0}
+.topbar-actions{display:flex;align-items:center;gap:6px;margin-left:auto}
+.action-btn{width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--text-muted);background:transparent;border:1px solid transparent;cursor:pointer;transition:all var(--ease-fast)}
+.action-btn:hover{background:var(--bg-3);border-color:var(--border-default);color:var(--text-primary)}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px 20px 48px}
+.breadcrumb{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);margin-bottom:12px}
+.bc-sep{color:var(--border-muted)}
+.bc-lang{color:var(--python);font-weight:600}
+.bc-active{color:var(--text-secondary);font-weight:500}
+.cat-header{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border-subtle)}
+.cat-title{font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--text-primary)}
+.cat-meta{font-size:13px;color:var(--text-muted)}
+.fn-list{display:flex;flex-direction:column;gap:8px}
+
+/* ── Card ── */
+.fn-card{background:var(--bg-2);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden;transition:border-color var(--ease-fast)}
+.fn-card:hover{border-color:var(--border-muted)}
+.fn-card.open{box-shadow:var(--shadow-sm)}
+.fn-card-header{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;user-select:none;flex-wrap:wrap}
+.fn-header-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.fn-name{font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--python);white-space:nowrap;flex-shrink:0}
+.fn-purpose{font-size:13px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fn-header-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.fn-chevron{color:var(--text-muted);transition:transform var(--ease-base);flex-shrink:0}
+.fn-card.open .fn-chevron{transform:rotate(90deg)}
+.fn-fav{width:26px;height:26px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:13px;transition:color var(--ease-fast),background var(--ease-fast)}
+.fn-fav:hover{background:var(--bg-3);color:var(--yellow)}
+.fn-fav.saved{color:var(--yellow)}
+.badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:var(--radius-xs);white-space:nowrap;flex-shrink:0}
+.badge-builtin{background:var(--python-subtle);color:var(--python)}
+.badge-lazy{background:var(--green-subtle);color:var(--green)}
+.badge-o1{background:var(--green-subtle);color:var(--green)}
+.badge-on{background:var(--yellow-subtle);color:var(--yellow)}
+.badge-safe{background:var(--teal-subtle);color:var(--teal)}
+.badge-mut{background:var(--red-subtle);color:var(--red)}
+.badge-method{background:var(--purple-subtle);color:var(--purple)}
+.badge-func{background:rgba(88,166,255,.12);color:var(--blue)}
+.badge-numpy{background:var(--numpy-subtle);color:var(--numpy)}
+.badge-pandas{background:var(--pandas-subtle);color:var(--pandas)}
+.badge-pyspark{background:var(--pyspark-subtle);color:var(--pyspark)}
+.copy-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--radius-sm);font-size:11px;font-weight:600;font-family:var(--font-ui);color:var(--text-muted);background:var(--bg-3);border:1px solid var(--border-default);cursor:pointer;white-space:nowrap;transition:all var(--ease-fast)}
+.copy-btn:hover{color:var(--text-primary);border-color:var(--border-muted);background:var(--bg-4)}
+.copy-btn.copied{color:var(--green);border-color:var(--green-dim)}
+.fn-card-body{display:none;border-top:1px solid var(--border-default)}
+.fn-card.open .fn-card-body{display:block}
+.sig-row{padding:10px 16px;background:var(--bg-0);font-family:var(--font-mono);font-size:13px;line-height:1.6;border-bottom:1px solid var(--border-subtle);overflow-x:auto;white-space:pre;color:var(--text-secondary)}
+.fn-meta-grid{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border-default)}
+@media(max-width:600px){.fn-meta-grid{grid-template-columns:repeat(2,1fr)}}
+.meta-cell{padding:9px 14px;border-right:1px solid var(--border-subtle)}
+.meta-cell:last-child{border-right:none}
+.meta-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:3px}
+.meta-val{font-family:var(--font-mono);font-size:13px;color:var(--text-primary)}
+.meta-val.good{color:var(--green)}
+.meta-val.bad{color:var(--red)}
+.card-section{padding:11px 16px;border-bottom:1px solid var(--border-default)}
+.card-section:last-child{border-bottom:none}
+.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:8px}
+.params-table{width:100%;border-collapse:collapse;font-size:13px}
+.params-table th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);text-align:left;padding:5px 10px;background:var(--bg-3);border-bottom:1px solid var(--border-default)}
+.params-table td{padding:7px 10px;border-bottom:1px solid var(--border-subtle);vertical-align:top;line-height:1.6}
+.params-table tr:last-child td{border-bottom:none}
+.params-table tr:hover td{background:var(--bg-3)}
+.p-name{font-family:var(--font-mono);color:#ffa657;font-weight:600;white-space:nowrap}
+.p-type{font-family:var(--font-mono);color:var(--teal);font-size:11px;white-space:nowrap}
+.p-req{font-family:var(--font-mono);color:var(--red);font-size:11px}
+.p-def{font-family:var(--font-mono);color:var(--text-muted);font-size:11px}
+.p-desc{color:var(--text-secondary)}
+.code-block{background:var(--bg-0);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);overflow-x:auto;margin-top:8px}
+.code-block pre{padding:13px 16px;font-family:var(--font-mono);font-size:13px;line-height:1.65;color:var(--text-secondary);white-space:pre;tab-size:4}
+.kw{color:var(--syn-kw)}.bi{color:var(--syn-bi)}.fn{color:var(--syn-fn)}
+.str{color:var(--syn-str)}.num{color:var(--syn-num)}.cm{color:var(--syn-cm);font-style:italic}.op{color:var(--syn-op)}
+.ba-wrap{display:grid;grid-template-columns:1fr 32px 1fr;align-items:start;margin-top:8px;overflow-x:auto}
+.ba-arrow{display:flex;align-items:center;justify-content:center;padding-top:28px;color:var(--text-muted);font-size:16px}
+.ba-table{border:1px solid var(--border-default);border-radius:var(--radius-sm);overflow:hidden;font-family:var(--font-mono);font-size:11px}
+.ba-hd{background:var(--bg-3);padding:5px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);border-bottom:1px solid var(--border-default);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ba-row{display:flex;align-items:center;gap:8px;padding:5px 10px;border-bottom:1px solid var(--border-subtle)}
+.ba-row:last-child{border-bottom:none}
+.ba-row.hi{background:var(--python-subtle)}
+.ba-idx{color:var(--text-muted);min-width:18px;text-align:right;flex-shrink:0}
+.ba-val{color:var(--text-primary)}
+.tags-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}
+.tag-group{display:flex;flex-direction:column;gap:5px}
+.tag-group-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted)}
+.tags{display:flex;flex-wrap:wrap;gap:4px}
+.tag{font-size:11px;font-family:var(--font-mono);padding:3px 8px;border-radius:var(--radius-xs);border:1px solid var(--border-default);color:var(--text-secondary);background:var(--bg-3);cursor:pointer;transition:all var(--ease-fast)}
+.tag:hover{color:var(--python);border-color:var(--python);background:var(--python-subtle)}
+.tag.related{color:var(--blue);border-color:rgba(88,166,255,.3);background:rgba(88,166,255,.07)}
+.list-items{display:flex;flex-direction:column;gap:5px}
+.list-item{display:flex;gap:8px;font-size:13px;color:var(--text-secondary);line-height:1.625}
+.list-dot{flex-shrink:0;width:5px;height:5px;border-radius:50%;background:var(--border-muted);margin-top:8px}
+.list-dot.green{background:var(--green)}.list-dot.red{background:var(--red)}.list-dot.yellow{background:var(--yellow)}
+.search-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding-top:80px}
+.search-overlay.hidden{display:none}
+.search-modal{width:100%;max-width:580px;background:var(--bg-2);border:1px solid var(--border-muted);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);overflow:hidden}
+.search-modal-input-wrap{display:flex;align-items:center;gap:10px;padding:0 16px;height:52px;border-bottom:1px solid var(--border-default)}
+.search-modal-icon{color:var(--text-muted);flex-shrink:0}
+.search-modal-input{flex:1;background:transparent;border:none;outline:none;font-size:16px;color:var(--text-primary);font-family:var(--font-ui)}
+.search-modal-input::placeholder{color:var(--text-muted)}
+.search-esc{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);background:var(--bg-3);border:1px solid var(--border-default);border-radius:4px;padding:2px 6px}
+.search-results{max-height:380px;overflow-y:auto;padding:6px 0}
+.search-sec-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);padding:8px 16px 4px}
+.search-item{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;cursor:pointer;transition:background var(--ease-fast)}
+.search-item:hover,.search-item.sel{background:var(--bg-3)}
+.res-name{font-family:var(--font-mono);font-size:13px;color:var(--text-primary);font-weight:500}
+.res-desc{font-size:11px;color:var(--text-muted);margin-top:1px}
+.res-tag{font-size:10px;font-weight:700;padding:2px 6px;border-radius:var(--radius-xs)}
+.res-tag.python{background:var(--python-subtle);color:var(--python)}
+.res-tag.numpy{background:var(--numpy-subtle);color:var(--numpy)}
+.res-tag.pandas{background:var(--pandas-subtle);color:var(--pandas)}
+.res-tag.pyspark{background:var(--pyspark-subtle);color:var(--pyspark)}
+.search-empty{padding:32px 16px;text-align:center;font-size:13px;color:var(--text-muted)}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">🐍</div>
+      <div class="brand-text">
+        <span class="brand-name">Py<span class="accent">Ref</span></span>
+        <span class="brand-tagline">Python · NumPy · Pandas · PySpark</span>
+      </div>
+      <button class="sidebar-collapse-btn" id="collapse-btn" title="Collapse sidebar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <div class="lang-tabs" id="lang-tabs">
+      <div class="lang-tab active" data-lang="python">Python</div>
+      <div class="lang-tab" data-lang="numpy">NumPy</div>
+      <div class="lang-tab" data-lang="pandas">Pandas</div>
+      <div class="lang-tab" data-lang="pyspark">PySpark</div>
+    </div>
+
+    <nav class="cat-nav" id="cat-nav"></nav>
+
+    <div class="sidebar-footer">
+      <button class="footer-btn" id="btn-favs"><span>★</span><span>Saved</span></button>
+      <button class="footer-btn" id="btn-recent"><span>🕐</span><span>Recent</span></button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="search-trigger" id="search-btn">
+        <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span class="search-placeholder">Search functions, parameters, tags…</span>
+        <kbd class="search-kbd">⌘K</kbd>
+      </button>
+      <div class="topbar-actions">
+        <button class="action-btn" id="theme-btn" title="Toggle theme">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="breadcrumb">
+        <span class="bc-lang" id="bc-lang">Python</span>
+        <span class="bc-sep">›</span>
+        <span id="bc-group">Standard Library</span>
+        <span class="bc-sep">›</span>
+        <span class="bc-active" id="bc-cat">Built-in Functions</span>
+      </div>
+      <div class="cat-header">
+        <span class="cat-title" id="cat-title">Built-in Functions</span>
+        <span class="cat-meta" id="cat-meta"></span>
+      </div>
+      <div class="fn-list" id="fn-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="search-overlay hidden" id="search-overlay">
+  <div class="search-modal">
+    <div class="search-modal-input-wrap">
+      <svg class="search-modal-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-modal-input" id="search-input" placeholder="Search functions, parameters, tags…" autocomplete="off" spellcheck="false">
+      <kbd class="search-esc">Esc</kbd>
+    </div>
+    <div class="search-results" id="search-results">
+      <div class="search-empty">Start typing to search…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Data files — each sets window.PYREF_* -->
+<script src="js/data/python.js"></script>
+<script src="js/data/numpy.js"></script>
+<script src="js/data/pandas.js"></script>
+<script src="js/data/pyspark.js"></script>
+
+<script>
+/* ── Build LANGS from external data files ── */
+const LANGS = {};
+
+function loadDataFile(win_key, lang_key) {
+  const src = window[win_key];
+  if (!src) return;
+  LANGS[lang_key] = { label: src.label, groups: src.groups };
+}
+
+loadDataFile('PYREF_PYTHON',  'python');
+loadDataFile('PYREF_NUMPY',   'numpy');
+loadDataFile('PYREF_PANDAS',  'pandas');
+loadDataFile('PYREF_PYSPARK', 'pyspark');
+
+/* ── Syntax highlighter ── */
+const KW = new Set(['for','in','if','else','elif','while','def','class','return','import','from',
+  'as','try','except','finally','with','pass','break','continue','lambda','yield','not','and',
+  'or','True','False','None','raise','del','assert','global','nonlocal','is','await','async']);
+const BI = new Set(['print','len','range','enumerate','zip','map','filter','sorted','reversed',
+  'list','dict','set','tuple','int','float','str','bool','type','isinstance','any','all','sum',
+  'min','max','abs','round','open','hasattr','getattr','setattr','callable','iter','next',
+  'vars','dir','repr','hash','id','input','super','object','property','staticmethod','classmethod']);
+
+function hl(raw) {
+  return raw.split('\n').map(line => {
+    let out='', i=0;
+    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    while (i < line.length) {
+      const c = line[i];
+      if (c === '#') { out += `<span class="cm">${esc(line.slice(i))}</span>`; break; }
+      if (c === "'" || c === '"') {
+        const q = c; let j = i+1;
+        while (j < line.length && line[j] !== q) { if (line[j] === '\\') j++; j++; }
+        out += `<span class="str">${esc(line.slice(i, j+1))}</span>`; i = j+1; continue;
+      }
+      if (/[a-zA-Z_]/.test(c)) {
+        let j = i;
+        while (j < line.length && /[a-zA-Z0-9_]/.test(line[j])) j++;
+        const w = line.slice(i, j);
+        if (KW.has(w)) out += `<span class="kw">${w}</span>`;
+        else if (BI.has(w)) out += `<span class="bi">${w}</span>`;
+        else out += w;
+        i = j; continue;
+      }
+      if (/[0-9]/.test(c)) {
+        let j = i;
+        while (j < line.length && /[0-9._xXbBoO]/.test(line[j])) j++;
+        out += `<span class="num">${line.slice(i,j)}</span>`; i = j; continue;
+      }
+      out += esc(c); i++;
+    }
+    return out;
+  }).join('\n');
+}
+
+/* ── State ── */
+const S = {
+  lang: 'python', cat: null,
+  favs:   new Set(JSON.parse(localStorage.getItem('pyref-favs')   || '[]')),
+  recent: JSON.parse(localStorage.getItem('pyref-recent') || '[]'),
+  theme:  localStorage.getItem('pyref-theme') || 'auto',
+};
+
+/* ── Badge renderer ── */
+const BADGE_MAP = {
+  builtin:'badge-builtin', lazy:'badge-lazy', o1:'badge-o1', on:'badge-on',
+  safe:'badge-safe', mut:'badge-mut', method:'badge-method', func:'badge-func',
+  numpy:'badge-numpy', pandas:'badge-pandas', pyspark:'badge-pyspark',
+  python:'badge-builtin'
+};
+const BADGE_LABEL = {
+  builtin:'built-in', lazy:'O(1) lazy', o1:'O(1)', on:'O(n)',
+  safe:'no mutation', mut:'mutates', method:'method', func:'function',
+  numpy:'NumPy', pandas:'Pandas', pyspark:'PySpark', python:'Python'
+};
+
+function badge(b) {
+  return `<span class="badge ${BADGE_MAP[b]||'badge-builtin'}">${BADGE_LABEL[b]||b}</span>`;
+}
+
+/* ── Card renderer ── */
+function renderCard(fn, lang) {
+  const id = `c-${lang}-${fn.id}`;
+  const saved = S.favs.has(fn.id);
+  // Support both badge: (data files) and badges: (legacy)
+  const badgeList = fn.badge || fn.badges || [];
+  const bgs = badgeList.map(badge).join('');
+
+  const paramRows = (fn.params || []).map(p => {
+    // Support both default: (data files) and def: (legacy)
+    const defVal = p.def !== undefined ? p.def : p.default;
+    const def = p.req
+      ? `<span class="p-req">required</span>`
+      : `<span class="p-def">${defVal !== undefined ? defVal : '—'}</span>`;
+    return `<tr>
+      <td><span class="p-name">${p.name}</span></td>
+      <td><span class="p-type">${p.type||'any'}</span></td>
+      <td>${def}</td>
+      <td class="p-desc">${p.desc}</td>
+    </tr>`;
+  }).join('');
+
+  const paramsHTML = paramRows
+    ? `<div class="card-section"><div class="section-label">Parameters</div>
+       <div style="overflow-x:auto"><table class="params-table">
+       <thead><tr><th style="width:130px">Name</th><th style="width:150px">Type</th><th style="width:100px">Default</th><th>Description</th></tr></thead>
+       <tbody>${paramRows}</tbody></table></div></div>` : '';
+
+  const metaHTML = fn.meta ? `<div class="fn-meta-grid">
+    <div class="meta-cell"><div class="meta-label">Returns</div><div class="meta-val">${fn.meta.ret||'—'}</div></div>
+    <div class="meta-cell"><div class="meta-label">Mutates</div><div class="meta-val ${fn.meta.mut?'bad':'good'}">${fn.meta.mut?'Yes':'No'}</div></div>
+    <div class="meta-cell"><div class="meta-label">Time</div><div class="meta-val">${fn.meta.time||'—'}</div></div>
+    <div class="meta-cell"><div class="meta-label">Space</div><div class="meta-val">${fn.meta.space||'—'}</div></div>
+  </div>` : '';
+
+  const codeHTML = fn.code
+    ? `<div class="card-section"><div class="section-label">Example</div>
+       <div class="code-block"><pre>${hl(fn.code)}</pre></div></div>` : '';
+
+  let baHTML = '';
+  if (fn.ba) {
+    const bRows = fn.ba.before.rows.map((r,i) =>
+      `<div class="ba-row"><span class="ba-idx">[${i}]</span><span class="ba-val">${r}</span></div>`).join('');
+    const aRows = fn.ba.after.rows.map(r =>
+      `<div class="ba-row hi"><span class="ba-val">${r}</span></div>`).join('');
+    baHTML = `<div class="card-section"><div class="section-label">Before / After</div>
+      <div class="ba-wrap">
+        <div><div class="ba-table"><div class="ba-hd">${fn.ba.before.label}</div>${bRows}</div></div>
+        <div class="ba-arrow">→</div>
+        <div><div class="ba-table"><div class="ba-hd">${fn.ba.after.label}</div>${aRows}</div></div>
+      </div></div>`;
+  }
+
+  let tagsHTML = '';
+  if (fn.related?.length || fn.tags?.length) {
+    let inner = '';
+    if (fn.related?.length) inner += `<div class="tag-group"><div class="tag-group-label">Related</div>
+      <div class="tags">${fn.related.map(r => `<span class="tag related" data-fn="${r}">${r}</span>`).join('')}</div></div>`;
+    if (fn.tags?.length) inner += `<div class="tag-group"><div class="tag-group-label">Tags</div>
+      <div class="tags">${fn.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div></div>`;
+    tagsHTML = `<div class="card-section"><div class="tags-row">${inner}</div></div>`;
+  }
+
+  function listSec(label, items, dot) {
+    if (!items?.length) return '';
+    return `<div class="card-section"><div class="section-label">${label}</div>
+      <div class="list-items">${items.map(it =>
+        `<div class="list-item"><div class="list-dot ${dot}"></div><span>${it}</span></div>`
+      ).join('')}</div></div>`;
+  }
+
+  const sigHTML = fn.sig
+    ? `<div class="sig-row">${fn.sig.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : '';
+
+  const body = [sigHTML, metaHTML, paramsHTML, codeHTML, baHTML, tagsHTML,
+    listSec('Common interview use cases', fn.interview, 'green'),
+    listSec('Common mistakes', fn.mistakes, 'red'),
+    listSec('Notes & edge cases', fn.notes, 'yellow')
+  ].join('');
+
+  return `<div class="fn-card" id="${id}" data-fn="${fn.id}" data-lang="${lang}">
+    <div class="fn-card-header" onclick="toggleCard('${id}','${fn.id}')">
+      <div class="fn-header-left">
+        <span class="fn-name">${fn.name}</span>
+        <span class="fn-purpose">${fn.purpose}</span>
+      </div>
+      <div class="fn-header-right">
+        ${bgs}
+        <button class="copy-btn" onclick="copyFn(event,'${fn.id}')" title="Copy snippet">⧉ Copy</button>
+        <button class="fn-fav${saved?' saved':''}" onclick="toggleFav(event,'${fn.id}')" title="${saved?'Remove from saved':'Save'}">★</button>
+        <svg class="fn-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+    <div class="fn-card-body">${body}</div>
+  </div>`;
+}
+
+/* ── Navigation ── */
+function buildNav(lang) {
+  const d = LANGS[lang]; if (!d) return;
+  const nav = document.getElementById('cat-nav');
+  nav.innerHTML = d.groups.map(g => `
+    <details class="cat-group" open>
+      <summary class="cat-group-label">${g.label}
+        <svg class="cat-group-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </summary>
+      ${g.cats.map(c => `<a class="cat-item${S.cat===c.key&&S.lang===lang?' active':''}"
+        href="#" data-cat="${c.key}" onclick="selCat(event,'${lang}','${c.key}')">
+        ${c.label}<span class="cat-badge">${c.fns.length}</span></a>`).join('')}
+    </details>`).join('');
+  document.querySelectorAll('.lang-tab').forEach(t => t.classList.toggle('active', t.dataset.lang===lang));
+  // update breadcrumb lang color
+  const bcLang = document.getElementById('bc-lang');
+  bcLang.textContent = d.label;
+  bcLang.style.color = `var(--${lang})`;
+}
+
+function selCat(e, lang, catKey) {
+  if (e) e.preventDefault();
+  S.lang = lang; S.cat = catKey;
+  document.querySelectorAll('.cat-item').forEach(el =>
+    el.classList.toggle('active', el.dataset.cat===catKey && S.lang===lang));
+  const d = LANGS[lang];
+  let cat = null, grp = null;
+  for (const g of d.groups) {
+    const f = g.cats.find(c => c.key===catKey);
+    if (f) { cat = f; grp = g; break; }
+  }
+  if (!cat) return;
+  document.getElementById('bc-cat').textContent = cat.label;
+  document.getElementById('bc-group').textContent = grp?.label || '';
+  document.getElementById('cat-title').textContent = cat.label;
+  document.getElementById('cat-meta').textContent =
+    `${cat.fns.length} function${cat.fns.length!==1?'s':''} · ${d.label}`;
+  document.getElementById('fn-list').innerHTML = cat.fns.map(fn => renderCard(fn, lang)).join('');
+  document.querySelector('.content').scrollTop = 0;
+  buildNav(lang);
+  // auto-open first card
+  const first = document.querySelector('.fn-card');
+  if (first && !first.classList.contains('open')) first.classList.add('open');
+}
+
+function switchLang(lang) {
+  if (!LANGS[lang]) return;
+  S.lang = lang; S.cat = null;
+  buildNav(lang);
+  const first = LANGS[lang]?.groups[0]?.cats[0];
+  if (first) selCat(null, lang, first.key);
+}
+
+/* ── Card toggle ── */
+function toggleCard(id, fnId) {
+  const el = document.getElementById(id); if (!el) return;
+  const opening = !el.classList.contains('open');
+  el.classList.toggle('open');
+  if (opening && fnId) addRecent(fnId);
+}
+
+/* ── Copy snippet ── */
+function copyFn(e, fnId) {
+  e.stopPropagation();
+  const btn = e.currentTarget;
+  let snip = fnId;
+  for (const d of Object.values(LANGS))
+    for (const g of d.groups)
+      for (const c of g.cats) {
+        const f = c.fns.find(x => x.id===fnId);
+        if (f) { snip = f.snippet || f.name; break; }
+      }
+  navigator.clipboard.writeText(snip).catch(() => {});
+  btn.textContent = '✓ Copied'; btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = '⧉ Copy'; btn.classList.remove('copied'); }, 1800);
+}
+
+/* ── Favorites ── */
+function toggleFav(e, fnId) {
+  e.stopPropagation();
+  const btn = e.currentTarget;
+  if (S.favs.has(fnId)) { S.favs.delete(fnId); btn.classList.remove('saved'); }
+  else { S.favs.add(fnId); btn.classList.add('saved'); }
+  localStorage.setItem('pyref-favs', JSON.stringify([...S.favs]));
+}
+
+function addRecent(fnId) {
+  S.recent = [fnId, ...S.recent.filter(x => x!==fnId)].slice(0, 20);
+  localStorage.setItem('pyref-recent', JSON.stringify(S.recent));
+}
+
+/* ── Search ── */
+let IDX = [];
+function buildIdx() {
+  IDX = [];
+  for (const [lang, d] of Object.entries(LANGS))
+    for (const g of d.groups)
+      for (const c of g.cats)
+        for (const fn of c.fns)
+          IDX.push({ id:fn.id, name:fn.name, purpose:fn.purpose, lang,
+            langLabel:d.label, cat:c.label,
+            s: [fn.name, fn.purpose, ...(fn.tags||[]), ...(fn.related||[])].join(' ').toLowerCase() });
+}
+
+function doSearch(q) {
+  const res = document.getElementById('search-results');
+  q = q.trim().toLowerCase();
+  if (!q) { res.innerHTML = '<div class="search-empty">Start typing to search…</div>'; return; }
+  const hits = IDX.filter(r => r.s.includes(q)).slice(0, 20);
+  if (!hits.length) { res.innerHTML = `<div class="search-empty">No results for "<strong>${q}</strong>"</div>`; return; }
+  const byLang = {};
+  hits.forEach(h => (byLang[h.lang] = byLang[h.lang]||[]).push(h));
+  res.innerHTML = Object.entries(byLang).map(([lang, items]) =>
+    `<div class="search-sec-label">${LANGS[lang].label}</div>` +
+    items.map(r => `<div class="search-item" onclick="goTo('${r.lang}','${r.id}')">
+      <div><div class="res-name">${r.name}</div><div class="res-desc">${r.purpose}</div></div>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+        <span class="res-tag ${r.lang}">${r.langLabel}</span>
+        <span style="font-size:11px;color:var(--text-muted)">${r.cat}</span>
+      </div></div>`).join('')
+  ).join('');
+}
+
+function goTo(lang, fnId) {
+  closeSearch();
+  const d = LANGS[lang];
+  for (const g of d.groups) for (const c of g.cats) {
+    if (c.fns.find(f => f.id===fnId)) {
+      if (S.lang !== lang) switchLang(lang);
+      selCat(null, lang, c.key);
+      setTimeout(() => {
+        const card = document.getElementById(`c-${lang}-${fnId}`);
+        if (card) { card.scrollIntoView({behavior:'smooth',block:'start'}); if (!card.classList.contains('open')) card.classList.add('open'); }
+      }, 150);
+      return;
+    }
+  }
+}
+
+function openSearch() {
+  document.getElementById('search-overlay').classList.remove('hidden');
+  setTimeout(() => document.getElementById('search-input').focus(), 50);
+}
+function closeSearch() { document.getElementById('search-overlay').classList.add('hidden'); }
+
+/* ── Theme ── */
+function applyTheme(t) {
+  S.theme = t;
+  if (t === 'auto') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = t;
+  localStorage.setItem('pyref-theme', t);
+}
+function cycleTheme() {
+  const themes = ['auto','dark','light'];
+  applyTheme(themes[(themes.indexOf(S.theme)+1) % themes.length]);
+}
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', () => {
+  applyTheme(S.theme);
+  buildIdx();
+  buildNav('python');
+  selCat(null, 'python', 'builtins');
+
+  document.getElementById('lang-tabs').addEventListener('click', e => {
+    const t = e.target.closest('.lang-tab');
+    if (t && LANGS[t.dataset.lang]) switchLang(t.dataset.lang);
+  });
+  document.getElementById('search-btn').addEventListener('click', openSearch);
+  document.getElementById('search-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeSearch();
+  });
+  document.getElementById('search-input').addEventListener('input', e => doSearch(e.target.value));
+  document.addEventListener('keydown', e => {
+    if ((e.metaKey||e.ctrlKey) && e.key==='k') { e.preventDefault(); openSearch(); }
+    if (e.key==='Escape') closeSearch();
+  });
+  document.getElementById('theme-btn').addEventListener('click', cycleTheme);
+  document.getElementById('collapse-btn').addEventListener('click', () =>
+    document.getElementById('sidebar').classList.toggle('collapsed'));
+
+  document.getElementById('btn-favs').addEventListener('click', () => {
+    const pairs = [];
+    for (const id of S.favs)
+      for (const [lang, d] of Object.entries(LANGS))
+        for (const g of d.groups) for (const c of g.cats) {
+          const f = c.fns.find(x => x.id===id);
+          if (f) { pairs.push({fn:f,lang}); break; }
+        }
+    if (!pairs.length) { alert('No saved functions yet. Click ★ on any card.'); return; }
+    document.getElementById('bc-cat').textContent = 'Saved';
+    document.getElementById('cat-title').textContent = 'Saved Functions';
+    document.getElementById('cat-meta').textContent = `${pairs.length} saved`;
+    document.getElementById('fn-list').innerHTML = pairs.map(({fn,lang}) => renderCard(fn,lang)).join('');
+    document.querySelector('.content').scrollTop = 0;
+  });
+
+  document.getElementById('btn-recent').addEventListener('click', () => {
+    const pairs = [];
+    for (const id of S.recent.slice(0,10))
+      for (const [lang, d] of Object.entries(LANGS))
+        for (const g of d.groups) for (const c of g.cats) {
+          const f = c.fns.find(x => x.id===id);
+          if (f) { pairs.push({fn:f,lang}); break; }
+        }
+    if (!pairs.length) { alert('No recently viewed functions yet.'); return; }
+    document.getElementById('bc-cat').textContent = 'Recent';
+    document.getElementById('cat-title').textContent = 'Recently Viewed';
+    document.getElementById('cat-meta').textContent = `${pairs.length} recent`;
+    document.getElementById('fn-list').innerHTML = pairs.map(({fn,lang}) => renderCard(fn,lang)).join('');
+    document.querySelector('.content').scrollTop = 0;
+  });
+
+  document.getElementById('fn-list').addEventListener('click', e => {
+    const tag = e.target.closest('.tag.related');
+    if (!tag) return;
+    const name = tag.dataset.fn;
+    const match = IDX.find(r => r.name===name);
+    if (match) goTo(match.lang, match.id);
+  });
+});
+</script>
+</body>
+</html>

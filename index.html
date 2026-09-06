@@ -22,7 +22,7 @@
     .card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:16px;text-decoration:none;color:inherit;transition:border-color .18s,transform .18s,box-shadow .18s;position:relative;overflow:hidden}
     .card::before{content:'';position:absolute;inset:0;border-radius:16px;opacity:0;transition:opacity .18s}
     .card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
-    .card[data-color=orange]{--accent:#FF6900}.card[data-color=blue]{--accent:#3B82F6}.card[data-color=cyan]{--accent:#06B6D4}.card[data-color=green]{--accent:#10B981}.card[data-color=yellow]{--accent:#F59E0B}
+    .card[data-color=orange]{--accent:#FF6900}.card[data-color=blue]{--accent:#3B82F6}.card[data-color=cyan]{--accent:#06B6D4}.card[data-color=green]{--accent:#10B981}.card[data-color=yellow]{--accent:#F59E0B}.card[data-color=indigo]{--accent:#4F46E5}
     .card:hover{border-color:var(--accent)}
     .card::before{background:radial-gradient(400px circle at 50% 0%,var(--accent,#fff) 0%,transparent 70%)}
     .card:hover::before{opacity:.05}
@@ -46,9 +46,9 @@
   <h1>Interactive Visualizers</h1>
   <p>Animation-driven guides to the modern data stack &mdash; built around Amazon, Netflix, Uber, and Shopify use cases.</p>
   <div class="stat-row">
-    <div class="stat"><div class="stat-num">8</div><div class="stat-label">Visualizers</div></div>
-    <div class="stat"><div class="stat-num">130+</div><div class="stat-label">Modules</div></div>
-    <div class="stat"><div class="stat-num">300+</div><div class="stat-label">Interview Q&amp;As</div></div>
+    <div class="stat"><div class="stat-num">9</div><div class="stat-label">Visualizers</div></div>
+    <div class="stat"><div class="stat-num">260+</div><div class="stat-label">Modules</div></div>
+    <div class="stat"><div class="stat-num">400+</div><div class="stat-label">Interview Q&amp;As</div></div>
   </div>
 </header>
 <main>
@@ -101,6 +101,12 @@
       <div><div class="card-title">Python &amp; PySpark</div><div class="card-subtitle">Coding Companion</div></div>
       <div class="card-desc">Python fundamentals, data structures, comprehensions, decorators, async, and PySpark &mdash; interview patterns for data engineering roles.</div>
       <div class="card-footer"><span class="card-modules">Multiple modules</span><span class="card-open">Open <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></div>
+    </a>
+    <a class="card" href="db-internals/" data-color="indigo">
+      <div class="card-top"><div class="card-icon">&#x1F5C3;&#xFE0F;</div><div class="card-tag">DB Internals</div></div>
+      <div><div class="card-title">DB Internals</div><div class="card-subtitle">Amazon Prime Day Edition</div></div>
+      <div class="card-desc">133 animated modules &mdash; storage pages, B+ trees, WAL, MVCC, distributed consensus, and more &mdash; all told through the Amazon "Buy Now" journey.</div>
+      <div class="card-footer"><span class="card-modules">133 modules</span><span class="card-open">Open <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></div>
     </a>
   </div>
 </main>

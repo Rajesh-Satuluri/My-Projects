@@ -62,11 +62,27 @@
       this.register('g 6', 'Go to Query Execution',() => nav('query-execution'),'Navigation');
       this.register('g 7', 'Go to Caching',        () => nav('caching'),        'Navigation');
       this.register('g 8', 'Go to Data Loading',   () => nav('data-loading'),   'Navigation');
+      this.register('g v', 'Go to Semi-Structured', () => nav('semi-structured'),'Navigation');
+      this.register('g d', 'Go to Data Engineering', () => nav('data-engineering'),'Navigation');
 
       // Navigation — Platform
       this.register('g 9', 'Go to Objects',        () => nav('objects'),         'Navigation');
+      this.register('g b', 'Go to RBAC & Roles',   () => nav('rbac'),            'Navigation');
       this.register('g a', 'Go to Advanced Features',() => nav('advanced'),      'Navigation');
       this.register('g s', 'Go to Security',        () => nav('security'),        'Navigation');
+      this.register('g o', 'Go to Data Governance', () => nav('governance'),     'Navigation');
+      this.register('g m', 'Go to Data Sharing',    () => nav('data-sharing'),   'Navigation');
+      this.register('g p', 'Go to Apps on Snowflake', () => nav('apps'),         'Navigation');
+      this.register('g u', 'Go to Business Continuity', () => nav('business-continuity'),'Navigation');
+
+      // Navigation — Operations
+      this.register('g c', 'Go to Cost & Performance', () => nav('cost-performance'),'Navigation');
+      this.register('g i', 'Go to Editions & Connectivity', () => nav('editions'), 'Navigation');
+      this.register('g l', 'Go to Glossary & Cheat Sheet', () => nav('reference'), 'Navigation');
+      this.register('g x', 'Go to Snowflake vs Field', () => nav('comparison'),   'Navigation');
+      this.register('g t', 'Go to SnowPro Cert Map',   () => nav('certification'),'Navigation');
+      this.register('g q', 'Go to Interview Prep',     () => nav('interview-prep'),'Navigation');
+
       this.register('g e', 'Go to E2E Flow',         () => nav('e2e-flow'),       'Navigation');
 
       // Animation

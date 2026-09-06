@@ -27,7 +27,7 @@
         {
           label: 'Before',
           title: 'Compute & storage were coupled',
-          body: 'Traditional data warehouses forced you to pay for idle compute to keep data attached. Netflix's catalog and watch data would require constant over-provisioning.',
+          body: 'Traditional data warehouses forced you to pay for idle compute to keep data attached. Netflix\'s catalog and watch data would require constant over-provisioning.',
         },
         {
           label: 'After',
@@ -42,7 +42,7 @@
         {
           label: 'After',
           title: 'Per-team virtual warehouses',
-          body: 'ML_TRAINING_WH, ANALYTICS_WH, EXEC_WH — each team gets isolated compute. One team's runaway query never affects another.',
+          body: 'ML_TRAINING_WH, ANALYTICS_WH, EXEC_WH — each team gets isolated compute. One team\'s runaway query never affects another.',
         },
         {
           label: 'Before',

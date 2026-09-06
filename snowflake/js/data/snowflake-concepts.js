@@ -19,9 +19,18 @@
         description: 'Always-on, multi-tenant infrastructure that coordinates every query. No dedicated compute — billed per second used.',
         components: ['Authentication & SSO', 'Query Parser & Optimizer', 'Metadata Manager', 'Transaction Manager', 'Access Control (RBAC)', 'Infrastructure Manager'],
         interviewQs: [
-          'What is the Cloud Services Layer and why does it matter?',
-          'How does Snowflake handle query optimization differently from traditional DBs?',
-          'What happens in Cloud Services when a query is submitted?',
+          {
+            q: 'What is the Cloud Services Layer and why does it matter?',
+            a: 'It is Snowflake\'s always-on "brain" — a multi-tenant set of services: authentication/SSO, the SQL parser and cost-based optimizer, the metadata store, transaction management, and RBAC access control. It matters because metadata operations (SHOW commands, result-cache hits, min/max pruning) run here without spinning up a warehouse, and the optimal plan is built before any data is scanned — saving both time and credits.',
+          },
+          {
+            q: 'How does Snowflake handle query optimization differently from traditional DBs?',
+            a: 'Traditional databases rely on manually maintained indexes, statistics, and partitions. Snowflake has no user-managed indexes; its cost-based optimizer uses metadata it collects automatically for every micro-partition (min/max, distinct and null counts) to prune data, and it can return results straight from the result cache. Optimization happens centrally in Cloud Services, independent of the warehouse that executes the plan.',
+          },
+          {
+            q: 'What happens in Cloud Services when a query is submitted?',
+            a: 'In order: (1) authenticate the session, (2) authorize via RBAC against the active role, (3) parse and compile the SQL, (4) build a cost-based plan and prune micro-partitions using metadata, (5) check the result cache — return instantly on a hit — otherwise (6) hand the compiled plan to the target virtual warehouse. Only step 6 consumes warehouse compute.',
+          },
         ],
         netflix: 'When a Netflix analyst logs in and runs a query, Cloud Services authenticates them via SSO, checks their ROLE, parses their SQL, builds an optimal query plan using metadata statistics, and routes execution to the right warehouse — all before a single byte of data is scanned.',
       },
@@ -34,10 +43,22 @@
         description: 'Independent compute clusters. Multiple warehouses run simultaneously without contention. Each auto-suspends when idle.',
         components: ['T-Shirt Size (XS → 6XL)', 'Multi-Cluster Auto-scaling', 'Auto-Suspend / Auto-Resume', 'Local SSD Cache', 'Concurrency Scaling', 'Snowpark Optimized Nodes'],
         interviewQs: [
-          'How does Snowflake achieve workload isolation?',
-          'What is multi-cluster warehousing and when would you use it?',
-          'How does auto-suspend save money without hurting performance?',
-          'What is the difference between concurrency scaling and multi-cluster?',
+          {
+            q: 'How does Snowflake achieve workload isolation?',
+            a: 'Each virtual warehouse is an independent compute cluster with its own CPU, memory, and local SSD cache, while all warehouses read the same shared storage. Because they never share compute, a heavy job on one warehouse (e.g. ML_TRAINING_WH) has zero performance impact on another (e.g. EXEC_WH). You isolate workloads simply by giving each team or workload its own warehouse.',
+          },
+          {
+            q: 'What is multi-cluster warehousing and when would you use it?',
+            a: 'A multi-cluster warehouse automatically adds and removes identical clusters (between a MIN and MAX) as concurrent query load rises and falls. It solves concurrency, not single-query speed — use it when many users hit the same warehouse at once (e.g. a dashboard used by hundreds of analysts) so queued queries get their own cluster instead of waiting.',
+          },
+          {
+            q: 'How does auto-suspend save money without hurting performance?',
+            a: 'Warehouses bill per second only while running. Auto-suspend stops a warehouse after a configurable idle period, so you stop paying when nothing runs; auto-resume restarts it in ~1–2s on the next query. Because storage is separate, suspending loses only the local SSD cache — never data — so the saving is large while the only cost is an occasional cache warm-up.',
+          },
+          {
+            q: 'What is the difference between concurrency scaling and multi-cluster?',
+            a: 'They are the same mechanism seen two ways: multi-cluster warehousing IS how Snowflake delivers concurrency scaling — extra clusters spin up to absorb concurrent queries. Sizing a warehouse up (XS→XL) makes a single query faster (more nodes per cluster); adding clusters (multi-cluster) handles more queries at once. Scale up for slow queries, scale out for many queries.',
+          },
         ],
         netflix: 'Netflix runs five separate warehouses: INGEST_WH processes Snowpipe streams, ML_TRAINING_WH runs Snowpark feature engineering, ANALYTICS_WH powers Tableau dashboards — all simultaneously with zero interference.',
       },
@@ -50,10 +71,22 @@
         description: 'Centralized columnar storage in cloud object storage (S3/Azure Blob/GCS). Separated from compute. Pay only for storage used.',
         components: ['Micro-Partitions (50–500MB compressed)', 'Columnar (PAX) Format', 'AES-256 Encryption at Rest', 'Automatic Compression', 'Metadata Statistics per Column', 'Time Travel File Retention'],
         interviewQs: [
-          'What is a micro-partition? How is it different from HDFS blocks?',
-          'How does Snowflake achieve partition pruning without explicit partition definitions?',
-          'What is columnar storage and why is it better for analytics?',
-          'How does Time Travel work at the storage layer?',
+          {
+            q: 'What is a micro-partition? How is it different from HDFS blocks?',
+            a: 'A micro-partition is an immutable ~50–500 MB (compressed) columnar file Snowflake creates automatically as data is ingested, carrying per-column metadata (min/max, distinct/null counts). Unlike HDFS blocks — fixed-size, row-oriented byte ranges with no column awareness — micro-partitions are columnar, self-describing, and pruning-aware, so Snowflake skips them by metadata without reading contents. You never define or manage them.',
+          },
+          {
+            q: 'How does Snowflake achieve partition pruning without explicit partition definitions?',
+            a: 'Because it records min/max (and other) statistics per column in every micro-partition, the optimizer compares a query\'s WHERE predicates against that metadata and skips any micro-partition that cannot contain matching rows — before scanning data. There is no PARTITION BY to define; pruning is automatic. Clustering keys can further improve pruning on very large tables by co-locating related values.',
+          },
+          {
+            q: 'What is columnar storage and why is it better for analytics?',
+            a: 'Columnar storage keeps each column\'s values together rather than each row\'s fields together. Analytics queries read a few columns across many rows, so a columnar layout reads only the needed columns (less I/O), compresses far better (similar values sit adjacent), and enables vectorized processing. Snowflake uses a hybrid columnar (PAX) format within each micro-partition.',
+          },
+          {
+            q: 'How does Time Travel work at the storage layer?',
+            a: 'Micro-partitions are immutable, so DML writes new files instead of overwriting old ones. Snowflake retains the superseded files for the table\'s retention window (up to 90 days on Enterprise). A Time Travel query simply reads the set of micro-partitions that were current at the requested point in time. After retention, those files move to Fail-Safe (7 days, recoverable only by Snowflake Support).',
+          },
         ],
         netflix: "Netflix's 180 TB watch_events table is stored as ~182,000 micro-partitions, each containing metadata (min/max WATCH_START, distinct COUNTRY_CODEs). A query for US viewers yesterday prunes 99.9% of partitions before any data is scanned.",
       },
@@ -66,8 +99,14 @@
         description: 'Amazon S3, Azure Blob Storage, or Google Cloud Storage — managed by Snowflake on your behalf. You never manage storage nodes.',
         components: ['Amazon S3', 'Azure Blob Storage', 'Google Cloud Storage', 'External Stages', 'Data Lake Integration'],
         interviewQs: [
-          'Why did Snowflake choose cloud object storage over local disks?',
-          'What is the difference between internal and external stages?',
+          {
+            q: 'Why did Snowflake choose cloud object storage over local disks?',
+            a: 'Cloud object storage (S3/Blob/GCS) is virtually infinite, extremely durable, cheap, and independent of compute — which is exactly what enables separation of storage and compute. Many ephemeral warehouses can read one shared copy, compute can suspend without losing data, and storage scales independently of query load. Local disks would tie data to specific compute nodes and defeat that model; they are used only as a transient cache.',
+          },
+          {
+            q: 'What is the difference between internal and external stages?',
+            a: 'A stage is a location that holds files for loading/unloading. An internal stage is storage Snowflake manages inside your account (user, table, or named internal stage). An external stage points to your own cloud bucket via a storage integration. Use internal stages for Snowflake-managed pipelines; use external stages to load from or unload to buckets you already own, or to back External/Iceberg tables.',
+          },
         ],
         netflix: 'Netflix runs on AWS. Snowflake uses S3 as the backbone storage. Netflix can also query external S3 data via External Tables or Iceberg Tables without loading it into Snowflake.',
       },

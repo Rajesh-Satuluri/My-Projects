@@ -23,8 +23,15 @@
       this._bar.querySelector('#anim-btn-next')?.addEventListener('click',  () => this._engine?.next());
       this._bar.querySelector('#anim-btn-reset')?.addEventListener('click', () => this._engine?.reset());
 
-      this._bar.querySelector('#anim-speed')?.addEventListener('change', (e) => {
+      // Restore saved playback speed into the selector.
+      let savedSpeed = null;
+      try { savedSpeed = localStorage.getItem('sviz-speed'); } catch (_) {}
+      const speedSel = this._bar.querySelector('#anim-speed');
+      if (speedSel && savedSpeed) speedSel.value = savedSpeed;
+
+      speedSel?.addEventListener('change', (e) => {
         this._engine?.setSpeed(parseFloat(e.target.value));
+        try { localStorage.setItem('sviz-speed', e.target.value); } catch (_) {}
       });
 
       this._bar.querySelector('#anim-progress-track')?.addEventListener('click', (e) => {
@@ -39,9 +46,30 @@
     register(engine) {
       this._detach();
       this._engine = engine;
+
+      // Apply the persisted playback speed to the new engine.
+      const speedSel = this._bar?.querySelector('#anim-speed');
+      if (speedSel && speedSel.value) engine.setSpeed(parseFloat(speedSel.value));
+
       this._attach();
+
+      // Keep the URL in sync as steps change: #module/step (shareable).
+      this._unsubscribers.push(engine.on('stepchange', (i) => {
+        const id = window.SnowflakeViz.currentModuleId;
+        if (!id) return;
+        const hash = i >= 0 ? `#${id}/${i}` : `#${id}`;
+        if (location.hash !== hash) history.replaceState(null, '', hash);
+      }));
+
       this._bar?.classList.add('visible');
       this._sync();
+
+      // Honor a deep-linked step (#module/step) once the module is wired.
+      const pending = window.SnowflakeViz._pendingStep;
+      if (Number.isInteger(pending) && pending >= 0) {
+        window.SnowflakeViz._pendingStep = null;
+        setTimeout(() => { try { engine.goto(pending); } catch (_) {} }, 0);
+      }
     },
 
     hide() {

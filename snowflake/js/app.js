@@ -9,14 +9,14 @@
   /* ── Module registry ────────────────────────────────────── */
   const NAV_GROUPS = [
     {
-      label: 'Foundation',
+      label: 'Getting Started',
       items: [
         { id: 'home',          label: 'Home',             icon: '❄️' },
         { id: 'intro',         label: 'Introduction',     icon: '🎬' },
       ],
     },
     {
-      label: 'Architecture',
+      label: 'Core Architecture',
       items: [
         { id: 'architecture',  label: 'Architecture',     icon: '🏛️' },
         { id: 'cloud-services',label: 'Cloud Services',   icon: '☁️' },
@@ -25,23 +25,46 @@
       ],
     },
     {
-      label: 'Query & Data',
+      label: 'Querying & Data',
       items: [
         { id: 'query-execution', label: 'Query Execution', icon: '🔍' },
         { id: 'caching',         label: 'Caching',          icon: '💾' },
         { id: 'data-loading',    label: 'Data Loading',     icon: '📥' },
+        { id: 'semi-structured', label: 'Semi-Structured',  icon: '🧩' },
+        { id: 'data-engineering',label: 'Data Engineering',  icon: '🔧' },
       ],
     },
     {
-      label: 'Platform',
+      label: 'Platform & Governance',
       items: [
         { id: 'objects',   label: 'Objects & Hierarchy', icon: '🗂️' },
+        { id: 'rbac',      label: 'RBAC & Roles',        icon: '🔑' },
         { id: 'advanced',  label: 'Advanced Features',   icon: '🚀' },
         { id: 'security',  label: 'Security & Governance',icon: '🔒' },
+        { id: 'governance',label: 'Data Governance',     icon: '🏷️' },
+        { id: 'data-sharing',label: 'Data Sharing',      icon: '🤝' },
+        { id: 'apps',      label: 'Apps on Snowflake',   icon: '🧱' },
+        { id: 'business-continuity', label: 'Business Continuity', icon: '🛟' },
       ],
     },
     {
-      label: 'Capstone',
+      label: 'Cost & Operations',
+      items: [
+        { id: 'cost-performance', label: 'Cost & Performance', icon: '💰' },
+        { id: 'editions',         label: 'Editions & Connectivity', icon: '🌐' },
+      ],
+    },
+    {
+      label: 'Study & Reference',
+      items: [
+        { id: 'reference',      label: 'Glossary & Cheat Sheet', icon: '📚' },
+        { id: 'interview-prep', label: 'Interview Prep',         icon: '💬' },
+        { id: 'comparison',     label: 'Snowflake vs Field',     icon: '⚖️' },
+        { id: 'certification',  label: 'SnowPro Cert Map',       icon: '🎓' },
+      ],
+    },
+    {
+      label: 'Capstone Project',
       items: [
         { id: 'e2e-flow',  label: 'E2E Flow',            icon: '🎯' },
       ],
@@ -57,6 +80,7 @@
     _buildNav();
     _bindSearch();
     _bindThemeToggle();
+    _setupMobileNav();
 
     const viz = window.SnowflakeViz;
     viz.Keyboard.init(navigate);
@@ -64,13 +88,31 @@
     viz.AnimationControls.init();
     _setupShortcutsModal();
 
-    const initial = _hashToId(location.hash) || 'home';
+    // Expose the nav registry for the palette, pager, gestures, progress.
+    viz.NAV_GROUPS = NAV_GROUPS;
+    viz.CommandPalette && viz.CommandPalette.init();
+    viz.Enhance && viz.Enhance.init();
+
+    // Restore last-visited module when there is no explicit hash target.
+    let lastModule = null;
+    try { lastModule = localStorage.getItem('sviz-last-module'); } catch (_) {}
+    const initial = _hashToId(location.hash) || lastModule || 'home';
+    _applyPendingStep();
     navigate(initial);
 
     window.addEventListener('hashchange', () => {
       const id = _hashToId(location.hash);
+      _applyPendingStep();
       if (id && id !== _currentModuleId) navigate(id);
     });
+  }
+
+  /* Parse "#module" or "#module/step" — stash the step for the engine. */
+  function _applyPendingStep() {
+    const raw = (location.hash || '').replace(/^#/, '');
+    const parts = raw.split('/');
+    const step = parts[1] != null ? parseInt(parts[1], 10) : null;
+    window.SnowflakeViz._pendingStep = Number.isInteger(step) ? step : null;
   }
 
   /* ── Navigation ─────────────────────────────────────────── */
@@ -80,9 +122,14 @@
     if (_currentModuleId === target.id) return;
 
     _currentModuleId = target.id;
+    window.SnowflakeViz.currentModuleId = target.id;
+    try { localStorage.setItem('sviz-last-module', target.id); } catch (_) {}
 
     document.querySelectorAll('.nav-item').forEach(el => {
-      el.classList.toggle('active', el.dataset.module === target.id);
+      const on = el.dataset.module === target.id;
+      el.classList.toggle('active', on);
+      if (on) el.setAttribute('aria-current', 'page');
+      else el.removeAttribute('aria-current');
     });
 
     _updateBreadcrumb(target);
@@ -120,6 +167,14 @@
       </div>`;
     }
     canvas.classList.remove('loading');
+
+    // Dismiss the off-canvas drawer after choosing a module on tablet/mobile.
+    if (window.innerWidth <= 1024 && window.SnowflakeViz._closeMobileNav) {
+      window.SnowflakeViz._closeMobileNav();
+    }
+
+    // Notify enhancements (progress, pager) that navigation completed.
+    document.dispatchEvent(new CustomEvent('sviz:navigate', { detail: { id: target.id } }));
   }
 
   /* ── Nav builder ─────────────────────────────────────────── */
@@ -128,14 +183,35 @@
     if (!nav) return;
     nav.innerHTML = '';
 
-    NAV_GROUPS.forEach(group => {
-      const grpEl = document.createElement('div');
-      grpEl.className = 'nav-group';
+    const collapsed = _getCollapsedGroups();
 
-      const lbl = document.createElement('div');
-      lbl.className = 'nav-group-header';
-      lbl.textContent = group.label;
-      grpEl.appendChild(lbl);
+    // Collapse / expand-all toolbar
+    const bar = document.createElement('div');
+    bar.className = 'nav-toolbar';
+    const toggleAll = document.createElement('button');
+    toggleAll.type = 'button';
+    toggleAll.className = 'nav-toggle-all';
+    bar.appendChild(toggleAll);
+    nav.appendChild(bar);
+
+    NAV_GROUPS.forEach(group => {
+      const isCollapsed = collapsed.has(group.label);
+      const grpEl = document.createElement('div');
+      grpEl.className = 'nav-group' + (isCollapsed ? ' collapsed' : '');
+
+      const header = document.createElement('button');
+      header.type = 'button';
+      header.className = 'nav-group-header';
+      header.setAttribute('aria-expanded', String(!isCollapsed));
+      header.innerHTML =
+        `<span class="nav-group-label">${group.label}</span>` +
+        `<svg class="group-chevron" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>`;
+      grpEl.appendChild(header);
+
+      const itemsWrap = document.createElement('div');
+      itemsWrap.className = 'nav-group-items';
+      const inner = document.createElement('div');
+      inner.className = 'nav-group-items-inner';
 
       group.items.forEach(item => {
         const a = document.createElement('a');
@@ -143,23 +219,97 @@
         a.href = '#' + item.id;
         a.dataset.module = item.id;
         a.innerHTML = `<span class="nav-icon">${item.icon}</span><span class="nav-label">${item.label}</span>`;
-        a.addEventListener('click', e => {
-          e.preventDefault();
-          navigate(item.id);
-        });
-        grpEl.appendChild(a);
+        a.addEventListener('click', e => { e.preventDefault(); navigate(item.id); });
+        inner.appendChild(a);
+      });
+      itemsWrap.appendChild(inner);
+      grpEl.appendChild(itemsWrap);
+
+      header.addEventListener('click', () => {
+        const nowCollapsed = grpEl.classList.toggle('collapsed');
+        header.setAttribute('aria-expanded', String(!nowCollapsed));
+        _saveGroupCollapsed(group.label, nowCollapsed);
+        _syncToggleAll();
       });
 
       nav.appendChild(grpEl);
     });
+
+    toggleAll.addEventListener('click', () => {
+      const groups = [...nav.querySelectorAll('.nav-group')];
+      const anyOpen = groups.some(g => !g.classList.contains('collapsed'));
+      groups.forEach(g => {
+        g.classList.toggle('collapsed', anyOpen);
+        const h = g.querySelector('.nav-group-header');
+        if (h) h.setAttribute('aria-expanded', String(!anyOpen));
+      });
+      _setCollapsedGroups(anyOpen ? NAV_GROUPS.map(x => x.label) : []);
+      _syncToggleAll();
+    });
+
+    _syncToggleAll();
+
+    function _syncToggleAll() {
+      const groups = [...nav.querySelectorAll('.nav-group')];
+      const anyOpen = groups.some(g => !g.classList.contains('collapsed'));
+      toggleAll.innerHTML =
+        `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">${anyOpen ? '<polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/>' : '<polyline points="9 21 3 21 3 15"/><polyline points="15 3 21 3 21 9"/>'}</svg>` +
+        `<span>${anyOpen ? 'Collapse all' : 'Expand all'}</span>`;
+      toggleAll.setAttribute('aria-label', anyOpen ? 'Collapse all sections' : 'Expand all sections');
+    }
+  }
+
+  /* Collapsed-group persistence */
+  function _getCollapsedGroups() {
+    try { return new Set(JSON.parse(localStorage.getItem('sviz-nav-collapsed') || '[]')); }
+    catch (_) { return new Set(); }
+  }
+  function _setCollapsedGroups(arr) {
+    try { localStorage.setItem('sviz-nav-collapsed', JSON.stringify(arr)); } catch (_) {}
+  }
+  function _saveGroupCollapsed(label, isCollapsed) {
+    const s = _getCollapsedGroups();
+    isCollapsed ? s.add(label) : s.delete(label);
+    _setCollapsedGroups([...s]);
+  }
+
+  /* ── Mobile / tablet off-canvas nav ──────────────────────── */
+  function _setupMobileNav() {
+    const toggle   = document.getElementById('nav-toggle');
+    const sidebar  = document.getElementById('sidebar');
+    const backdrop = document.getElementById('nav-backdrop');
+    if (!toggle || !sidebar) return;
+
+    const open = () => {
+      sidebar.classList.add('open');
+      backdrop && backdrop.classList.add('visible');
+      toggle.setAttribute('aria-expanded', 'true');
+    };
+    const close = () => {
+      sidebar.classList.remove('open');
+      backdrop && backdrop.classList.remove('visible');
+      toggle.setAttribute('aria-expanded', 'false');
+    };
+
+    toggle.addEventListener('click', () => {
+      sidebar.classList.contains('open') ? close() : open();
+    });
+    backdrop && backdrop.addEventListener('click', close);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    window.addEventListener('resize', () => { if (window.innerWidth > 1024) close(); });
+
+    // Let navigate() dismiss the drawer after a selection on small screens.
+    window.SnowflakeViz._closeMobileNav = close;
   }
 
   /* ── Search ──────────────────────────────────────────────── */
   function _bindSearch() {
     const input = document.getElementById('sidebar-search');
     if (!input) return;
+    const nav = document.getElementById('sidebar-nav');
     input.addEventListener('input', () => {
       const q = input.value.toLowerCase();
+      if (nav) nav.classList.toggle('searching', !!q);
       document.querySelectorAll('.nav-item').forEach(el => {
         const match = el.dataset.module.includes(q) ||
           el.querySelector('.nav-label')?.textContent.toLowerCase().includes(q);
@@ -241,7 +391,8 @@
 
   /* ── Helpers ─────────────────────────────────────────────── */
   function _hashToId(hash) {
-    return hash ? hash.replace(/^#/, '') : null;
+    if (!hash) return null;
+    return hash.replace(/^#/, '').split('/')[0] || null;
   }
 
   function _idToModuleKey(id) {

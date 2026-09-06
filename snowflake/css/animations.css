@@ -338,3 +338,19 @@
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ============================================================
+   Reduced Motion — respect the OS/browser accessibility setting
+   (iPadOS Settings ▸ Accessibility ▸ Motion, macOS equivalent).
+   Keeps functional state changes; removes decorative motion.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

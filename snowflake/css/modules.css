@@ -31,11 +31,13 @@
 
 /* ── Info callout box ────────────────────────────────────── */
 .info-box {
+  display: block; /* override components.css flex so rich inline text wraps */
   background: rgba(41,181,232,.07);
   border: 1px solid rgba(41,181,232,.25);
   border-radius: var(--radius);
   padding: 1rem 1.25rem;
   margin-bottom: 1.5rem;
+  overflow-wrap: anywhere;
 }
 .info-box strong { color: var(--snowflake); }
 
@@ -749,8 +751,8 @@
   line-height: 1.7;
   color: var(--text-secondary);
   margin-bottom: 1.25rem;
-  white-space: pre;
-  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   transition: border-color .3s;
 }
 .qe-query-box.active { border-color: var(--snowflake); }
@@ -1562,7 +1564,7 @@
   overflow-y: auto;
 }
 
-.adv-code-box code { display: block; white-space: pre; }
+.adv-code-box code { display: block; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* ============================================================
    SECURITY & GOVERNANCE MODULE
