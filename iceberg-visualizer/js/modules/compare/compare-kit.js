@@ -20,7 +20,8 @@
 .cmp-wrap { max-width:1040px; margin:0 auto; }
 .cmp-h1 { font-size:24px; font-weight:800; letter-spacing:-.02em; color:var(--text-primary); margin:0 0 8px; }
 .cmp-lead { font-size:14px; color:var(--text-secondary); line-height:1.7; margin:0 0 24px; max-width:820px; }
-.cmp-cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.cmp-cols { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.cmp-cols.cmp-cols--2 { grid-template-columns:1fr 1fr; }
 .cmp-col { border:1px solid var(--border-default); border-radius:var(--radius-lg); background:var(--bg-2); overflow:hidden; }
 .cmp-col__head { padding:12px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border-default); }
 .cmp-col__badge { width:22px; height:22px; border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
@@ -31,6 +32,10 @@
 .cmp-col--delta .cmp-col__head { background:linear-gradient(180deg, rgba(255,90,60,.12), transparent); }
 .cmp-col--delta .cmp-col__title { color:#ff8a5c; }
 .cmp-col--delta .cmp-col__badge { background:rgba(255,90,60,.16); }
+.cmp-col--hudi .cmp-col__head { background:linear-gradient(180deg, rgba(20,184,166,.12), transparent); }
+.cmp-col--hudi .cmp-col__title { color:#2dd4bf; }
+.cmp-col--hudi .cmp-col__badge { background:rgba(20,184,166,.16); }
+.cmp-col--hudi .cmp-points li::before { background:#14b8a6; }
 .cmp-col__body { padding:14px 16px 18px; }
 .cmp-points { list-style:none; margin:0 0 14px; padding:0; display:flex; flex-direction:column; gap:9px; }
 .cmp-points li { position:relative; padding-left:20px; font-size:12.5px; color:var(--text-secondary); line-height:1.55; }
@@ -49,11 +54,13 @@
 
 /* Overview matrix */
 .cmp-matrix-wrap { overflow-x:auto; border:1px solid var(--border-default); border-radius:var(--radius-lg); }
-.cmp-matrix { width:100%; border-collapse:collapse; font-size:12.5px; min-width:720px; }
+.cmp-matrix { width:100%; border-collapse:collapse; font-size:12.5px; min-width:880px; }
 .cmp-matrix th { text-align:left; padding:12px 14px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; background:var(--bg-3); border-bottom:1px solid var(--border-default); position:sticky; top:0; }
-.cmp-matrix th.cmp-th-dim { color:var(--text-muted); width:16%; }
+.cmp-matrix th.cmp-th-dim { color:var(--text-muted); width:14%; }
 .cmp-matrix th.cmp-th-ice { color:#5ab0ff; }
 .cmp-matrix th.cmp-th-delta { color:#ff8a5c; }
+.cmp-matrix th.cmp-th-hudi { color:#2dd4bf; }
+.cmp-matrix td.cmp-td-hudi { border-left:2px solid rgba(20,184,166,.35); }
 .cmp-matrix td { padding:11px 14px; border-bottom:1px solid var(--border-subtle); color:var(--text-secondary); line-height:1.5; vertical-align:top; }
 .cmp-matrix td.cmp-td-dim { font-weight:700; color:var(--text-primary); white-space:nowrap; }
 .cmp-matrix tr:last-child td { border-bottom:none; }
@@ -61,13 +68,14 @@
 .cmp-matrix td.cmp-td-ice { border-left:2px solid rgba(74,174,255,.35); }
 .cmp-matrix td.cmp-td-delta { border-left:2px solid rgba(255,90,60,.35); }
 
-@media (max-width:820px) { .cmp-cols { grid-template-columns:1fr; } }
+@media (max-width:1000px) { .cmp-cols { grid-template-columns:1fr; } }
 `;
     document.head.appendChild(s);
   }
 
   const ICE_MARK = `<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><polygon points="12,3 21,20 3,20" fill="#4aaeff"/></svg>`;
   const DELTA_MARK = `<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><polygon points="12,3 21,20 3,20" fill="#ff5a3c"/></svg>`;
+  const HUDI_MARK = `<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><rect x="4" y="6" width="16" height="12" rx="2" fill="#14b8a6"/></svg>`;
   const BULB = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0012 2z"/></svg>`;
 
   function esc(s) { return String(s).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
@@ -82,8 +90,8 @@
   }
 
   function side(kind, data) {
-    const mark = kind === 'ice' ? ICE_MARK : DELTA_MARK;
-    const title = kind === 'ice' ? 'Apache Iceberg' : 'Delta Lake';
+    const mark = kind === 'ice' ? ICE_MARK : (kind === 'delta' ? DELTA_MARK : HUDI_MARK);
+    const title = kind === 'ice' ? 'Apache Iceberg' : (kind === 'delta' ? 'Delta Lake' : 'Apache Hudi');
     return `
       <div class="cmp-col cmp-col--${kind}">
         <div class="cmp-col__head"><span class="cmp-col__badge">${mark}</span><span class="cmp-col__title">${title}</span></div>
@@ -108,9 +116,10 @@
   <div class="cmp-wrap">
     <h1 class="cmp-h1">${esc(c.title)}</h1>
     <p class="cmp-lead">${esc(c.intro)}</p>
-    <div class="cmp-cols">
+    <div class="cmp-cols${c.hudi ? '' : ' cmp-cols--2'}">
       ${side('ice', c.iceberg)}
       ${side('delta', c.delta)}
+      ${c.hudi ? side('hudi', c.hudi) : ''}
     </div>
     <div class="cmp-takeaway">
       <span class="cmp-takeaway__icon">${BULB}</span>
@@ -126,5 +135,5 @@
     return mod;
   }
 
-  TV.CompareKit = { injectStyles, esc, side, jumpLinks, conceptModule, ICE_MARK, DELTA_MARK, BULB };
+  TV.CompareKit = { injectStyles, esc, side, jumpLinks, conceptModule, ICE_MARK, DELTA_MARK, HUDI_MARK, BULB };
 })();

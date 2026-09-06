@@ -53,7 +53,7 @@
     id: 'compare',
     label: 'Compare',
     short: 'Compare',
-    tagline: 'Iceberg vs Delta Lake',
+    tagline: 'Iceberg · Delta · Hudi',
     docsUrl: 'https://tabular.io/apache-iceberg-cookbook/',
     docsLabel: 'Table Format Guides',
     visible: true,

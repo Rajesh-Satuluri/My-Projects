@@ -53,6 +53,15 @@
         { id: 'savepoint-restore', label: 'Savepoint & Restore', icon: 'clock',  available: true },
       ],
     },
+    {
+      id: 'learn', label: 'Learn & Practice',
+      items: [
+        { id: 'interview',  label: 'Interview Mode', icon: 'message', available: true },
+        { id: 'quiz',       label: 'Quiz Mode',      icon: 'help',    available: true },
+        { id: 'study',      label: 'Study Deck',     icon: 'book',    available: true },
+        { id: 'cheatsheet', label: 'Cheat Sheets',   icon: 'file',    available: true },
+      ],
+    },
   ];
 
   // Hudi mark — teal→emerald stacked file-slices (base + log).
