@@ -36,6 +36,11 @@ everything is now **format-aware**.
   `data-format` on `<html>`. Theme (light/dark) stays orthogonal (`data-theme`).
 - **Narrative:** one fictional company, **ShopKart Global E-Commerce**, shared across both formats so
   comparisons and interview answers stay consistent.
+- **N-format ready (Hudi later), zero placeholders now:** the whole app is data-driven from a format
+  registry. A third format (**Apache Hudi**) is planned but **not built now** — and it must leave **no
+  trace in the shipped UI**: no "coming soon" chip, no empty switcher slot, no blank matrix column, no
+  Hudi label anywhere. Adding Hudi in future = drop in `formats/hudi.js` + `modules/hudi/*` + data and
+  register it; **no core edits**. Until then nothing references it, so nothing shows. See §11a + Appendix A.
 
 **Absolute constraints (do not violate):**
 1. Work happens **only** inside the (renamed) visualizer folder. Do **not** modify any other project
@@ -48,8 +53,12 @@ everything is now **format-aware**.
    single engine. Compare modules must therefore drive **one** engine that animates both panes in
    lockstep — never two engines competing for the bar (§7).
 4. No external runtime dependencies. All CSS/JS local + inlined. Only dev dep is Playwright (verify).
-5. **De-risk the shipped Iceberg app:** do the multi-format refactor as Stage 1 with Iceberg as the
-   *only* format and get the full verify harness green **before** adding any Delta content (§11).
+5. **De-risk the shipped Iceberg app:** do the multi-format refactor first with Iceberg as the *only*
+   format and get the full verify harness green **before** adding any Delta content (§11).
+6. **Everything format-related is derived from the registry, never hardcoded** — the switcher, the set
+   of valid route formats, per-format brand CSS, keyboard-shortcut targets, the command palette, and
+   the Compare matrix columns/panes all iterate `TV.formats`. Hardcoding "iceberg"/"delta" anywhere the
+   registry could drive it is a defect (it's what would force a refactor when Hudi arrives).
 
 ---
 
@@ -157,21 +166,29 @@ Rules:
 
 ### 2.3 Format switcher (new UI)
 
-A segmented control at the **top of the sidebar**, above search:
+A segmented control at the **top of the sidebar**, above search — **built entirely from the registry**,
+never a hardcoded list of pills:
 
 ```
-┌─────────────────────────────┐
-│  [ Iceberg ] [ Delta ] [ ⇄ Compare ]  │
-└─────────────────────────────┘
+┌───────────────────────────────────────┐
+│  [ Iceberg ] [ Delta ] [ ⇄ Compare ]  │   ← renders one pill per registered format + Compare
+└───────────────────────────────────────┘
 ```
 
-- Clicking a segment calls `TV.navigate(format, homeOrSameScreen)`, rebuilds the nav for that format,
+- Render logic: `Object.values(TV.formats).filter(f => f.visible !== false && f.id !== 'compare')`
+  → one pill each, then the Compare pill (shown only when ≥2 comparable formats exist). Because it's
+  data-driven, **an unregistered format simply doesn't appear** — no "coming soon", no empty slot. When
+  Hudi is registered later, its pill appears automatically with zero switcher code changes.
+- **Single-format collapse (no empty control):** if only one format is registered (e.g. mid–Stage 1),
+  the switcher renders as a **static brand label**, not an orphan single pill — so it never looks
+  broken or half-built. It becomes an interactive toggle the moment a 2nd format registers.
+- Clicking a pill calls `TV.navigate(format, homeOrSameScreen)`, rebuilds the nav for that format,
   sets `document.documentElement.dataset.format = format` (drives brand tokens), updates the sidebar
   brand (name/logo/tagline), the topbar docs link, and the breadcrumb root.
 - `Compare` is styled distinctly (it's a mode, not a format) and does **not** swap the brand accent —
   it uses a neutral/dual accent.
-- Keyboard: extend shortcuts (`g i` → Iceberg home, `g d` → Delta home, `g c` → Compare); keep the
-  format-relative `g h/w/a/m`.
+- Keyboard: shortcut targets are generated from the registry (`g i` → Iceberg, `g d` → Delta,
+  `g c` → Compare; a future `g u` → Hudi appears automatically). Keep format-relative `g h/w/a/m`.
 
 ### 2.4 What stays format-agnostic (copy/keep verbatim)
 
@@ -414,14 +431,21 @@ Compare
   └─ maintenance         (dual-pane: compaction/expire  vs  OPTIMIZE/Z-ORDER/VACUUM)
 ```
 
-- `overview` is a static, scrollable decision matrix (rows = capabilities: ACID, time travel, delete
-  strategy, layout optimization, catalog options, ecosystem, streaming/CDC, interop; columns =
-  Iceberg / Delta), plus a "when to choose which" guide — highly paywall-worthy, interview-grade.
-- Compare modules use the `cmp-` prefix and a neutral/dual accent. Each pane is a compact version of
-  the corresponding single-format diagram (reuse the SVG-building helpers where practical, or
-  purpose-build simplified twins). The step narration explains *the difference at each stage*.
-- Compare screens still get a Test-Yourself bank keyed under `TV.QuestionBank.compare[id]` with
-  "which format does X" comparison questions.
+- `overview` is a static, scrollable decision matrix. **Columns are data-driven** —
+  `TV.formats` filtered to `comparable !== false` — so it renders **exactly 2 columns now** (Iceberg,
+  Delta) and **3 automatically** when Hudi registers, with **no blank/"coming soon" column ever**.
+  Rows = capabilities: ACID, time travel, delete strategy, layout optimization, catalog options,
+  ecosystem, streaming/CDC, interop. Plus a "when to choose which" guide — paywall-worthy, interview-grade.
+- **N-pane, single-engine dual-view:** each Compare module renders **one pane per comparable format**
+  (2 today, 3 later) in a responsive `grid` (`grid-template-columns: repeat(auto-fit, minmax(…))`) so
+  the layout is balanced at 2 and at 3 with no empty cell. A **single** `AnimationEngine` drives all
+  panes in lockstep (one step advances every pane to the equivalent stage). Build the pane list from
+  the registry — never hardcode "left = iceberg, right = delta". A pane's diagram comes from a
+  per-format `comparePane(step, ctx)` contributed by that format's module (or a compact purpose-built
+  twin). Step narration explains *the difference at each stage*.
+- Compare modules use the `cmp-` prefix and a neutral/dual accent. Test-Yourself banks live under
+  `TV.QuestionBank.compare[id]` with "which format does X" questions (author them so a 3rd option can
+  be added later without rewrites).
 
 ---
 
@@ -496,34 +520,86 @@ Plan:
 
 ---
 
-## 11. Build stages (do them in this order)
+## 11. Build plan — atomic iterations
 
-**Stage 1 — Multi-format refactor, Iceberg only (risk isolation).**
-Neutralize namespace to `TV` (+ `IcebergViz` alias); add `TV.formats` with only `iceberg`; add
-`TV.registerModule`; make `TV.modules` format-keyed and update each existing Iceberg module's
-registration line; extend the router to 3 segments (back-compat for bare `#screen`); add the format
-switcher (Iceberg only for now); make brand tokens `data-format`-driven; namespace localStorage to
-`tv-<format>-…` (migrate old `iv-…` keys on read if present); point palette/quiz/progress/tour at the
-active-format accessors. **Get all three verify scripts green with only Iceberg present.** If anything
-in the shipped Iceberg experience regresses, it surfaces here, in isolation.
+Each iteration is **small, self-contained, and ends green** (all three verify scripts + syntax gate
+pass, both themes, no regressions) and is committed separately. No iteration leaves the app in a
+half-built or placeholder state. Phases A–D group them; within a phase, order matters.
 
-**Stage 2 — Add the Delta format.**
-Build all Delta modules (§4–5), `delta-concepts.js`, Delta question bank/interview/quiz/study/
-cheatsheet, Delta brand + logo. Register under `TV.modules.delta`. Extend the verify sweep to iterate
-both formats. Green.
+### Phase A — Multi-format refactor, Iceberg only (risk isolation; no new content, no visible change)
 
-**Stage 3 — Add Compare mode.**
-Single-engine dual-pane modules + the static decision matrix + comparison question bank (§7). Extend
-verify. Green.
+- **IT-1 · Namespace generalization.** Introduce `window.TableViz` (`TV`) with `window.IcebergViz = TV`
+  (+ `IV` alias). No behavioral change; app still runs exactly as today. *Verify: full harness green.*
+- **IT-2 · Format registry + registration.** Add `TV.formats` (only `iceberg`), `TV.registerModule`,
+  format-keyed `TV.modules`; convert each existing Iceberg module's registration line; make
+  `getScreens/getNavGroups/currentScreenId` format-aware (default = active). Still single-format,
+  routing unchanged. *Verify: green.*
+- **IT-3 · 3-segment router + per-format persistence.** Parse `#<format>/<screen>/<step>`; keep bare
+  `#screen` working; namespace localStorage to `tv-<format>-…` with one-time migration of old `iv-…`
+  keys; `_syncStepToUrl` writes the format segment. *Verify: deep-links, resume, back-compat all green.*
+- **IT-4 · Per-format brand tokens.** Migrate `--iceberg*` usages → `--brand*`, driven by
+  `data-format`; Iceberg's rendered output is pixel-identical. No-flash `<head>` script stamps
+  `data-format` + `data-theme`. *Verify: both themes visually unchanged for Iceberg.*
+- **IT-5 · Format switcher (registry-driven, single-format collapse).** Build the switcher; with only
+  Iceberg registered it renders as a **static brand label** (never an empty/orphan control). Palette,
+  quiz modal, progress, tour all read active-format accessors. *Verify: green — this closes the
+  risk-isolation phase with zero UI placeholders.*
 
-**Stage 4 — Deploy + portfolio + redirect (§10).** Commit to the designated branch; push; verify the
-`gh-pages` result. (PR only if asked.)
+### Phase B — Delta format (one iteration per nav group; each ends green)
 
-Suggested module build order within Stage 2 (run `check` + `verify:anim` as you go): architecture →
-log-explorer → create-table → insert → write-path → read-path → commit-explorer → version-explorer →
-checkpoint → time-travel → update → delete → merge → overwrite → schema-evolution → partitioning →
-liquid-clustering → concurrency → deletion-vectors → optimize → vacuum → query-planner →
-change-data-feed → engine-integrations → learn modules.
+- **IT-6 · Delta scaffold + Get Started.** `formats/delta.js` (brand red→amber, Δ logo, docsUrl, nav
+  groups), `delta-concepts.js`, ShopKart Delta resolutions; modules `home`, `why-delta`,
+  `architecture`. Switcher **automatically** becomes a live 2-way toggle. *Verify: both formats green.*
+- **IT-7 · Delta Log & Schema core.** `log-explorer`, `commit-explorer`, `version-explorer`,
+  `checkpoint`. *Verify: green.*
+- **IT-8 · Delta Write Operations.** `create-table`, `insert`, `update`, `delete`, `merge`,
+  `overwrite`. *Verify: `verify:anim` green.*
+- **IT-9 · Delta Read & Query.** `read-path`, `write-path`, `query-planner`, `time-travel`. *Verify.*
+- **IT-10 · Delta Schema & Layout.** `schema-evolution`, `partitioning`, `liquid-clustering`. *Verify.*
+- **IT-11 · Delta Advanced.** `concurrency`, `deletion-vectors`, `optimize`, `vacuum`,
+  `change-data-feed`, `engine-integrations`. *Verify.*
+- **IT-12 · Delta Learn & banks.** Delta `question-bank` entries, `interview` (~24 Q&A), `quiz` (~22),
+  `study`, `cheatsheet`; wire Test-Yourself banks. *Verify: quiz-modal contract green in both formats.*
+
+### Phase C — Compare mode (registry-driven, N-pane ready)
+
+- **IT-13 · Compare scaffold + decision matrix.** `formats/compare.js`, `overview` (data-driven
+  columns = comparable formats → 2 now, 3-ready), Compare nav group. *Verify: matrix renders exactly 2
+  balanced columns, no blank cell.*
+- **IT-14 · Compare dynamics I.** N-pane single-engine `read-path`, `deletes`, `time-travel`. *Verify:
+  both panes advance in lockstep from one engine; `verify:anim` green.*
+- **IT-15 · Compare dynamics II + banks.** `schema-evolution`, `concurrency`, `maintenance`;
+  `TV.QuestionBank.compare`. *Verify: full sweep green across iceberg + delta + compare.*
+
+### Phase D — Ship
+
+- **IT-16 · Deploy + portfolio + redirect (§10).** `git mv` folder → `table-formats-visualizer/`;
+  update workflow to publish at `/lakehouse/` (or chosen path) + `/iceberg/` redirect stub; update the
+  portfolio card. Push to the designated branch; verify the `gh-pages` result via GitHub tools. (PR
+  only if asked.)
+
+Within IT-8..IT-11, build modules in the group's listed order, running `check` + `verify:anim` after
+each module so a regression is caught at the module that caused it.
+
+---
+
+## 11a. Adding a format later (Hudi) — the extension contract
+
+This is the acceptance test for "N-format ready." When Hudi is built in a future session, it must be
+achievable with **only** these additions and **no edits to core files** (`app.js` router/switcher,
+engine, controls, features, verify harness structure):
+
+1. Add `js/formats/hudi.js` → `TV.formats.hudi = { id, label:'Apache Hudi', short:'Hudi', visible:true,
+   comparable:true, docsUrl, logoSvg (amber/green brand), navGroups }`.
+2. Add `js/modules/hudi/*` module files, each `TV.registerModule('hudi', mod)`.
+3. Add `js/data/hudi-concepts.js` and `TV.QuestionBank.hudi = {…}`; extend ShopKart resolutions.
+4. Add `:root[data-format="hudi"]` brand tokens; add its `<script>` tags to `index.html`.
+5. Register `comparePane` contributions for Compare modules that should include Hudi.
+
+Then: the switcher shows a Hudi pill automatically, the decision matrix grows a Hudi column, Compare
+modules render a third pane, keyboard adds `g u`, and the verify sweep picks Hudi up because it
+iterates `TV.formats`. **If any of the above requires touching a core file, the abstraction in Phase A
+is wrong — fix it in Phase A, not by special-casing Hudi.** Nothing about Hudi is built or surfaced now.
 
 ---
 
@@ -596,6 +672,53 @@ as the path. Everything else follows this spec.
 
 ---
 
-*End of spec. This unifies Iceberg and Delta into one format-aware tool with a Compare mode. When a
-mechanism is unclear, open the corresponding existing module and mirror it — only the content, the
+---
+
+## Appendix A — Apache Hudi content plan (FUTURE — do not build or surface now)
+
+Planned only, so the architecture accommodates it and a future session has the content ready. **Build
+nothing Hudi in this effort; show nothing Hudi in the UI.** When the time comes, follow §11a.
+
+**Brand:** amber→green gradient (`--brand` ≈ `#f6a821 → #4c9a2a`), distinct from Iceberg blue→purple
+and Delta red→amber. Logo: a stylized "H"/timeline mark.
+
+**Concept map (Hudi vs the shared ShopKart scenario):**
+
+| Concept | Hudi mechanism |
+|---|---|
+| Table format core | **Timeline** in `.hoodie/` — an ordered log of *instants* (actions with states requested→inflight→completed) |
+| Table types | **Copy-on-Write (CoW)** (rewrite base files) vs **Merge-on-Read (MoR)** (base Parquet + row-based **log files**, merged at read/compaction) |
+| Commit unit | Timeline instants: `commit` (CoW), `deltacommit` (MoR), plus `compaction`, `clustering`, `clean`, `rollback`, `savepoint` |
+| File layout | **File groups** / **file slices**: a base file + its log files, grouped by a **record key** |
+| Record identity | **Record key + precombine** → native, efficient **upserts**; **record-level index** (Bloom, HBase, bucket, RLI) locates keys fast |
+| Read acceleration | Partition pruning + column stats + **metadata table** (files/column_stats/record_index partitions) |
+| Time travel | Query as of an instant / timestamp; incremental reads |
+| Incremental query | **Native incremental pulls** — read only records changed after an instant (Hudi's signature feature) |
+| Layout optimization | **Compaction** (MoR log→base), **clustering** (sort/z-order rewrite), **cleaning** (retain N commits) |
+| Concurrency | OCC (external lock provider) + MVCC across readers/writers/table-services; **non-blocking concurrency control** (newer) |
+| Cleanup | **Cleaner** service (commit retention) |
+| Catalog | Hive metastore / Glue / catalog sync |
+| Interop | Read via Onetable/**XTable** (Hudi↔Iceberg↔Delta) |
+
+**Module list (mirror the 6-group nav):** home, why-hudi, architecture (timeline + `.hoodie`),
+timeline-explorer (↔ log/metadata explorer), create-table, insert/upsert, update, delete, merge,
+overwrite; read-path (index → file slices → merge), write-path (upsert commit), query-planner,
+time-travel + **incremental-query** (Hudi-unique); instant-explorer, file-slices, compaction,
+clustering, schema-evolution, partitioning; concurrency (OCC/NBCC), cow-vs-mor (Hudi-unique headline),
+cleaning, metadata-table, record-index, engine-integrations; interview, quiz, study, cheatsheet.
+
+**Animated vs static:** same split philosophy as Iceberg/Delta (operations + read/write/timeline
+dynamics animated; home/why/explorers/learn static). Prefixes: `h`-scheme (`htl-` timeline,
+`hfs-` file-slices, `hcmp-`… careful vs compare — use `hcpt-` compaction, `hclu-` clustering,
+`hri-` record-index).
+
+**Compare additions when Hudi lands:** the decision matrix gains a Hudi column automatically; add Hudi
+`comparePane` contributions to read-path (index-based vs manifest vs log-replay), deletes, time-travel,
+and a new Compare row for **incremental queries** and **CoW vs MoR** (Hudi's differentiators).
+
+---
+
+*End of spec. This unifies Iceberg and Delta into one format-aware, N-format-ready tool with a Compare
+mode — with Apache Hudi planned (Appendix A) but entirely absent from the shipped UI until built. When
+a mechanism is unclear, open the corresponding existing module and mirror it — only the content, the
 per-format brand, and the added format/compare layers differ.*
