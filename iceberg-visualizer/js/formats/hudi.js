@@ -32,6 +32,27 @@
         { id: 'record-keys',      label: 'Keys & Precombine', icon: 'filter',     available: true },
       ],
     },
+    {
+      id: 'read-ops', label: 'Read & Query',
+      items: [
+        { id: 'file-layout',        label: 'File Groups & Slices', icon: 'layers',  available: true },
+        { id: 'indexing',           label: 'Indexing',             icon: 'search',  available: true },
+        { id: 'query-types',        label: 'Query Types',          icon: 'cpu',     available: true },
+        { id: 'incremental-query',  label: 'Incremental Query',    icon: 'refresh', available: true },
+        { id: 'query-planner',      label: 'Query Planner',        icon: 'filter',  available: true },
+      ],
+    },
+    {
+      id: 'services', label: 'Table Services',
+      items: [
+        { id: 'compaction',       label: 'Compaction',       icon: 'book',       available: true },
+        { id: 'clustering',       label: 'Clustering',       icon: 'git-branch', available: true },
+        { id: 'cleaning',         label: 'Cleaning',         icon: 'trash',      available: true },
+        { id: 'metadata-table',   label: 'Metadata Table',   icon: 'list',       available: true },
+        { id: 'concurrency',      label: 'Concurrency (OCC)', icon: 'users',     available: true },
+        { id: 'savepoint-restore', label: 'Savepoint & Restore', icon: 'clock',  available: true },
+      ],
+    },
   ];
 
   // Hudi mark — teal→emerald stacked file-slices (base + log).
@@ -63,7 +84,7 @@
     tagline: 'ShopKart Handbook',
     docsUrl: 'https://hudi.apache.org/docs/overview',
     docsLabel: 'Apache Hudi Docs',
-    visible: false,      // hidden until the reveal partition (build complete enough)
+    visible: true,       // revealed at F3 — switcher is now Iceberg / Delta / Hudi / ⇄ Compare
     comparable: true,
     home: 'home',
     logoSvg: LOGO,
