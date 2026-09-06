@@ -52,6 +52,12 @@
   --brand-gradient: linear-gradient(135deg, #4aaeff 0%, #ff5a3c 100%);
   --brand-gradient-warm: linear-gradient(135deg, #4aaeff 0%, #ff5a3c 100%);
 }
+:root[data-format="hudi"] {
+  --brand: #14b8a6; --brand-2: #34d399; --brand-strong: #0f9488;
+  --brand-glow: rgba(20, 184, 166, .30);
+  --brand-gradient: linear-gradient(135deg, #14b8a6 0%, #34d399 100%);
+  --brand-gradient-warm: linear-gradient(135deg, #14b8a6 0%, #34d399 100%);
+}
 /* Alias legacy tokens → brand (recolors all existing components).
    Uses [data-format] (specificity 0,1,1) placed after main.css's
    light-theme block so it wins in both light and dark themes. */
@@ -140,6 +146,7 @@ button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
 :root[data-theme="light"][data-format="iceberg"] { --brand: #1a7fd4; --brand-strong: #0a5fbf; }
 :root[data-theme="light"][data-format="delta"]   { --brand: #e0431f; --brand-strong: #b8320f; }
 :root[data-theme="light"][data-format="compare"] { --brand: #5a6472; --brand-strong: #434b57; }
+:root[data-theme="light"][data-format="hudi"]    { --brand: #0d9488; --brand-strong: #0a7267; }
 
 /* Hamburger → X morph (mobile/tablet nav toggle) */
 #nav-toggle .ham { position: relative; display: inline-block; width: 18px; height: 14px; }
