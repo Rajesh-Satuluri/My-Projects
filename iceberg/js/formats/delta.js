@@ -31,6 +31,37 @@
         { id: 'overwrite',    label: 'replaceWhere',    icon: 'refresh',    available: true },
       ],
     },
+    {
+      id: 'read-ops', label: 'Read & Query',
+      items: [
+        { id: 'read-path',     label: 'Read Path (Log Replay)', icon: 'search', available: true },
+        { id: 'write-path',    label: 'Write Path (Commit)',    icon: 'edit',   available: true },
+        { id: 'query-planner', label: 'Query Planner',          icon: 'cpu',    available: true },
+        { id: 'time-travel',   label: 'Time Travel',            icon: 'clock',  available: true },
+      ],
+    },
+    {
+      id: 'log', label: 'Log & Schema',
+      items: [
+        { id: 'version-explorer',  label: 'Version History',   icon: 'camera',     available: true },
+        { id: 'commit-explorer',   label: 'Commit Explorer',   icon: 'list',       available: true },
+        { id: 'checkpoint',        label: 'Checkpoints',       icon: 'book',       available: true },
+        { id: 'schema-evolution',  label: 'Schema Evolution',  icon: 'columns',    available: true },
+        { id: 'partitioning',      label: 'Partitioning',      icon: 'filter',     available: true },
+        { id: 'liquid-clustering', label: 'Liquid Clustering', icon: 'git-branch', available: true },
+      ],
+    },
+    {
+      id: 'advanced', label: 'Advanced Topics',
+      items: [
+        { id: 'concurrency',         label: 'Concurrency (OCC)',   icon: 'users',   available: true },
+        { id: 'deletion-vectors',    label: 'Deletion Vectors',    icon: 'trash',   available: true },
+        { id: 'optimize',            label: 'OPTIMIZE & Z-Order',  icon: 'zap',     available: true },
+        { id: 'vacuum',              label: 'VACUUM',              icon: 'tool',    available: true },
+        { id: 'change-data-feed',    label: 'Change Data Feed',    icon: 'refresh', available: true },
+        { id: 'engine-integrations', label: 'Engine Integrations', icon: 'link',    available: true },
+      ],
+    },
   ];
 
   // Delta Δ mark — red→amber gradient (distinct from Iceberg blue→purple).

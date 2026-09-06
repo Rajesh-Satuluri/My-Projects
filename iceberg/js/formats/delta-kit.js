@@ -120,6 +120,9 @@
         const fx = makeFx(svg);
         const steps = cfg.buildSteps(svg, fx);
         const data = cfg.stepData || [];
+        // Ensure the controls-bar step label is populated even when a module's
+        // engine steps use empty labels (sidebar narration lives in stepData).
+        data.forEach((d, i) => { if (steps[i] && !steps[i].label) steps[i].label = d.label; });
         const engine = new TV.AnimationEngine({ steps });
         this._engine = engine;
 
