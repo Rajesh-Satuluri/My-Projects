@@ -72,6 +72,7 @@
     const items = [];
     const qb = IV.QuestionBank || {};
     Object.keys(qb).forEach(screen => {
+      if (!Array.isArray(qb[screen])) return;   // skip format buckets (e.g. qb.delta)
       qb[screen].forEach(q => items.push({
         type: 'quiz', difficulty: q.difficulty || 'basic',
         group: _labelFor(screen), q: q.q, a: q.explanation,

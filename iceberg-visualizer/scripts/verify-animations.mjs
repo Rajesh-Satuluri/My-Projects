@@ -55,11 +55,16 @@ async function main() {
   page.on('console', m => { if (m.type() === 'error') errors.push('console.error: ' + m.text()); });
 
   await page.goto(base + '/#home', { waitUntil: 'networkidle' });
-  const ids = await page.$$eval('a.nav-item[data-nav-id]', els => els.map(e => e.dataset.navId));
+  const screens = await page.evaluate(() => {
+    const TV = window.TableViz;
+    return Object.keys(TV.formats).flatMap(fid =>
+      (TV.formats[fid].navGroups || []).flatMap(g =>
+        g.items.filter(it => it.available !== false).map(it => fid + '/' + it.id)));
+  });
 
   const animated = [], noAnim = [], failures = [];
 
-  for (const id of ids) {
+  for (const id of screens) {
     errors.length = 0;
     await page.goto(`${base}/#${id}`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(150);

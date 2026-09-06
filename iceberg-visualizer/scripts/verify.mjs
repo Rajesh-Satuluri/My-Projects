@@ -82,16 +82,23 @@ async function main() {
   // Suppress the first-run tour so it never interferes with checks.
   async function mkPage(opts) {
     const p = await browser.newPage(opts || {});
-    await p.addInitScript(() => { try { localStorage.setItem('iv-tour-done','1'); localStorage.setItem('tv-iceberg-tour-done','1'); localStorage.setItem('tv-migrated','1'); } catch (e) {} });
+    await p.addInitScript(() => { try { localStorage.setItem('iv-tour-done','1'); localStorage.setItem('tv-iceberg-tour-done','1'); localStorage.setItem('tv-delta-tour-done','1'); localStorage.setItem('tv-migrated','1'); localStorage.setItem('tv-format','iceberg'); } catch (e) {} });
     return p;
   }
 
-  // Discover screen ids once.
+  // Discover screens across EVERY registered format (incl. hidden ones).
   const disco = await mkPage();
   await disco.goto(base + '/#home', { waitUntil: 'networkidle' });
-  const ids = await disco.$$eval('a.nav-item[data-nav-id]', els => els.map(e => e.dataset.navId));
+  const screens = await disco.evaluate(() => {
+    const TV = window.TableViz;
+    return Object.keys(TV.formats).flatMap(fid =>
+      (TV.formats[fid].navGroups || []).flatMap(g =>
+        g.items.filter(it => it.available !== false).map(it => ({ format: fid, id: it.id }))));
+  });
   await disco.close();
-  console.log(`Discovered ${ids.length} screens.\n`);
+  const byFmt = screens.reduce((a, s) => (a[s.format] = (a[s.format] || 0) + 1, a), {});
+  console.log(`Discovered ${screens.length} screens across ${Object.keys(byFmt).length} formats: ` +
+    Object.entries(byFmt).map(([f, n]) => `${f}:${n}`).join(', ') + '\n');
 
   for (const theme of THEMES) {
     for (const vp of VIEWPORTS) {
@@ -100,7 +107,8 @@ async function main() {
       page.on('pageerror', e => errors.push('pageerror: ' + e.message));
       page.on('console', m => { if (m.type() === 'error') errors.push('console.error: ' + m.text()); });
 
-      for (const id of ids) {
+      for (const sc of screens) {
+        const id = sc.format + '/' + sc.id;
         errors.length = 0;
         await page.goto(`${base}/#${id}`, { waitUntil: 'networkidle' });
         await page.evaluate(t => { document.documentElement.dataset.theme = t; }, theme);
