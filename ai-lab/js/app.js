@@ -4,6 +4,16 @@
 // six tracks of expandable module cards, cross-cutting systems, learning paths.
 // =============================================================================
 import { MODULES, SYSTEMS, PATHS, TRACKS, moduleById, countConcepts } from "./manifest.js";
+import { TRANSFORMER_CONCEPTS } from "../data/transformers.js";
+import { initRouter } from "./router.js";
+
+// map a manifest concept title like "11.4 Build attention from zero" -> concept slug
+const T_BY_N = new Map(TRANSFORMER_CONCEPTS.map((c) => [c.n, c]));
+function conceptLink(title) {
+  const m = String(title).match(/^(\d+\.\d+)/);
+  if (m && T_BY_N.has(m[1])) return "#/c/" + T_BY_N.get(m[1]).slug;
+  return null;
+}
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -64,11 +74,20 @@ function moduleCard(m, hue) {
 
   const panelGroups = moduleConcepts(m)
     .map((g) => {
-      const chips = g.items.map((c) => `<span class="chip">${c}</span>`).join("");
+      const chips = g.items
+        .map((c) => {
+          const link = conceptLink(c);
+          return link
+            ? `<a class="chip chip-live" href="${link}">${c}</a>`
+            : `<span class="chip">${c}</span>`;
+        })
+        .join("");
       const label = g.label ? `<div class="mc-grouplabel">${g.label}</div>` : "";
       return `${label}<div class="mc-concepts">${chips}</div>`;
     })
     .join("");
+
+  const isLive = !!conceptLink((m.concepts || [])[0] || "");
 
   card.innerHTML = `
     <button class="modcard-btn" aria-expanded="false">
@@ -81,7 +100,7 @@ function moduleCard(m, hue) {
       <p class="mc-sub">${m.subtitle || ""}</p>
       <div class="mc-foot">
         <span class="mc-count">${moduleCount(m)} concepts</span>
-        <span>· pending</span>
+        <span class="${isLive ? "mc-live" : ""}">· ${isLive ? "live" : "pending"}</span>
         <span class="mc-chevron">›</span>
       </div>
     </button>
@@ -184,3 +203,4 @@ renderSystems();
 renderPaths();
 renderStats();
 wireFilter();
+initRouter();
