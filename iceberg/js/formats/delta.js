@@ -62,6 +62,15 @@
         { id: 'engine-integrations', label: 'Engine Integrations', icon: 'link',    available: true },
       ],
     },
+    {
+      id: 'learn', label: 'Learn & Practice',
+      items: [
+        { id: 'interview',  label: 'Interview Mode', icon: 'message', available: true },
+        { id: 'quiz',       label: 'Quiz Mode',      icon: 'help',    available: true },
+        { id: 'study',      label: 'Study Deck',     icon: 'book',    available: true },
+        { id: 'cheatsheet', label: 'Cheat Sheets',   icon: 'file',    available: true },
+      ],
+    },
   ];
 
   // Delta Δ mark — red→amber gradient (distinct from Iceberg blue→purple).
@@ -93,7 +102,7 @@
     tagline: 'ShopKart Handbook',
     docsUrl: 'https://docs.delta.io/latest/index.html',
     docsLabel: 'Delta Lake Docs',
-    visible: false,      // hidden until Phase B6 (build complete)
+    visible: true,       // revealed in Phase B6 — switcher is now Iceberg ⇄ Delta
     comparable: true,
     home: 'home',
     logoSvg: LOGO,
