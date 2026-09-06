@@ -1,29 +1,14 @@
 // =============================================================================
 // AI LAB — concept reader (3-column docs layout)
 //   left rail  = all concepts in the track (persistent nav)
-//   center     = one continuous explanation, basic intuition → deep internals
-//   right rail = "on this page" outline
-// The read-depth presets only trim HOW FAR DOWN you read; they never swap in a
-// different explanation. Full (default) shows the whole thing top to bottom.
+//   center     = one continuous explanation, read top to bottom
+//   right rail = "on this page" outline with scroll-spy
+// No depth control — each concept simply shows its full explanation.
 // =============================================================================
 import { renderBlock } from "./blocks.js";
 
-const DEPTH_TAG = {
-  1: "Intuition", 2: "Intuition", 3: "Technical", 4: "Mathematics",
-  5: "Implementation", 6: "Production", 7: "Engineering", 8: "Architecture",
-  9: "Interview", 10: "Principal",
-};
-const PRESETS = [
-  { id: "essentials", label: "Essentials", cap: 3, hint: "intuition → technical" },
-  { id: "standard", label: "Standard", cap: 6, hint: "adds math, code, production" },
-  { id: "full", label: "Full", cap: 10, hint: "everything, incl. interview & principal" },
-];
-
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
-
-let presetId = localStorage.getItem("ailab:preset") || "full";
-function cap() { return (PRESETS.find((p) => p.id === presetId) || PRESETS[2]).cap; }
 
 export function renderConcept(concept, ctx) {
   const el = $("#reader-body");
@@ -55,13 +40,6 @@ export function renderConcept(concept, ctx) {
           <h1 class="reader-title">${concept.title}</h1>
           ${concept.subtitle ? `<p class="reader-sub">${concept.subtitle}</p>` : ""}
         </header>
-        <div class="readbar">
-          <span class="readbar-label">Read depth</span>
-          <div class="preset-group" id="presetGroup">
-            ${PRESETS.map((p) => `<button class="preset${p.id === presetId ? " on" : ""}" data-preset="${p.id}" title="${p.hint}">${p.label}</button>`).join("")}
-          </div>
-          <span class="readbar-hint" id="readbarHint"></span>
-        </div>
         <article class="blocks" id="blocks"></article>
         <nav class="reader-nav">
           ${prev ? `<a class="rn rn-prev" href="#/c/${prev.slug}"><span>‹ Previous</span><b>${prev.n} ${escapeHtml(prev.title)}</b></a>` : "<span></span>"}
@@ -77,16 +55,6 @@ export function renderConcept(concept, ctx) {
 
   paintBlocks(concept);
 
-  $("#presetGroup").addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-preset]");
-    if (!btn) return;
-    presetId = btn.dataset.preset;
-    localStorage.setItem("ailab:preset", presetId);
-    $$(".preset", $("#presetGroup")).forEach((b) => b.classList.toggle("on", b.dataset.preset === presetId));
-    paintBlocks(concept);
-  });
-
-  // keep the active left-rail item in view
   const active = $(".rail-item.on");
   if (active) active.scrollIntoView({ block: "nearest" });
 
@@ -96,39 +64,21 @@ export function renderConcept(concept, ctx) {
 
 function paintBlocks(concept) {
   const host = $("#blocks");
-  const visible = concept.blocks.filter((b) => (b.d || 1) <= cap());
-  const hint = $("#readbarHint");
-  if (hint) hint.textContent = presetId === "full"
-    ? "Full explanation — intuition through principal-level detail"
-    : `Showing ${visible.length} of ${concept.blocks.length} sections`;
-
-  host.innerHTML = visible
-    .map((b, i) => `<div class="blkwrap" id="blk-${i}" data-depth="${b.d || 1}">${renderBlock(b)}</div>`)
+  host.innerHTML = concept.blocks
+    .map((b, i) => `<div class="blkwrap" id="blk-${i}">${renderBlock(b)}</div>`)
     .join("");
 
-  visible.forEach((b, i) => {
-    if (!b.d) return;
-    const wrap = $("#blk-" + i, host);
-    const h = wrap && wrap.querySelector(".blk-h");
-    if (h) {
-      const tag = document.createElement("span");
-      tag.className = "depth-tag";
-      tag.textContent = DEPTH_TAG[b.d] || "";
-      h.appendChild(tag);
-    }
-  });
-
-  buildToc(visible);
+  buildToc(concept.blocks);
   postPass(host);
   wireExec(host);
-  wireScrollSpy(visible);
+  wireScrollSpy(concept.blocks);
 }
 
-function buildToc(visible) {
+function buildToc(blocks) {
   const nav = $("#tocNav");
   if (!nav) return;
   const items = [];
-  visible.forEach((b, i) => {
+  blocks.forEach((b, i) => {
     const label = b.h || (b.type === "hook" ? "Opening question" : null);
     if (label) items.push(`<a href="#blk-${i}" data-target="blk-${i}">${escapeHtml(stripTex(label))}</a>`);
   });
@@ -142,7 +92,7 @@ function buildToc(visible) {
   };
 }
 
-function wireScrollSpy(visible) {
+function wireScrollSpy(blocks) {
   const links = $$("#tocNav a");
   if (!links.length) return;
   const map = new Map(links.map((a) => [a.dataset.target, a]));
@@ -155,7 +105,7 @@ function wireScrollSpy(visible) {
       }
     });
   }, { rootMargin: "-100px 0px -70% 0px" });
-  visible.forEach((_, i) => {
+  blocks.forEach((_, i) => {
     const w = document.getElementById("blk-" + i);
     if (w && map.has("blk-" + i)) obs.observe(w);
   });
