@@ -1,185 +1,186 @@
 // =============================================================================
-// AI LAB — OUTLINE VIEWER (titles only)
-// -----------------------------------------------------------------------------
-// Renders the coverage manifest as a browsable outline. No content yet — this
-// is the "see every heading before we author anything" view. Every concept is
-// a stub marked "pending".
+// AI LAB — premium curriculum shell (titles only)
+// Renders the coverage manifest as a track-based journey: hero, path map,
+// six tracks of expandable module cards, cross-cutting systems, learning paths.
 // =============================================================================
+import { MODULES, SYSTEMS, PATHS, TRACKS, moduleById, countConcepts } from "./manifest.js";
 
-import { MODULES, SYSTEMS, PATHS, KINDS, countConcepts } from "./manifest.js";
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 
-const $ = (sel, el = document) => el.querySelector(sel);
-const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
-
-// ---- Build the concept list for a module (flat, with optional group labels) -
+// ---- helpers ----------------------------------------------------------------
 function moduleConcepts(m) {
-  const out = [];
-  if (m.concepts) m.concepts.forEach((c) => out.push({ title: c, group: null }));
-  if (m.groups) m.groups.forEach((g) => g.concepts.forEach((c) => out.push({ title: c, group: g.title })));
-  return out;
+  const groups = [];
+  if (m.groups) m.groups.forEach((g) => groups.push({ label: g.title, items: g.concepts }));
+  if (m.concepts) groups.push({ label: null, items: m.concepts });
+  return groups;
 }
 function moduleCount(m) {
-  return moduleConcepts(m).length;
+  return moduleConcepts(m).reduce((n, g) => n + g.items.length, 0);
 }
 
-// ---- Sidebar -----------------------------------------------------------------
-function renderSidebar() {
-  const nav = $("#nav");
+// progress ring at 0% (every concept pending) — the geometry is ready for later
+function ring() {
+  const r = 12, c = 2 * Math.PI * r;
+  return `<svg class="ring" width="30" height="30" viewBox="0 0 30 30">
+    <circle class="bg" cx="15" cy="15" r="${r}" fill="none" stroke-width="3"/>
+    <circle class="fg" cx="15" cy="15" r="${r}" fill="none" stroke-width="3"
+      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${c.toFixed(1)}"/>
+  </svg>`;
+}
+
+// ---- top nav + path map ------------------------------------------------------
+function renderNavAndMap() {
+  const nav = $("#topnav");
+  const map = $("#pathmap");
   nav.innerHTML = "";
-  for (const m of MODULES) {
-    const kind = KINDS[m.kind] || {};
+  map.innerHTML = "";
+  for (const t of TRACKS) {
     const a = document.createElement("a");
-    a.href = `#${m.id}`;
-    a.className = "nav-item" + (m.star ? " nav-star" : "");
-    a.dataset.id = m.id;
-    a.style.setProperty("--hue", kind.hue ?? 210);
-    a.innerHTML = `
-      <span class="nav-code">${m.code}</span>
-      <span class="nav-title">${m.title}${m.star ? " ⭐" : ""}</span>
-      <span class="nav-count">${moduleCount(m)}</span>`;
+    a.href = `#${t.id}`;
+    a.textContent = t.title;
     nav.appendChild(a);
+
+    const card = document.createElement("a");
+    card.href = `#${t.id}`;
+    card.className = "pmcard" + (t.crown ? " crown" : "");
+    card.style.setProperty("--hue", t.hue);
+    const count = t.modules.reduce((n, id) => n + moduleCount(moduleById(id)), 0);
+    card.innerHTML = `
+      <div class="pm-n">${t.n}</div>
+      <div class="pm-ic">${t.icon}</div>
+      <div class="pm-t">${t.title}</div>
+      <div class="pm-c">${t.modules.length} modules · ${count} concepts</div>`;
+    map.appendChild(card);
   }
 }
 
-// ---- Main outline ------------------------------------------------------------
-function conceptCard(title) {
-  const el = document.createElement("li");
-  el.className = "concept";
-  el.innerHTML = `<span class="concept-dot"></span><span class="concept-title">${title}</span><span class="concept-status">pending</span>`;
-  return el;
-}
+// ---- module card -------------------------------------------------------------
+function moduleCard(m, hue) {
+  const card = document.createElement("div");
+  card.className = "modcard";
+  card.style.setProperty("--hue", hue);
+  card.dataset.module = m.id;
 
-function renderModule(m) {
-  const kind = KINDS[m.kind] || {};
-  const section = document.createElement("section");
-  section.className = "module" + (m.star ? " module-star" : "");
-  section.id = m.id;
-  section.style.setProperty("--hue", kind.hue ?? 210);
+  const panelGroups = moduleConcepts(m)
+    .map((g) => {
+      const chips = g.items.map((c) => `<span class="chip">${c}</span>`).join("");
+      const label = g.label ? `<div class="mc-grouplabel">${g.label}</div>` : "";
+      return `${label}<div class="mc-concepts">${chips}</div>`;
+    })
+    .join("");
 
-  const header = document.createElement("header");
-  header.className = "module-head";
-  header.innerHTML = `
-    <div class="module-head-row">
-      <span class="module-code">${m.code}</span>
-      <h2 class="module-title">${m.title}</h2>
-      <span class="kind-chip">${kind.label ?? ""}</span>
-      <span class="module-count">${moduleCount(m)} concepts</span>
-    </div>
-    <p class="module-sub">${m.subtitle ?? ""}</p>`;
-  section.appendChild(header);
-
-  if (m.groups) {
-    for (const g of m.groups) {
-      const gh = document.createElement("h3");
-      gh.className = "group-title";
-      gh.textContent = g.title;
-      section.appendChild(gh);
-      const ul = document.createElement("ul");
-      ul.className = "concepts";
-      g.concepts.forEach((c) => ul.appendChild(conceptCard(c)));
-      section.appendChild(ul);
-    }
-  }
-  if (m.concepts) {
-    const ul = document.createElement("ul");
-    ul.className = "concepts";
-    m.concepts.forEach((c) => ul.appendChild(conceptCard(c)));
-    section.appendChild(ul);
-  }
-  return section;
-}
-
-function renderSystems() {
-  const section = document.createElement("section");
-  section.className = "module module-systems";
-  section.id = "systems";
-  section.innerHTML = `
-    <header class="module-head">
-      <div class="module-head-row">
-        <span class="module-code">§24–36</span>
-        <h2 class="module-title">Cross-cutting Systems</h2>
-        <span class="kind-chip">Platform-wide</span>
-        <span class="module-count">${SYSTEMS.length} engines</span>
+  card.innerHTML = `
+    <button class="modcard-btn" aria-expanded="false">
+      <div class="mc-top">
+        <span class="mc-code">${m.code}</span>
+        ${m.star ? '<span class="badge-crown" style="margin:0">★ crown jewel</span>' : ""}
+        <span class="mc-ring">${ring()}</span>
       </div>
-      <p class="module-sub">Modes &amp; engines that wrap every concept — not linear modules.</p>
-    </header>`;
-  const ul = document.createElement("ul");
-  ul.className = "concepts systems-list";
-  for (const s of SYSTEMS) {
-    const li = document.createElement("li");
-    li.className = "concept";
-    li.innerHTML = `<span class="concept-dot"></span><span class="concept-title">${s.code} · ${s.title}</span><span class="concept-note">${s.note}</span>`;
-    ul.appendChild(li);
+      <h3 class="mc-title">${m.title}</h3>
+      <p class="mc-sub">${m.subtitle || ""}</p>
+      <div class="mc-foot">
+        <span class="mc-count">${moduleCount(m)} concepts</span>
+        <span>· pending</span>
+        <span class="mc-chevron">›</span>
+      </div>
+    </button>
+    <div class="mc-panel">${panelGroups}</div>`;
+
+  const btn = $(".modcard-btn", card);
+  btn.addEventListener("click", () => {
+    const open = card.classList.toggle("open");
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  return card;
+}
+
+// ---- track section -----------------------------------------------------------
+function renderTracks() {
+  const root = $("#tracks");
+  root.innerHTML = "";
+  for (const t of TRACKS) {
+    const sec = document.createElement("section");
+    sec.className = "track" + (t.crown ? " crown" : "");
+    sec.id = t.id;
+    sec.style.setProperty("--hue", t.hue);
+    const count = t.modules.reduce((n, id) => n + moduleCount(moduleById(id)), 0);
+
+    sec.innerHTML = `
+      <div class="track-head">
+        <div class="track-num">${t.n}</div>
+        <div class="track-headtext">
+          ${t.crown ? '<div class="badge-crown">★ The star of the show</div>' : ""}
+          <h2>${t.title}</h2>
+          <p>${t.tagline}</p>
+        </div>
+        <div class="track-meta">
+          <div class="tm-n">${count}</div>
+          <div class="tm-l">concepts</div>
+        </div>
+      </div>`;
+
+    const grid = document.createElement("div");
+    grid.className = "modgrid";
+    t.modules.forEach((id) => grid.appendChild(moduleCard(moduleById(id), t.hue)));
+    sec.appendChild(grid);
+    root.appendChild(sec);
   }
-  section.appendChild(ul);
-
-  const ph = document.createElement("div");
-  ph.className = "paths-block";
-  ph.innerHTML = `<h3 class="group-title">§34 Learning Paths</h3>
-    <div class="paths">${PATHS.map((p) => `<span class="path-chip">${p}</span>`).join("")}</div>`;
-  section.appendChild(ph);
-  return section;
 }
 
-function renderMain() {
-  const main = $("#outline");
-  main.innerHTML = "";
-  MODULES.forEach((m) => main.appendChild(renderModule(m)));
-  main.appendChild(renderSystems());
+// ---- systems + paths ---------------------------------------------------------
+function renderSystems() {
+  const grid = $("#systems-grid");
+  grid.innerHTML = SYSTEMS.map(
+    (s) => `<div class="tile"><div class="t-code">${s.code}</div>
+      <div class="t-title">${s.title}</div><div class="t-note">${s.note}</div></div>`
+  ).join("");
+}
+function renderPaths() {
+  const icons = ["◉", "⚙", "◆", "⇢", "▤", "⚡", "★"];
+  $("#paths-grid").innerHTML = PATHS.map(
+    (p, i) => `<div class="pathcard"><span class="p-ic">${icons[i % icons.length]}</span>
+      <span class="p-t">${p}</span><span class="p-a">→</span></div>`
+  ).join("");
 }
 
-// ---- Coverage banner ---------------------------------------------------------
-function renderBanner() {
-  const total = countConcepts();
-  $("#stat-concepts").textContent = total;
-  $("#stat-modules").textContent = MODULES.length;
-  $("#stat-systems").textContent = SYSTEMS.length;
+// ---- stats -------------------------------------------------------------------
+function renderStats() {
+  $("#s-concepts").textContent = countConcepts();
+  $("#s-tracks").textContent = TRACKS.length;
+  $("#s-modules").textContent = MODULES.length;
 }
 
-// ---- Filter ------------------------------------------------------------------
+// ---- search / filter ---------------------------------------------------------
 function wireFilter() {
   const input = $("#filter");
   input.addEventListener("input", () => {
     const q = input.value.trim().toLowerCase();
-    let anyVisible;
-    $$(".module").forEach((sec) => {
-      let visibleInSec = 0;
-      $$(".concept", sec).forEach((c) => {
-        const t = c.querySelector(".concept-title").textContent.toLowerCase();
-        const show = !q || t.includes(q);
-        c.hidden = !show;
-        if (show) visibleInSec++;
+    document.body.classList.toggle("filtering", !!q);
+    $$(".track").forEach((sec) => {
+      let visInTrack = 0;
+      $$(".modcard", sec).forEach((card) => {
+        const m = moduleById(card.dataset.module);
+        const hay = (m.title + " " + (m.subtitle || "") + " " +
+          moduleConcepts(m).flatMap((g) => g.items).join(" ")).toLowerCase();
+        const hitConcept = q && moduleConcepts(m).flatMap((g) => g.items)
+          .some((c) => c.toLowerCase().includes(q));
+        const show = !q || hay.includes(q);
+        card.hidden = !show;
+        if (show) visInTrack++;
+        // auto-open cards that match on a concept so the hit is visible
+        if (q && hitConcept) card.classList.add("open");
+        else if (q) card.classList.remove("open");
       });
-      // hide empty group titles
-      $$(".group-title", sec).forEach((gt) => {
-        const ul = gt.nextElementSibling;
-        gt.hidden = ul && $$(".concept:not([hidden])", ul).length === 0;
-      });
-      sec.hidden = visibleInSec === 0;
+      sec.hidden = visInTrack === 0;
     });
   });
 }
 
-// ---- Scroll-spy for sidebar --------------------------------------------------
-function wireScrollSpy() {
-  const obs = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((e) => {
-        if (e.isIntersecting) {
-          $$(".nav-item").forEach((n) => n.classList.remove("active"));
-          const active = $(`.nav-item[data-id="${e.target.id}"]`);
-          if (active) active.classList.add("active");
-        }
-      });
-    },
-    { rootMargin: "-10% 0px -80% 0px" }
-  );
-  $$(".module").forEach((m) => obs.observe(m));
-}
-
-// ---- Init --------------------------------------------------------------------
-renderSidebar();
-renderMain();
-renderBanner();
+// ---- init --------------------------------------------------------------------
+renderNavAndMap();
+renderTracks();
+renderSystems();
+renderPaths();
+renderStats();
 wireFilter();
-wireScrollSpy();

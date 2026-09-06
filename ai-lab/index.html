@@ -3,48 +3,85 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Lab — Curriculum Outline</title>
+  <title>AI Lab — Interactive AI Engineering Laboratory</title>
+  <meta name="description" content="Learn AI engineering the way you'd want to be taught it — math to Transformers to production. An interactive laboratory, not a slideshow." />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-mark">AI</div>
-        <div class="brand-text">
-          <strong>AI Lab</strong>
-          <span>Curriculum outline</span>
-        </div>
-      </div>
-      <nav id="nav" class="nav"></nav>
-      <a href="#systems" class="nav-item nav-item-systems">
-        <span class="nav-code">§</span>
-        <span class="nav-title">Cross-cutting systems</span>
+  <div class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="#top">
+        <span class="brand-mark">AI</span>
+        <b>AI&nbsp;Lab</b><span>engineering laboratory</span>
       </a>
-    </aside>
-
-    <main class="content">
-      <header class="page-head">
-        <p class="eyebrow">Coverage contract — titles only, no content yet</p>
-        <h1>Interactive AI Engineering Laboratory</h1>
-        <p class="lede">
-          Every concept the platform must eventually teach, seeded up front so
-          nothing goes missing. Each item below is a <em>pending</em> stub —
-          content is authored later, starting with the Transformer golden slice.
-        </p>
-        <div class="stats">
-          <div class="stat"><span id="stat-concepts" class="stat-n">0</span><span class="stat-l">concepts</span></div>
-          <div class="stat"><span id="stat-modules" class="stat-n">0</span><span class="stat-l">modules</span></div>
-          <div class="stat"><span id="stat-systems" class="stat-n">0</span><span class="stat-l">systems</span></div>
-        </div>
-        <input id="filter" class="filter" type="search" placeholder="Filter concepts…  (e.g. attention, PCA, RAG)" />
-      </header>
-      <div id="outline" class="outline"></div>
-      <footer class="page-foot">
-        Structure from the master-prompt curriculum (Modules 0–23) + cross-cutting systems (§24–36).
-      </footer>
-    </main>
+      <nav class="topnav" id="topnav"></nav>
+      <div class="topbar-search">
+        <input id="filter" type="search" placeholder="Search 359 concepts…" autocomplete="off" />
+      </div>
+    </div>
   </div>
+
+  <a id="top"></a>
+  <header class="hero">
+    <div class="wrap">
+      <span class="eyebrow"><span class="dot"></span> Preview build · curriculum &amp; navigation shell</span>
+      <h1>Learn AI engineering the way it should be&nbsp;<span class="grad">taught.</span></h1>
+      <p class="hero-lede">
+        One interactive laboratory that takes you from the mathematics under a
+        single neuron all the way to a Transformer you can execute in your head —
+        and the production systems that run them. Built to be understood, not
+        memorized.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#t4">Start with the Transformer Lab ★</a>
+        <a class="btn btn-ghost" href="#t1">Begin from foundations</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hstat"><b id="s-concepts">0</b><span>concepts, fully mapped</span></div>
+        <div class="hstat"><b id="s-tracks">0</b><span>learning tracks</span></div>
+        <div class="hstat"><b id="s-modules">0</b><span>modules</span></div>
+        <div class="hstat"><b>10</b><span>depth levels each</span></div>
+      </div>
+    </div>
+  </header>
+
+  <section class="pathmap">
+    <div class="wrap">
+      <div class="pathmap-track" id="pathmap"></div>
+    </div>
+  </section>
+
+  <main class="wrap" id="tracks"></main>
+
+  <section class="sec" id="systems">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Wraps every concept</span>
+        <h2>Cross-cutting systems</h2>
+        <p>The modes and engines that make this a laboratory rather than a book — interview drills, request tracing, ablation, the global concept graph, spaced review.</p>
+      </div>
+      <div class="tilegrid" id="systems-grid"></div>
+    </div>
+  </section>
+
+  <section class="sec" id="paths">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Pick your route</span>
+        <h2>Learning paths</h2>
+        <p>Seven role-based routes through the same material — from a complete AI engineer track to a focused interview sprint.</p>
+      </div>
+      <div class="pathgrid" id="paths-grid"></div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="wrap">
+      <b>AI Lab</b> — preview build. Titles-only coverage map; lesson content is authored next, opening with the Transformer golden slice.
+      Structure from the master-prompt curriculum (Modules 0–23) &amp; cross-cutting systems (§24–36).
+    </div>
+  </footer>
+
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
