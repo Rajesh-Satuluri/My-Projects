@@ -230,19 +230,26 @@ body.sidebar-open #nav-toggle .ham i:nth-child(3) { top: 6px; transform: rotate(
   width: 300px;
 }
 
-/* Narrow / portrait (iPad 9th gen portrait, small laptops): stack the
-   step sidebar UNDER the canvas so the diagram gets full width. Only
-   targets animation layouts (an -outer that directly holds a -canvas),
-   and keeps the height:100%/overflow:hidden contract (no page scroll). */
-@media (max-width: 900px) {
-  #module-container [class$="-outer"]:has(> [class$="-canvas"]) {
-    flex-direction: column !important;
+/* Adaptive step-sidebar placement — decided by the ACTUAL canvas area's
+   shape, not the viewport (which ignores the nav width). Each animation
+   module wraps in a *-page; make that the query container and stack the
+   step sidebar UNDER the canvas whenever the area is portrait-ish, so
+   the diagram always gets whichever layout renders it larger. This is
+   device-agnostic: iPad portrait and cramped landscape tablets stack;
+   wide laptops/desktops stay side-by-side. Keeps the
+   height:100%/overflow:hidden contract (no page scroll). */
+#module-container [class*="-page"]:has([class$="-canvas"]) {
+  container-type: size;
+}
+@container (max-aspect-ratio: 13 / 10) {
+  [class$="-outer"]:has(> [class$="-canvas"]) {
+    flex-direction: column;
   }
-  #module-container [class$="-outer"]:has(> [class$="-canvas"]) > [class$="-sidebar"],
-  #module-container [class$="-outer"]:has(> [class$="-canvas"]) > [class$="-side"] {
-    width: auto !important;
-    max-height: 46% !important;
-    border-left: none !important;
-    border-top: 1px solid var(--border-default) !important;
+  [class$="-outer"]:has(> [class$="-canvas"]) > [class$="-sidebar"],
+  [class$="-outer"]:has(> [class$="-canvas"]) > [class$="-side"] {
+    width: auto;
+    max-height: 46%;
+    border-left: none;
+    border-top: 1px solid var(--border-default);
   }
 }
