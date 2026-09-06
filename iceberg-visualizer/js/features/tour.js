@@ -10,7 +10,7 @@
   function KEY() { return 'tv-' + (TV.currentFormat ? (TV.currentFormat() || 'iceberg') : 'iceberg') + '-tour-done'; }
 
   const STEPS = [
-    { sel: '#sidebar-nav', title: 'Browse every topic', body: '28 interactive topics — metadata, write &amp; read paths, query planning, time travel, and more.', place: 'right' },
+    { sel: '#sidebar-nav', title: 'Browse every topic', body: 'Interactive topics — architecture, write &amp; read paths, query planning, time travel, and more. Switch formats up top.', place: 'right' },
     { sel: '#nav-toggle,#sidebar-search', title: 'Jump anywhere fast', body: 'Press <kbd>⌘</kbd>/<kbd>Ctrl</kbd> <kbd>K</kbd> for the command palette, or search the sidebar.', place: 'right' },
     { sel: '#theme-toggle', title: 'Light or dark', body: 'Toggle the theme any time — your choice is remembered.', place: 'bottom' },
     { sel: '#anim-controls-bar', title: 'Play the animations', body: 'Step through each concept with Play / step controls, or use <kbd>Space</kbd> and arrow keys.', place: 'top' },
