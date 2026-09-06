@@ -613,21 +613,42 @@ upgrade to the polish design system (§6a), verified with before/after screensho
   `:focus-visible` rings, ARIA, focus trap/Esc/restore on every overlay. *Verify: green — closes Phase
   A with the full premium system on the shipped Iceberg app, zero placeholders.*
 
-### Phase B — Delta format (one iteration per nav group; inherits the whole design system for free)
+### Phase B — Delta format (partitioned; inherits the whole design system for free)
 
-- **IT-8 · Delta scaffold + Get Started.** `formats/delta.js` (brand red→amber, Δ logo, docsUrl, nav
-  groups), `delta-concepts.js`, ShopKart Delta resolutions; modules `home`, `why-delta`,
-  `architecture`. Switcher **automatically** becomes a live 2-way toggle. *Verify: both formats green.*
-- **IT-9 · Delta Log & Schema core.** `log-explorer`, `commit-explorer`, `version-explorer`,
-  `checkpoint`. *Verify.*
-- **IT-10 · Delta Write Operations.** `create-table`, `insert`, `update`, `delete`, `merge`,
-  `overwrite`. *Verify: `verify:anim`.*
-- **IT-11 · Delta Read & Query.** `read-path`, `write-path`, `query-planner`, `time-travel`. *Verify.*
-- **IT-12 · Delta Schema & Layout.** `schema-evolution`, `partitioning`, `liquid-clustering`. *Verify.*
-- **IT-13 · Delta Advanced.** `concurrency`, `deletion-vectors`, `optimize`, `vacuum`,
-  `change-data-feed`, `engine-integrations`. *Verify.*
-- **IT-14 · Delta Learn & banks.** Delta `question-bank`, `interview` (~24 Q&A), `quiz` (~22), `study`,
-  `cheatsheet`; wire Test-Yourself banks. *Verify: quiz-modal contract green in both formats.*
+Phase B is split into **6 partitions**, each = one Delta nav group fully built, verified green in both
+formats, committed, and deployed. Within a partition, build module-by-module running `check` +
+`verify:anim` after each so a regression is caught at the module that caused it.
+
+**No-placeholder rule for Phase B (important).** Delta is registered from B1 but kept
+`visible: false` (hidden from the switcher) while it is incomplete, so the **shipped UI never shows a
+partial Delta** (no half-empty nav, no "coming soon"). Each partition is still deployable (Iceberg is
+unaffected) and reviewed via local screenshots (temporarily enabling Delta in the screenshot run).
+Delta is flipped `visible: true` only in **B6**, when it is complete — that is the moment the switcher
+becomes a live Iceberg⇄Delta toggle in production.
+*(Alternative if you prefer to watch it grow live: "reveal-and-grow" — flip `visible:true` at B1 and
+grow Delta's `navGroups` group-by-group so only built screens ever appear. Also placeholder-free.
+Decide at B1.)*
+
+- **B1 · Foundation + Get Started.** `formats/delta.js` (brand red→amber, Δ logo, docsUrl,
+  `visible:false`), `js/data/delta-concepts.js`, ShopKart Delta resolutions, `TV.QuestionBank.delta = {}`;
+  **extend the verify harness to sweep every registered format** (so hidden Delta is verified too).
+  Modules: `home`, `why-delta`, `architecture` (animated), `log-explorer` (interactive log tree).
+  *Verify: both formats green; red→amber recoloring confirmed by screenshot.*
+- **B2 · Write Operations.** `create-table`, `insert`, `update`, `delete`, `merge`, `overwrite`
+  (all animated: log commits with add/remove actions; DV vs copy-on-write where relevant).
+  *Verify: `verify:anim` green for Delta write ops.*
+- **B3 · Read & Query.** `read-path` (star: log-replay from checkpoint + data skipping via file stats),
+  `write-path` (commit protocol + optimistic conflict), `query-planner`, `time-travel`
+  (`VERSION/TIMESTAMP AS OF`). *Verify.*
+- **B4 · Log & Schema.** `version-explorer`, `commit-explorer` (pretty-printed action JSON),
+  `checkpoint` (why checkpoints exist), `schema-evolution`, `partitioning` + generated columns,
+  `liquid-clustering`. *Verify.*
+- **B5 · Advanced Topics.** `concurrency` (OCC + isolation levels), `deletion-vectors`,
+  `optimize` (bin-pack + Z-ORDER), `vacuum`, `change-data-feed`, `engine-integrations`. *Verify.*
+- **B6 · Learn & Practice + reveal.** Delta `question-bank` (all screens), `interview` (~24 Q&A),
+  `quiz` (~22), `study`, `cheatsheet`; wire Test-Yourself banks. **Flip Delta `visible: true`** →
+  switcher becomes a live 2-way toggle. *Verify: full sweep green across both formats; quiz-modal
+  contract green; switcher toggles brand + nav + docs correctly.*
 
 ### Phase C — Compare mode (registry-driven, N-pane ready)
 
