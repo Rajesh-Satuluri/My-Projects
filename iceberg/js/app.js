@@ -1,83 +1,68 @@
 /* ============================================================
-   IcebergViz App — Bootstrap, Router, Navigation
-   Entry point: runs after all modules are loaded.
+   TableViz App — Bootstrap, Router, Navigation, Format Switcher
+   Entry point: runs after all formats + modules are loaded.
+
+   Multi-format aware:
+   - Formats live in TV.formats (see js/formats/*.js).
+   - Modules resolve via TV.getModule(activeFormat, id); legacy
+     Iceberg modules registered flat are absorbed into the
+     'iceberg' bucket at boot.
+   - Hash router understands #<format>/<screen>/<step>, with
+     back-compat for a bare #<screen> under the active format.
+   - Persistence is namespaced per format (tv-<fmt>-…); global
+     prefs (theme, sidebar) are tv-…; one-time migration from the
+     old iv-… keys runs at boot.
    ============================================================ */
 
 (function () {
   'use strict';
 
-  const IV = window.IcebergViz;
+  const TV = window.TableViz;
+  const FORMAT_IDS = () => Object.keys(TV.formats);
+  const DEFAULT_FORMAT = 'iceberg';
 
-  /* ── Navigation registry ─────────────────────────────────── */
-  const NAV_GROUPS = [
-    {
-      id: 'start',
-      label: 'Get Started',
-      items: [
-        { id: 'home',              label: 'Home',               icon: 'home',     available: true },
-        { id: 'why-iceberg',       label: 'Why Iceberg?',       icon: 'shield',   available: true },
-        { id: 'architecture',      label: 'Architecture',       icon: 'layers',   available: true },
-        { id: 'metadata-explorer', label: 'Metadata Explorer',  icon: 'folder',   available: true },
-      ],
-    },
-    {
-      id: 'write-ops',
-      label: 'Write Operations',
-      items: [
-        { id: 'create-table',  label: 'CREATE TABLE',    icon: 'table-plus',  available: true },
-        { id: 'insert',        label: 'INSERT',           icon: 'arrow-down',  available: true },
-        { id: 'update',        label: 'UPDATE',           icon: 'pencil',      available: true },
-        { id: 'delete',        label: 'DELETE',           icon: 'trash',       available: true },
-        { id: 'merge',         label: 'MERGE INTO',       icon: 'merge',       available: true },
-        { id: 'overwrite',     label: 'INSERT OVERWRITE', icon: 'refresh',     available: true },
-        { id: 'append',        label: 'APPEND',           icon: 'plus',        available: true },
-      ],
-    },
-    {
-      id: 'read-ops',
-      label: 'Read & Query',
-      items: [
-        { id: 'read-path',     label: 'Read Path',     icon: 'search',   available: true },
-        { id: 'write-path',    label: 'Write Path',    icon: 'edit',     available: true },
-        { id: 'query-planner', label: 'Query Planner', icon: 'cpu',      available: true },
-        { id: 'time-travel',   label: 'Time Travel',   icon: 'clock',    available: true },
-      ],
-    },
-    {
-      id: 'metadata',
-      label: 'Metadata & Schema',
-      items: [
-        { id: 'snapshot-explorer',   label: 'Snapshot Explorer',   icon: 'camera',     available: true },
-        { id: 'manifest-explorer',   label: 'Manifest Explorer',   icon: 'list',       available: true },
-        { id: 'schema-evolution',    label: 'Schema Evolution',    icon: 'columns',    available: true },
-        { id: 'hidden-partitioning', label: 'Hidden Partitioning', icon: 'filter',     available: true },
-        { id: 'partition-evolution', label: 'Partition Evolution', icon: 'git-branch', available: true },
-        { id: 'catalog-explorer',    label: 'Catalog Explorer',    icon: 'book',       available: true },
-      ],
-    },
-    {
-      id: 'advanced',
-      label: 'Advanced Topics',
-      items: [
-        { id: 'concurrency',         label: 'Concurrency',          icon: 'users',    available: true },
-        { id: 'maintenance',         label: 'Maintenance Ops',      icon: 'tool',     available: true },
-        { id: 'performance',         label: 'Performance Sim',      icon: 'zap',      available: true },
-        { id: 'engine-integrations', label: 'Engine Integrations',  icon: 'link',     available: true },
-      ],
-    },
-    {
-      id: 'learn',
-      label: 'Learn & Practice',
-      items: [
-        { id: 'interview',  label: 'Interview Mode', icon: 'message-square', available: true },
-        { id: 'quiz',       label: 'Quiz Mode',      icon: 'check-square',   available: true },
-        { id: 'study',      label: 'Study Deck',     icon: 'book',           available: true },
-        { id: 'cheatsheet', label: 'Cheat Sheets',   icon: 'file-text',      available: true },
-      ],
-    },
-  ];
+  /* ── One-time migration: iv-… → tv-… ─────────────────────── */
+  function _migrateLegacyKeys() {
+    if (TV.ls.get('tv-migrated') === '1') return;
+    const copy = (from, to) => {
+      const v = TV.ls.get(from);
+      if (v != null && TV.ls.get(to) == null) TV.ls.set(to, v);
+    };
+    copy('iv-theme', 'tv-theme');
+    copy('iv-sidebar-collapsed', 'tv-sidebar-collapsed');
+    copy('iv-last-screen', 'tv-iceberg-last-screen');
+    copy('iv-nav-collapsed', 'tv-iceberg-nav-collapsed');
+    copy('iv-visited', 'tv-iceberg-visited');
+    copy('iv-progress-celebrated', 'tv-iceberg-progress-celebrated');
+    copy('iv-tour-done', 'tv-iceberg-tour-done');
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.indexOf('iv-quiz-') === 0) copy(k, 'tv-iceberg-quiz-' + k.slice('iv-quiz-'.length));
+      }
+    } catch (e) {}
+    TV.ls.set('tv-migrated', '1');
+  }
 
-  /* ── Icon set (inline SVG path data) ────────────────────── */
+  /* ── Absorb legacy flat-registered modules into 'iceberg' ─── */
+  function _absorbLegacyModules() {
+    const bucket = (TV.formatModules.iceberg = TV.formatModules.iceberg || {});
+    Object.keys(TV.modules || {}).forEach(id => {
+      const mod = TV.modules[id];
+      if (mod && typeof mod === 'object' && typeof mod.render === 'function' && !bucket[id]) {
+        mod.format = mod.format || 'iceberg';
+        bucket[id] = mod;
+      }
+    });
+  }
+
+  /* ── Active-format helpers ────────────────────────────────── */
+  function fmt() { return TV.activeFormat; }
+  function fmtDesc(id) { return TV.formats[id || TV.activeFormat] || {}; }
+  function navGroups(id) { return (fmtDesc(id).navGroups) || []; }
+  function homeScreen(id) { return fmtDesc(id).home || 'home'; }
+
+  /* ── Icon set (inline SVG path data) — shared across formats ─ */
   function _navIcon(name) {
     const p = {
       home:          'M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z M9 22V12h6v10',
@@ -113,20 +98,22 @@
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="${d}"/></svg>`;
   }
 
-  /* ── Chevron SVG ─────────────────────────────────────────── */
   function _chevronSvg() {
     return `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" width="10" height="10" aria-hidden="true"><path d="M3 4l3 3 3-3"/></svg>`;
   }
 
-  /* ── Collapsed-group persistence ─────────────────────────── */
-  const NAV_COLLAPSE_KEY = 'iv-nav-collapsed';
+  /* ── localStorage-safe helpers ───────────────────────────── */
+  const _lsGet = TV.ls.get, _lsSet = TV.ls.set;
+
+  /* ── Collapsed-group persistence (per format) ────────────── */
+  function _collapseKey() { return 'tv-' + fmt() + '-nav-collapsed'; }
   function _getCollapsedGroups() {
-    try { return new Set(JSON.parse(localStorage.getItem(NAV_COLLAPSE_KEY) || '[]')); }
+    try { return new Set(JSON.parse(_lsGet(_collapseKey()) || '[]')); }
     catch (e) { return new Set(); }
   }
   function _saveCollapsedGroups() {
     const ids = [...document.querySelectorAll('.nav-group.collapsed')].map(s => s.dataset.group);
-    _lsSet(NAV_COLLAPSE_KEY, JSON.stringify(ids));
+    _lsSet(_collapseKey(), JSON.stringify(ids));
   }
   function _updateCollapseAllBtn() {
     const btn = document.getElementById('nav-collapse-all');
@@ -137,15 +124,75 @@
     btn.textContent = anyOpen ? 'Collapse all' : 'Expand all';
   }
 
-  /* ── Build sidebar navigation ────────────────────────────── */
+  /* ── Format switcher (registry-driven; single-format collapse) ── */
+  function _buildFormatSwitcher() {
+    const host = document.getElementById('format-switcher');
+    if (!host) return;
+    const formats = FORMAT_IDS().map(id => TV.formats[id]).filter(f => f && f.visible !== false && f.id !== 'compare');
+    const compare = TV.formats.compare;
+    host.innerHTML = '';
+
+    // Single format → static brand label (never an orphan control).
+    if (formats.length < 2) {
+      host.classList.add('single');
+      host.classList.remove('multi');
+      const f = formats[0] || fmtDesc();
+      host.innerHTML = `<span class="fmt-static">${f.label || 'Table Formats'}</span>`;
+      return;
+    }
+
+    host.classList.add('multi');
+    host.classList.remove('single');
+    const track = document.createElement('div');
+    track.className = 'fmt-track';
+    const mk = (f, isCompare) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'fmt-seg' + (f.id === fmt() ? ' active' : '') + (isCompare ? ' fmt-seg--compare' : '');
+      b.dataset.format = f.id;
+      b.textContent = isCompare ? '⇄ ' + (f.short || f.label) : (f.short || f.label);
+      b.setAttribute('aria-pressed', String(f.id === fmt()));
+      b.addEventListener('click', () => switchFormat(f.id));
+      return b;
+    };
+    formats.forEach(f => track.appendChild(mk(f, false)));
+    if (compare && compare.visible !== false) track.appendChild(mk(compare, true));
+    host.appendChild(track);
+  }
+
+  function _syncFormatSwitcher() {
+    document.querySelectorAll('#format-switcher .fmt-seg').forEach(b => {
+      const on = b.dataset.format === fmt();
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
+  }
+
+  /* ── Apply a format's brand (attribute + sidebar + docs) ──── */
+  function _applyFormatBrand() {
+    const d = fmtDesc();
+    document.documentElement.dataset.format = fmt();
+    const logo = document.getElementById('sidebar-logo');
+    if (logo && d.logoSvg) logo.innerHTML = d.logoSvg;
+    const name = document.getElementById('sidebar-name');
+    if (name) name.textContent = d.short ? d.short + 'Viz' : 'TableViz';
+    const tag = document.getElementById('sidebar-tagline');
+    if (tag) tag.textContent = d.tagline || '';
+    const docs = document.getElementById('docs-link');
+    if (docs && d.docsUrl) {
+      docs.href = d.docsUrl;
+      docs.title = d.docsLabel || 'Documentation';
+      docs.setAttribute('data-tooltip', 'Open ' + (d.docsLabel || 'documentation'));
+    }
+  }
+
+  /* ── Build sidebar navigation (active format) ────────────── */
   function _buildNav() {
     const nav = document.getElementById('sidebar-nav');
     if (!nav) return;
     nav.innerHTML = '';
-
     const collapsed = _getCollapsedGroups();
 
-    // Collapse-all / Expand-all toolbar
     const tools = document.createElement('div');
     tools.className = 'nav-tools';
     tools.innerHTML = `<button id="nav-collapse-all" class="nav-tools-btn" type="button"></button>`;
@@ -161,12 +208,11 @@
     });
     nav.appendChild(tools);
 
-    NAV_GROUPS.forEach(group => {
+    navGroups().forEach(group => {
       const section = document.createElement('div');
       section.className = 'nav-group' + (collapsed.has(group.id) ? ' collapsed' : '');
       section.dataset.group = group.id;
 
-      // Group header (a real button for a11y)
       const groupHeader = document.createElement('button');
       groupHeader.type = 'button';
       groupHeader.className = 'nav-group-header';
@@ -183,7 +229,6 @@
       });
       section.appendChild(groupHeader);
 
-      // Animatable container: grid-rows 1fr↔0fr, items inside an overflow-hidden inner
       const itemsContainer = document.createElement('div');
       itemsContainer.className = 'nav-group-items';
       const inner = document.createElement('div');
@@ -191,7 +236,7 @@
 
       group.items.forEach(item => {
         const a = document.createElement('a');
-        a.href = item.available ? '#' + item.id : 'javascript:void(0)';
+        a.href = item.available ? '#' + fmt() + '/' + item.id : 'javascript:void(0)';
         a.className = 'nav-item' + (item.available ? '' : ' coming-soon');
         a.dataset.navId = item.id;
         a.innerHTML = `
@@ -200,10 +245,7 @@
           ${!item.available ? '<span class="nav-badge">soon</span>' : ''}
         `;
         if (!item.available) {
-          a.addEventListener('click', (e) => {
-            e.preventDefault();
-            _showComingSoon(item.label);
-          });
+          a.addEventListener('click', (e) => { e.preventDefault(); _showComingSoon(item.label); });
         }
         inner.appendChild(a);
       });
@@ -227,18 +269,13 @@
   function _setBreadcrumb(id) {
     const bc = document.getElementById('breadcrumb');
     if (!bc) return;
-    let groupLabel = '';
-    let itemLabel = '';
-    NAV_GROUPS.forEach(g => {
-      g.items.forEach(item => {
-        if (item.id === id) {
-          groupLabel = g.label;
-          itemLabel = item.label;
-        }
-      });
-    });
+    let groupLabel = '', itemLabel = '';
+    navGroups().forEach(g => g.items.forEach(item => {
+      if (item.id === id) { groupLabel = g.label; itemLabel = item.label; }
+    }));
+    const root = (fmtDesc().short ? fmtDesc().short + 'Viz' : 'TableViz');
     bc.innerHTML = `
-      <span class="bc-root">IcebergViz</span>
+      <span class="bc-root">${root}</span>
       ${groupLabel ? `<span class="bc-sep">›</span><span class="bc-group">${groupLabel}</span>` : ''}
       ${itemLabel ? `<span class="bc-sep">›</span><span class="bc-current">${itemLabel}</span>` : ''}
     `;
@@ -253,124 +290,142 @@
     toast.innerHTML = `<strong>${label}</strong> is coming in a future iteration!`;
     document.body.appendChild(toast);
     requestAnimationFrame(() => toast.classList.add('visible'));
-    setTimeout(() => {
-      toast.classList.remove('visible');
-      setTimeout(() => toast.remove(), 300);
-    }, 2500);
+    setTimeout(() => { toast.classList.remove('visible'); setTimeout(() => toast.remove(), 300); }, 2500);
+  }
+
+  /* ── Route/navigation motion: top progress bar ───────────── */
+  let _npTimer = null;
+  function _navProgress() {
+    const b = document.getElementById('nav-progress');
+    if (!b) return;
+    b.classList.remove('done'); b.classList.add('run');
+    b.style.width = '0%'; void b.offsetWidth; b.style.width = '82%';
+    clearTimeout(_npTimer);
+    _npTimer = setTimeout(() => {
+      b.style.width = '100%'; b.classList.add('done');
+      setTimeout(() => { b.classList.remove('run', 'done'); b.style.width = '0%'; }, 240);
+    }, 170);
+  }
+  function _riseIn() {
+    const m = document.getElementById('module-container');
+    if (!m) return;
+    m.classList.remove('main-enter'); void m.offsetWidth; m.classList.add('main-enter');
   }
 
   /* ── Current module tracking ─────────────────────────────── */
   let _currentModuleId = null;
   let _currentModuleInstance = null;
 
-  /* ── localStorage-safe helpers ───────────────────────────── */
-  function _lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-  function _lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
-
-  /* ── Hash parsing: #screen or #screen/step ───────────────── */
+  /* ── Hash parsing: #[format/]screen[/step] ───────────────── */
   function _parseHash() {
     const raw = location.hash.replace(/^#/, '').trim();
-    if (!raw) return { id: '', step: null };
-    const [id, stepStr] = raw.split('/');
+    if (!raw) return { format: null, id: '', step: null };
+    const parts = raw.split('/');
+    let format = null, id = '', stepStr = null;
+    if (TV.formats[parts[0]]) { format = parts[0]; id = parts[1] || ''; stepStr = parts[2]; }
+    else { id = parts[0]; stepStr = parts[1]; }
     const step = stepStr != null ? parseInt(stepStr, 10) : null;
-    return { id, step: Number.isNaN(step) ? null : step };
+    return { format, id, step: Number.isNaN(step) ? null : step };
   }
 
-  /* ── Seek the active animation engine (deep-link support) ── */
   function _seek(step) {
     if (step == null || step < 0) return;
-    const eng = IV.AnimationControls && IV.AnimationControls._engine;
+    const eng = TV.AnimationControls && TV.AnimationControls._engine;
     if (eng && step < eng.totalSteps) eng.goto(step);
   }
 
   /* ── Mirror the current animation step into the URL ───────── */
-  IV._syncStepToUrl = function (i) {
+  TV._syncStepToUrl = function (i) {
     if (!_currentModuleId) return;
-    const base = '#' + _currentModuleId;
+    const base = '#' + fmt() + '/' + _currentModuleId;
     const next = i >= 0 ? base + '/' + i : base;
-    // replaceState does not fire hashchange → no navigate loop.
     if (location.hash !== next) history.replaceState(null, '', next);
   };
 
-  /* ── Navigate to a module ────────────────────────────────── */
+  /* ── Switch active format ────────────────────────────────── */
+  function switchFormat(nextFmt, id) {
+    if (!TV.formats[nextFmt]) return;
+    if (nextFmt === fmt() && !id) return;
+    TV.activeFormat = nextFmt;
+    _lsSet('tv-format', nextFmt);
+    _applyFormatBrand();
+    _buildNav();
+    _syncFormatSwitcher();
+    document.dispatchEvent(new CustomEvent('app:format', { detail: { format: nextFmt } }));
+    // Keep the same screen if it exists in the target format, else its home / resume.
+    let target = id;
+    if (!target) {
+      const last = _lsGet('tv-' + nextFmt + '-last-screen');
+      target = (last && TV.getModule(nextFmt, last)) ? last : homeScreen(nextFmt);
+    }
+    _currentModuleId = null; // force a fresh render
+    navigate(target);
+  }
+
+  /* ── Navigate to a module (within active format) ─────────── */
   function navigate(id, step) {
-    id = id || 'home';
-    // Same screen, just a different deep-linked step: seek, don't re-render.
+    id = id || homeScreen();
     if (id === _currentModuleId) { _seek(step); return; }
 
-    // Destroy previous module
     if (_currentModuleInstance && typeof _currentModuleInstance.destroy === 'function') {
-      try { _currentModuleInstance.destroy(); } catch(e) { console.warn('Module destroy error:', e); }
+      try { _currentModuleInstance.destroy(); } catch (e) { console.warn('Module destroy error:', e); }
     }
-    IV.AnimationControls.hide();
+    TV.AnimationControls.hide();
+    _navProgress();
 
     const container = document.getElementById('module-container');
     if (!container) return;
 
-    const mod = IV.modules[id];
+    const mod = TV.getModule(fmt(), id);
     if (!mod) {
       container.innerHTML = `
         <div class="placeholder-module">
           <div class="placeholder-icon">🧊</div>
           <h2>${id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</h2>
           <p>This module is coming in a future iteration.</p>
-          <button class="btn-primary" onclick="location.hash='home'">← Back to Home</button>
-        </div>
-      `;
-      _currentModuleId = id;
-      _currentModuleInstance = null;
-      _setActiveNav(id);
-      _setBreadcrumb(id);
-      _lsSet('iv-last-screen', id);
-      document.dispatchEvent(new CustomEvent('app:navigate', { detail: { id } }));
+          <button class="btn-primary" onclick="location.hash='${fmt()}/${homeScreen()}'">← Back to Home</button>
+        </div>`;
+      _currentModuleId = id; _currentModuleInstance = null;
+      _setActiveNav(id); _setBreadcrumb(id); _riseIn();
+      _lsSet('tv-' + fmt() + '-last-screen', id);
+      document.dispatchEvent(new CustomEvent('app:navigate', { detail: { id, format: fmt() } }));
       return;
     }
 
     container.innerHTML = '';
-    try {
-      mod.render(container);
-    } catch(err) {
+    try { mod.render(container); }
+    catch (err) {
       console.error('Module render error [' + id + ']:', err);
       container.innerHTML = `
         <div class="error-module">
           <h3>Error rendering module: ${id}</h3>
           <pre>${err.message}\n\n${err.stack || ''}</pre>
-        </div>
-      `;
+        </div>`;
     }
 
-    _currentModuleId = id;
-    _currentModuleInstance = mod;
-    _setActiveNav(id);
-    _setBreadcrumb(id);
+    _currentModuleId = id; _currentModuleInstance = mod;
+    _setActiveNav(id); _setBreadcrumb(id); _riseIn();
+    container.scrollTop = 0; window.scrollTo(0, 0);
 
-    container.scrollTop = 0;
-    window.scrollTo(0, 0);
+    const h = _parseHash();
+    if (h.id !== id || h.format !== fmt()) history.pushState(null, '', '#' + fmt() + '/' + id);
 
-    if (_parseHash().id !== id) {
-      history.pushState(null, '', '#' + id);
-    }
+    _lsSet('tv-' + fmt() + '-last-screen', id);
+    document.dispatchEvent(new CustomEvent('app:navigate', { detail: { id, format: fmt() } }));
 
-    // Resume + decoupled feature bus (progress, pager, etc. listen here).
-    _lsSet('iv-last-screen', id);
-    document.dispatchEvent(new CustomEvent('app:navigate', { detail: { id } }));
-
-    // Deep-linked step (#screen/step): seek after the module has rendered
-    // and registered its engine. Retry once next frame if not ready yet.
-    if (step != null) {
-      _seek(step);
-      requestAnimationFrame(() => _seek(step));
-    }
+    if (step != null) { _seek(step); requestAnimationFrame(() => _seek(step)); }
   }
 
   /* ── Hash router ─────────────────────────────────────────── */
   function _routeFromHash() {
-    const { id, step } = _parseHash();
-    if (!id) {
-      // First load with no hash: resume last screen, else home.
-      navigate(_lsGet('iv-last-screen') || 'home');
-      return;
+    const { format, id, step } = _parseHash();
+    if (format && format !== fmt()) {
+      TV.activeFormat = format;
+      _lsSet('tv-format', format);
+      _applyFormatBrand(); _buildNav(); _syncFormatSwitcher();
+      document.dispatchEvent(new CustomEvent('app:format', { detail: { format } }));
     }
+    if (!id) { navigate(_lsGet('tv-' + fmt() + '-last-screen') || homeScreen()); return; }
     navigate(id, step);
   }
 
@@ -385,13 +440,11 @@
         a.style.display = !q || label.includes(q) ? '' : 'none';
       });
       if (q) {
-        // Auto-expand while searching so matches are never hidden (temporary).
         document.querySelectorAll('.nav-group').forEach(g => {
           g.classList.remove('collapsed');
           g.querySelector('.nav-group-header')?.setAttribute('aria-expanded', 'true');
         });
       } else {
-        // Restore the persisted collapse state when the query is cleared.
         const saved = _getCollapsedGroups();
         document.querySelectorAll('.nav-group').forEach(g => {
           const c = saved.has(g.dataset.group);
@@ -410,80 +463,60 @@
     if (!toggleBtn || !sidebar) return;
     toggleBtn.addEventListener('click', () => {
       sidebar.classList.toggle('collapsed');
-      localStorage.setItem('iv-sidebar-collapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
+      document.body.classList.toggle('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+      _lsSet('tv-sidebar-collapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
     });
-    if (localStorage.getItem('iv-sidebar-collapsed') === '1') {
+    if (_lsGet('tv-sidebar-collapsed') === '1') {
       sidebar.classList.add('collapsed');
+      document.body.classList.add('sidebar-collapsed');
     }
   }
 
   /* ── Off-canvas nav drawer (tablet / touch) ──────────────── */
   const _drawerMQ = window.matchMedia('(max-width: 1024px)');
-
   function _openDrawer() {
     const sidebar = document.getElementById('sidebar');
-    const backdrop = document.getElementById('nav-backdrop');
-    const toggle = document.getElementById('nav-toggle');
     if (!sidebar) return;
     sidebar.classList.add('drawer-open');
-    backdrop?.classList.add('visible');
-    toggle?.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('sidebar-open');
+    document.getElementById('nav-backdrop')?.classList.add('visible');
+    document.getElementById('nav-toggle')?.setAttribute('aria-expanded', 'true');
   }
-
   function _closeDrawer() {
     const sidebar = document.getElementById('sidebar');
-    const backdrop = document.getElementById('nav-backdrop');
-    const toggle = document.getElementById('nav-toggle');
     if (!sidebar) return;
     sidebar.classList.remove('drawer-open');
-    backdrop?.classList.remove('visible');
-    toggle?.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('sidebar-open');
+    document.getElementById('nav-backdrop')?.classList.remove('visible');
+    document.getElementById('nav-toggle')?.setAttribute('aria-expanded', 'false');
   }
-
-  // Keep desktop "collapsed" rail and drawer mode from colliding:
-  // in drawer mode the sidebar is always full-width; leaving drawer
-  // mode restores the saved collapse preference.
   function _syncDrawerMode() {
     const sidebar = document.getElementById('sidebar');
     if (!sidebar) return;
-    if (_drawerMQ.matches) {
-      sidebar.classList.remove('collapsed');
-    } else {
+    if (_drawerMQ.matches) { sidebar.classList.remove('collapsed'); document.body.classList.remove('sidebar-collapsed'); }
+    else {
       _closeDrawer();
-      if (localStorage.getItem('iv-sidebar-collapsed') === '1') {
-        sidebar.classList.add('collapsed');
-      }
+      if (_lsGet('tv-sidebar-collapsed') === '1') { sidebar.classList.add('collapsed'); document.body.classList.add('sidebar-collapsed'); }
     }
   }
-
   function _initDrawer() {
     const toggle = document.getElementById('nav-toggle');
-    const backdrop = document.getElementById('nav-backdrop');
     const sidebar = document.getElementById('sidebar');
-
     toggle?.addEventListener('click', () => {
-      if (sidebar?.classList.contains('drawer-open')) _closeDrawer();
-      else _openDrawer();
+      if (sidebar?.classList.contains('drawer-open')) _closeDrawer(); else _openDrawer();
     });
-    backdrop?.addEventListener('click', _closeDrawer);
-
-    // Close after choosing a destination while in drawer mode.
+    document.getElementById('nav-backdrop')?.addEventListener('click', _closeDrawer);
     document.getElementById('sidebar-nav')?.addEventListener('click', (e) => {
       if (e.target.closest('a.nav-item') && _drawerMQ.matches) _closeDrawer();
     });
-
-    // Esc closes the drawer.
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && sidebar?.classList.contains('drawer-open')) _closeDrawer();
     });
-
-    // React to width changes (rotation, window resize).
     const onChange = () => _syncDrawerMode();
     if (_drawerMQ.addEventListener) _drawerMQ.addEventListener('change', onChange);
-    else _drawerMQ.addListener(onChange); // older Safari
+    else _drawerMQ.addListener(onChange);
     _syncDrawerMode();
-
-    IV._closeDrawer = _closeDrawer;
+    TV._closeDrawer = _closeDrawer;
   }
 
   /* ── Theme toggle ────────────────────────────────────────── */
@@ -494,9 +527,9 @@
       const root = document.documentElement;
       const next = root.dataset.theme === 'light' ? 'dark' : 'light';
       root.dataset.theme = next;
-      localStorage.setItem('iv-theme', next);
+      _lsSet('tv-theme', next);
     });
-    const saved = localStorage.getItem('iv-theme');
+    const saved = _lsGet('tv-theme');
     if (saved) document.documentElement.dataset.theme = saved;
   }
 
@@ -507,26 +540,33 @@
     const close = () => modal.classList.remove('visible');
     modal.querySelector('.modal-close')?.addEventListener('click', close);
     modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
-    IV._showShortcutsModal = () => modal.classList.add('visible');
+    TV._showShortcutsModal = () => modal.classList.add('visible');
   }
 
   /* ── Wire [data-nav] click delegation ───────────────────── */
   function _wireNavCards() {
     document.addEventListener('click', (e) => {
       const card = e.target.closest('[data-nav]');
-      if (card) {
-        const target = card.dataset.nav;
-        if (target) { e.preventDefault(); navigate(target); }
-      }
+      if (card) { const target = card.dataset.nav; if (target) { e.preventDefault(); navigate(target); } }
     });
   }
 
   /* ── Bootstrap ───────────────────────────────────────────── */
   function _boot() {
-    IV.Tooltip.init();
-    IV.AnimationControls.init();
-    IV.Keyboard.init(navigate);
+    _migrateLegacyKeys();
+    _absorbLegacyModules();
 
+    // Resolve active format: saved → default, must exist in registry.
+    let saved = _lsGet('tv-format');
+    if (!saved || !TV.formats[saved]) saved = TV.formats[DEFAULT_FORMAT] ? DEFAULT_FORMAT : FORMAT_IDS()[0];
+    TV.activeFormat = saved;
+
+    TV.Tooltip.init();
+    TV.AnimationControls.init();
+    TV.Keyboard.init(navigate);
+
+    _applyFormatBrand();
+    _buildFormatSwitcher();
     _buildNav();
     _initSidebarSearch();
     _initSidebarToggle();
@@ -539,18 +579,14 @@
     _routeFromHash();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', _boot);
-  } else {
-    _boot();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _boot);
+  else _boot();
 
-  window.IcebergViz.navigate = navigate;
-
-  /* ── Nav registry accessors (used by palette, pager, progress) ── */
-  IV.getScreens = () => NAV_GROUPS.flatMap(g =>
-    g.items.filter(it => it.available !== false)
-           .map(it => ({ id: it.id, label: it.label, icon: it.icon, group: g.label })));
-  IV.getNavGroups = () => NAV_GROUPS;
-  IV.currentScreenId = () => _currentModuleId;
+  /* ── Public API ──────────────────────────────────────────── */
+  TV.navigate = navigate;
+  TV.switchFormat = switchFormat;
+  TV.getScreens = (id) => navGroups(id).flatMap(g =>
+    g.items.filter(it => it.available !== false).map(it => ({ id: it.id, label: it.label, icon: it.icon, group: g.label })));
+  TV.getNavGroups = (id) => navGroups(id);
+  TV.currentScreenId = () => _currentModuleId;
 })();

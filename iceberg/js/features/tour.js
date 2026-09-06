@@ -6,7 +6,8 @@
 (function () {
   'use strict';
   const IV = (window.IcebergViz = window.IcebergViz || {});
-  const KEY = 'iv-tour-done';
+  const TV = window.TableViz || IV;
+  function KEY() { return 'tv-' + (TV.currentFormat ? (TV.currentFormat() || 'iceberg') : 'iceberg') + '-tour-done'; }
 
   const STEPS = [
     { sel: '#sidebar-nav', title: 'Browse every topic', body: '28 interactive topics — metadata, write &amp; read paths, query planning, time travel, and more.', place: 'right' },
@@ -17,8 +18,8 @@
 
   let i = 0, overlay, spot, pop, done = false;
 
-  function seen() { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return true; } }
-  function markSeen() { try { localStorage.setItem(KEY, '1'); } catch (e) {} }
+  function seen() { try { return localStorage.getItem(KEY()) === '1'; } catch (e) { return true; } }
+  function markSeen() { try { localStorage.setItem(KEY(), '1'); } catch (e) {} }
 
   function target(step) {
     for (const s of step.sel.split(',')) {

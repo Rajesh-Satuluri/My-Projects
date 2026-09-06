@@ -15,7 +15,15 @@
   let modal, panel, titleEl, bestEl, bodyEl, scoreEl, footBtn, lastFocus;
   let currentId = null;
 
-  function bestKey(id) { return 'iv-quiz-' + id; }
+  const TV = window.TableViz || IV;
+  function fmt() { return TV.currentFormat ? (TV.currentFormat() || 'iceberg') : 'iceberg'; }
+  function bankFor(id) {
+    const QB = IV.QuestionBank || {};
+    if (QB[fmt()] && QB[fmt()][id]) return QB[fmt()][id];          // format-keyed (Delta/Compare)
+    if (fmt() === 'iceberg' && QB[id]) return QB[id];              // legacy flat (Iceberg)
+    return null;
+  }
+  function bestKey(id) { return 'tv-' + fmt() + '-quiz-' + id; }
   function getBest(id) { try { return parseInt(localStorage.getItem(bestKey(id)) || '', 10); } catch (e) { return NaN; } }
   function setBest(id, pct) {
     const prev = getBest(id);
@@ -64,7 +72,7 @@
   }
 
   function populate(id) {
-    const bank = (IV.QuestionBank && IV.QuestionBank[id]) || [];
+    const bank = bankFor(id) || [];
     currentId = id;
     titleEl.textContent = label(id);
     bodyEl.innerHTML = '';
@@ -125,7 +133,7 @@
   function open() {
     if (!modal) build();
     const id = IV.currentScreenId && IV.currentScreenId();
-    if (!id || !(IV.QuestionBank && IV.QuestionBank[id])) return;
+    if (!id || !bankFor(id)) return;
     populate(id);
     lastFocus = document.activeElement;
     modal.classList.add('is-open');
@@ -144,7 +152,7 @@
   function syncButton(id) {
     const btn = document.getElementById('quiz-toggle');
     if (!btn) return;
-    const has = !!(IV.QuestionBank && IV.QuestionBank[id]);
+    const has = !!bankFor(id);
     btn.hidden = !has;
     // Close a stale modal when navigating to a screen without a bank.
     if (!has && modal && modal.classList.contains('is-open')) close();
