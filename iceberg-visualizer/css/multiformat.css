@@ -208,3 +208,39 @@ body.sidebar-open #nav-toggle .ham i:nth-child(3) { top: 6px; transform: rotate(
 @media (max-width: 720px) {
   .xformat-jump { display:none !important; }
 }
+
+/* ============================================================
+   Animation canvas — fill the space (was capped at native px)
+   Vector SVGs scale losslessly, so filling the canvas only makes
+   diagrams larger and crisper. One rule overrides every module's
+   inline max-width/height cap (iceberg *-canvas, dk/hk/cmpa alike).
+   Upper guard keeps proportions sane on ultra-wide / 4K.
+   ============================================================ */
+#module-container [class$="-canvas"] > svg {
+  width: 100%;
+  height: 100%;
+  max-width: min(100%, 1200px) !important;
+  max-height: 100% !important;
+}
+/* Reclaim a little width from the step sidebar. */
+#module-container [class$="-outer"]:has(> [class$="-canvas"]) > [class$="-sidebar"],
+#module-container [class$="-outer"]:has(> [class$="-canvas"]) > [class$="-side"] {
+  width: 320px;
+}
+
+/* Narrow / portrait (iPad 9th gen portrait, small laptops): stack the
+   step sidebar UNDER the canvas so the diagram gets full width. Only
+   targets animation layouts (an -outer that directly holds a -canvas),
+   and keeps the height:100%/overflow:hidden contract (no page scroll). */
+@media (max-width: 900px) {
+  #module-container [class$="-outer"]:has(> [class$="-canvas"]) {
+    flex-direction: column !important;
+  }
+  #module-container [class$="-outer"]:has(> [class$="-canvas"]) > [class$="-sidebar"],
+  #module-container [class$="-outer"]:has(> [class$="-canvas"]) > [class$="-side"] {
+    width: auto !important;
+    max-height: 46% !important;
+    border-left: none !important;
+    border-top: 1px solid var(--border-default) !important;
+  }
+}
