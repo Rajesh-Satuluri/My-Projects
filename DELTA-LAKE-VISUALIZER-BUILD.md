@@ -14,6 +14,10 @@
 >
 > **Chosen architecture: UNIFIED TOOL** (one codebase, one deploy, a format switcher). This supersedes
 > the earlier "separate sibling app" idea.
+>
+> **Companion file:** `UIUX-POLISH-SPEC.md` (same folder) is the normative **premium design system**
+> for this tool — read it in full and apply it across the whole app (see §6a). This build spec and the
+> polish spec are meant to be used together.
 
 ---
 
@@ -409,6 +413,57 @@ consistent with ShopKart (20M orders/day, 30 countries, 6 PB history, 24,000 fil
 
 ---
 
+## 6a. Premium design system & polish (from `UIUX-POLISH-SPEC.md`)
+
+The whole tool must ship at **"$1000 paid-subscription" quality** per the companion file
+**`UIUX-POLISH-SPEC.md`** (in this repo — read it in full; it is normative). Apply that design system
+**across the entire unified tool** (Iceberg + Delta + Compare) so there is **one** visual language, not
+two. Key reconciliations with this build:
+
+- **Recoloring accent = our per-format brand.** The polish spec's signature move (§2: flip one
+  attribute, override `--brand` / `--brand-2` / `--brand-glow`, everything follows) **is exactly** our
+  `data-format` brand system. Unify them: there is one recoloring mechanism keyed on
+  `data-format` — Iceberg = blue→cyan (`#4f8cff`/`#22d3ee`), Delta = red→amber (`#fb7185`→`#fbbf24`
+  family), Compare = neutral/dual. **No component hardcodes an accent** — always through `--brand*`.
+  When Hudi lands it's just another `data-format` value → amber→green; zero component changes.
+- **Adopt the polish token set as the tool's design tokens** (§1: layered `--bg-0..3`, text ramp,
+  motion tokens `--dur-fast/--dur/--dur-slow/--dur-cat` + easings, `--radius`/`--radius-sm`, shadows,
+  stripe colors, `--success`/`--flame`, `--code-bg` dark-in-both-themes). Keep the generic **state**
+  colors (green/amber/red) for animation semantics. Light theme = warm-paper (§1.2).
+- **Motion system (§3):** universal control transition + hover-lift + press-settle on every control;
+  the **pixel-height accordion** for nav groups (replaces the current grid-rows collapse); the three
+  **route cues** (top nav-progress bar, content rise-in, reading-progress bar on long/reading screens);
+  everything gated behind `prefers-reduced-motion`. Note: this must **not** interfere with the
+  `AnimationEngine` step animations inside modules — the route cues are shell-level only.
+- **Components (§4):** unified **modal choreography** (scrim + backdrop blur + card rise) reused by the
+  command palette, the Test-Yourself quiz modal, the shortcuts modal, and any new overlay; premium
+  code blocks (dark slab, uppercase language micro-label, indent guides, copy-pulse) for the
+  code-viewer; left-edge **accent stripes** on sections; **uppercase micro-labels** above values;
+  glowing active-nav bar + **slim per-category progress bars**.
+- **Micro-interactions (§5):** hamburger→X morph, single rotating collapse-all caret, animated desktop
+  sidebar collapse (grid track → 0), mobile drawer slide + blur scrim, toast confirmations, refined
+  empty/search-empty states.
+- **Learning-UX surfaces (§5, §4.5):** overall progress box (success-gradient), **resume "continue
+  where you left off" card**, **achievement stat tiles** (visited/mastered + streak with flame
+  `background-clip:text` gradient), **activity heatmap**, **readiness ring** (quiz mastery per format),
+  **review-due chip**. These read per-format progress from `localStorage` (`tv-<format>-…`).
+- **Responsive & a11y (§6–§7):** never scroll the page sideways; ≤1100px icon-only toolbar (scrollable);
+  ≤900px off-canvas drawer; 34–44px coarse-pointer targets; `:focus-visible` rings; ARIA on modals +
+  icon buttons; focus trap + Esc + focus restore on every overlay. (The current app already does much
+  of this — upgrade it to the spec's exact patterns/values.)
+
+**Apply-once, inherit-everywhere:** because all of the above lives in shared CSS + shared feature
+files, building it in Phase A on the Iceberg-only app means **Delta and Compare inherit the full
+premium system for free** when they're added. That's why the design-system work is front-loaded.
+
+**One decision this raises (see §14):** whether Phase A **re-tokenizes** the shipped Iceberg app to the
+polish palette (a deliberate unified visual refresh — recommended, since we're building a new
+"Open Table Formats" identity) **or** layers the polish patterns on the existing Iceberg tokens (keeps
+today's exact Iceberg look). Recommended: **re-tokenize to one system**, with before/after screenshot
+review in the design-system iteration so nothing regresses.
+
+---
+
 ## 7. Compare mode (the headline feature)
 
 A pseudo-format `compare` with its own nav group of **dual-pane** modules. The point: same ShopKart
@@ -526,59 +581,80 @@ Each iteration is **small, self-contained, and ends green** (all three verify sc
 pass, both themes, no regressions) and is committed separately. No iteration leaves the app in a
 half-built or placeholder state. Phases A–D group them; within a phase, order matters.
 
-### Phase A — Multi-format refactor, Iceberg only (risk isolation; no new content, no visible change)
+### Phase A — Foundation: multi-format core + premium design system (Iceberg only, risk isolation)
+
+*No new teaching content and no placeholders in this phase — but it DOES include a deliberate visual
+upgrade to the polish design system (§6a), verified with before/after screenshots so nothing regresses.*
 
 - **IT-1 · Namespace generalization.** Introduce `window.TableViz` (`TV`) with `window.IcebergViz = TV`
-  (+ `IV` alias). No behavioral change; app still runs exactly as today. *Verify: full harness green.*
+  (+ `IV` alias). No behavioral change. *Verify: full harness green.*
 - **IT-2 · Format registry + registration.** Add `TV.formats` (only `iceberg`), `TV.registerModule`,
-  format-keyed `TV.modules`; convert each existing Iceberg module's registration line; make
-  `getScreens/getNavGroups/currentScreenId` format-aware (default = active). Still single-format,
-  routing unchanged. *Verify: green.*
+  format-keyed `TV.modules`; convert each Iceberg module's registration line; make
+  `getScreens/getNavGroups/currentScreenId` format-aware. *Verify: green.*
 - **IT-3 · 3-segment router + per-format persistence.** Parse `#<format>/<screen>/<step>`; keep bare
-  `#screen` working; namespace localStorage to `tv-<format>-…` with one-time migration of old `iv-…`
-  keys; `_syncStepToUrl` writes the format segment. *Verify: deep-links, resume, back-compat all green.*
-- **IT-4 · Per-format brand tokens.** Migrate `--iceberg*` usages → `--brand*`, driven by
-  `data-format`; Iceberg's rendered output is pixel-identical. No-flash `<head>` script stamps
-  `data-format` + `data-theme`. *Verify: both themes visually unchanged for Iceberg.*
-- **IT-5 · Format switcher (registry-driven, single-format collapse).** Build the switcher; with only
-  Iceberg registered it renders as a **static brand label** (never an empty/orphan control). Palette,
-  quiz modal, progress, tour all read active-format accessors. *Verify: green — this closes the
-  risk-isolation phase with zero UI placeholders.*
+  `#screen` working; namespace localStorage to `tv-<format>-…` with one-time `iv-…` migration;
+  `_syncStepToUrl` writes the format segment. *Verify: deep-links, resume, back-compat green.*
+- **IT-4 · Design tokens + recoloring system (§1–§2, §6a).** Install the polish token set (layered bg,
+  text ramp, motion tokens + easings, radius/shadow scale, stripe/success/flame, dark `--code-bg`),
+  warm-paper light theme, and unify recoloring so `data-format` drives `--brand/--brand-2/--brand-glow`
+  (Iceberg = blue→cyan). Route every color through tokens. *Verify: both themes; screenshot review.*
+- **IT-5 · Motion & choreography (§3, §4.7).** Universal control transition + hover-lift/press-settle;
+  pixel-height accordion for nav groups; the three route cues (nav-progress bar, content rise-in,
+  reading-progress); unified modal choreography (scrim blur + card rise) applied to command palette +
+  quiz modal + shortcuts modal; all gated behind `prefers-reduced-motion`; must not touch in-module
+  `AnimationEngine` timing. *Verify: `verify` + `verify:anim` green.*
+- **IT-6 · Premium shell components + micro-interactions (§4.3–4.4, §4.6, §5, §8).** Left-edge section
+  stripes + uppercase micro-labels; glowing active-nav bar + slim per-category progress bars;
+  hamburger→X morph; animated sidebar collapse (grid track→0); premium code-viewer (dark slab, indent
+  guides, copy-pulse); toast; refined empty/search-empty states. *Verify: green.*
+- **IT-7 · Format switcher + responsive/a11y pass (§2, §6, §7).** Registry-driven switcher styled as the
+  premium segmented pill (single-format collapse → static brand label, never an empty control);
+  ≤1100px icon-only scrollable toolbar; ≤900px off-canvas drawer; coarse-pointer 34–44px targets;
+  `:focus-visible` rings, ARIA, focus trap/Esc/restore on every overlay. *Verify: green — closes Phase
+  A with the full premium system on the shipped Iceberg app, zero placeholders.*
 
-### Phase B — Delta format (one iteration per nav group; each ends green)
+### Phase B — Delta format (one iteration per nav group; inherits the whole design system for free)
 
-- **IT-6 · Delta scaffold + Get Started.** `formats/delta.js` (brand red→amber, Δ logo, docsUrl, nav
+- **IT-8 · Delta scaffold + Get Started.** `formats/delta.js` (brand red→amber, Δ logo, docsUrl, nav
   groups), `delta-concepts.js`, ShopKart Delta resolutions; modules `home`, `why-delta`,
   `architecture`. Switcher **automatically** becomes a live 2-way toggle. *Verify: both formats green.*
-- **IT-7 · Delta Log & Schema core.** `log-explorer`, `commit-explorer`, `version-explorer`,
-  `checkpoint`. *Verify: green.*
-- **IT-8 · Delta Write Operations.** `create-table`, `insert`, `update`, `delete`, `merge`,
-  `overwrite`. *Verify: `verify:anim` green.*
-- **IT-9 · Delta Read & Query.** `read-path`, `write-path`, `query-planner`, `time-travel`. *Verify.*
-- **IT-10 · Delta Schema & Layout.** `schema-evolution`, `partitioning`, `liquid-clustering`. *Verify.*
-- **IT-11 · Delta Advanced.** `concurrency`, `deletion-vectors`, `optimize`, `vacuum`,
+- **IT-9 · Delta Log & Schema core.** `log-explorer`, `commit-explorer`, `version-explorer`,
+  `checkpoint`. *Verify.*
+- **IT-10 · Delta Write Operations.** `create-table`, `insert`, `update`, `delete`, `merge`,
+  `overwrite`. *Verify: `verify:anim`.*
+- **IT-11 · Delta Read & Query.** `read-path`, `write-path`, `query-planner`, `time-travel`. *Verify.*
+- **IT-12 · Delta Schema & Layout.** `schema-evolution`, `partitioning`, `liquid-clustering`. *Verify.*
+- **IT-13 · Delta Advanced.** `concurrency`, `deletion-vectors`, `optimize`, `vacuum`,
   `change-data-feed`, `engine-integrations`. *Verify.*
-- **IT-12 · Delta Learn & banks.** Delta `question-bank` entries, `interview` (~24 Q&A), `quiz` (~22),
-  `study`, `cheatsheet`; wire Test-Yourself banks. *Verify: quiz-modal contract green in both formats.*
+- **IT-14 · Delta Learn & banks.** Delta `question-bank`, `interview` (~24 Q&A), `quiz` (~22), `study`,
+  `cheatsheet`; wire Test-Yourself banks. *Verify: quiz-modal contract green in both formats.*
 
 ### Phase C — Compare mode (registry-driven, N-pane ready)
 
-- **IT-13 · Compare scaffold + decision matrix.** `formats/compare.js`, `overview` (data-driven
-  columns = comparable formats → 2 now, 3-ready), Compare nav group. *Verify: matrix renders exactly 2
-  balanced columns, no blank cell.*
-- **IT-14 · Compare dynamics I.** N-pane single-engine `read-path`, `deletes`, `time-travel`. *Verify:
-  both panes advance in lockstep from one engine; `verify:anim` green.*
-- **IT-15 · Compare dynamics II + banks.** `schema-evolution`, `concurrency`, `maintenance`;
+- **IT-15 · Compare scaffold + decision matrix.** `formats/compare.js`, `overview` (data-driven columns
+  = comparable formats → 2 now, 3-ready), Compare nav group. *Verify: exactly 2 balanced columns, no
+  blank cell.*
+- **IT-16 · Compare dynamics I.** N-pane single-engine `read-path`, `deletes`, `time-travel`. *Verify:
+  panes advance in lockstep from one engine; `verify:anim`.*
+- **IT-17 · Compare dynamics II + banks.** `schema-evolution`, `concurrency`, `maintenance`;
   `TV.QuestionBank.compare`. *Verify: full sweep green across iceberg + delta + compare.*
 
-### Phase D — Ship
+### Phase D — Learning-UX premium surfaces (cross-format study-tool polish, §4.5 + §5)
 
-- **IT-16 · Deploy + portfolio + redirect (§10).** `git mv` folder → `table-formats-visualizer/`;
+- **IT-18 · Progress, mastery & motivation surfaces.** Overall progress box (success-gradient);
+  resume "continue where you left off" card; achievement stat tiles (visited/mastered + streak with
+  flame `background-clip:text` gradient); activity heatmap; readiness ring (per-format quiz mastery);
+  review-due chip. All read per-format `localStorage`; surfaced on each format's home + study deck via
+  shared components (so both formats get them at once). *(Full spaced-repetition scheduling is optional
+  — flagged, not required.)* *Verify: green in both formats.*
+
+### Phase E — Ship
+
+- **IT-19 · Deploy + portfolio + redirect (§10).** `git mv` folder → `table-formats-visualizer/`;
   update workflow to publish at `/lakehouse/` (or chosen path) + `/iceberg/` redirect stub; update the
-  portfolio card. Push to the designated branch; verify the `gh-pages` result via GitHub tools. (PR
-  only if asked.)
+  portfolio card. Push to the designated branch; verify `gh-pages` via GitHub tools. (PR only if asked.)
 
-Within IT-8..IT-11, build modules in the group's listed order, running `check` + `verify:anim` after
+Within IT-10..IT-13, build modules in the group's listed order, running `check` + `verify:anim` after
 each module so a regression is caught at the module that caused it.
 
 ---
@@ -666,9 +742,14 @@ themes in both brands, tabular-nums for stats, `overflow-x:auto` on wide content
 `prefers-reduced-motion` respected. Diagrams show the *real* mechanism (the log, the actions, the
 stats-based skipping), not decoration. Step narration is where the teaching happens — keep it specific.
 
-**One open decision to confirm before Stage 4 (does not block Stages 1–3):**
-the deploy URL — **`/lakehouse/` with an `/iceberg/` redirect** (recommended) vs. keeping `/iceberg/`
-as the path. Everything else follows this spec.
+**Open decisions:**
+1. **Design-system re-tokenization (affects IT-4, i.e. early Phase A).** Re-tokenize the whole tool to
+   the `UIUX-POLISH-SPEC.md` palette as one unified system (**recommended** — new "Open Table Formats"
+   identity, screenshot-reviewed) vs. layer the polish patterns on today's exact Iceberg tokens.
+2. **Deploy URL (affects IT-19 only).** **`/lakehouse/` with an `/iceberg/` redirect** (recommended)
+   vs. keeping the `/iceberg/` path.
+
+Neither blocks starting Phase A; #1 is settled at IT-4 and #2 at IT-19.
 
 ---
 
