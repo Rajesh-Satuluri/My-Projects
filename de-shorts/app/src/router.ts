@@ -8,10 +8,12 @@ import { useEffect, useState } from "react";
 export type Route =
   | { name: "topics" }
   | { name: "topic"; topic: string }
-  | { name: "concept"; id: string };
+  | { name: "concept"; id: string }
+  | { name: "review" };
 
 function parse(hash: string): Route {
   const h = hash.replace(/^#/, "");
+  if (h === "/review") return { name: "review" };
   const t = h.match(/^\/t\/(.+)$/);
   if (t) return { name: "topic", topic: decodeURIComponent(t[1]) };
   const c = h.match(/^\/c\/(.+)$/);
@@ -33,4 +35,5 @@ export const go = {
   topics: () => (location.hash = "#/"),
   topic: (t: string) => (location.hash = `#/t/${encodeURIComponent(t)}`),
   concept: (id: string) => (location.hash = `#/c/${encodeURIComponent(id)}`),
+  review: () => (location.hash = "#/review"),
 };
