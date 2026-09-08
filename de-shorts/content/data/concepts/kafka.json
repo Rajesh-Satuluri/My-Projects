@@ -1,5 +1,1059 @@
 [
   {
+    "id": "de.kafka.why",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Why Kafka Exists",
+    "difficulty": "fundamental",
+    "priority": 90,
+    "shortType": "why",
+    "definition": "Kafka decouples systems that produce events from systems that consume them, using a durable, replayable log.",
+    "explanation": "Point-to-point integrations explode as systems grow. Kafka sits in the middle: producers write events once, and many independent consumers read them at their own pace, without knowing about each other.",
+    "whyItMatters": "It turns brittle service-to-service calls into a durable event backbone that scales to millions of events per second and lets you add consumers without touching producers.",
+    "interviewLine": "Kafka is a distributed, durable commit log that decouples producers from consumers and lets events be replayed by any consumer.",
+    "interviewQuestion": "When would you choose Kafka over a traditional message queue like RabbitMQ?",
+    "visual": {
+      "template": "flow",
+      "data": {
+        "steps": [
+          "Producers",
+          "Kafka log",
+          "Many consumers"
+        ]
+      }
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.kafka.topic",
+      "de.kafka.partition"
+    ],
+    "nextConcepts": [
+      "de.kafka.topic"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "fundamentals",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.partition",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Partition",
+    "difficulty": "core",
+    "priority": 90,
+    "shortType": "visual",
+    "definition": "A partition is an ordered, immutable sequence of records — the unit of parallelism and ordering in Kafka.",
+    "explanation": "A topic is divided into partitions. Order is guaranteed within a partition, not across them. Consumers in a group split partitions between themselves, so partitions cap how many consumers can work in parallel.",
+    "whyItMatters": "Partitions are the single biggest scaling lever in Kafka: more partitions = more parallel throughput, but also more overhead and weaker global ordering.",
+    "interviewLine": "Ordering is per-partition. To scale a consumer group you add partitions, because one partition is read by at most one consumer in a group.",
+    "commonMistake": "Expecting global ordering across a topic. Only records within the same partition are ordered.",
+    "interviewQuestion": "You need strict ordering per customer but high throughput overall. How do you partition?",
+    "visual": {
+      "template": "partition",
+      "data": {
+        "source": "Producer",
+        "partitions": 3,
+        "consumers": [
+          "C1",
+          "C2",
+          "C3"
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.kafka.topic"
+    ],
+    "relatedConcepts": [
+      "de.kafka.offset",
+      "de.kafka.consumer-group",
+      "de.kafka.partition-strategy"
+    ],
+    "nextConcepts": [
+      "de.kafka.offset"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "scaling",
+      "ordering",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.consumer-group",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Consumer Group",
+    "difficulty": "core",
+    "priority": 89,
+    "shortType": "visual",
+    "definition": "A group of consumers that cooperatively read a topic, with each partition assigned to exactly one member.",
+    "explanation": "Groups give horizontal scale: Kafka divides the topic's partitions among the group's consumers. Different groups each receive the full stream, enabling independent pipelines over the same topic.",
+    "whyItMatters": "Consumer groups are how you scale reads and how you fan out to multiple use-cases (analytics, billing, search) from one topic.",
+    "interviewLine": "Within a group, a partition is owned by one consumer, so parallelism is capped by partition count; across groups, everyone gets every record.",
+    "commonMistake": "Adding more consumers than partitions to a group — the extra consumers sit idle.",
+    "interviewQuestion": "What happens if a group has more consumers than the topic has partitions?",
+    "visual": {
+      "template": "partition",
+      "data": {
+        "source": "Topic (3 partitions)",
+        "partitions": 3,
+        "consumers": [
+          "C1",
+          "C2",
+          "C3"
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.kafka.consumer"
+    ],
+    "relatedConcepts": [
+      "de.kafka.rebalancing",
+      "de.kafka.partition"
+    ],
+    "nextConcepts": [
+      "de.kafka.rebalancing"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "scaling",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.topic",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Topic",
+    "difficulty": "fundamental",
+    "priority": 88,
+    "shortType": "concept",
+    "definition": "A topic is a named, append-only stream of records that producers write to and consumers read from.",
+    "explanation": "Topics are the logical channel of Kafka. Each topic is split into partitions for parallelism. A topic is multi-subscriber: many consumer groups can read the same topic independently.",
+    "whyItMatters": "Topics are how you model event types (OrderCreated, PaymentFailed). Getting topic granularity right shapes throughput, ordering, and access control.",
+    "interviewLine": "A topic is a logical event stream; physically it is one or more partitions, which is where the real parallelism lives.",
+    "commonMistake": "Thinking a topic is a queue. A topic is a log: reading a record does not remove it, and multiple groups can each read all of it.",
+    "interviewQuestion": "How do you decide how many topics vs. how many partitions to use?",
+    "prerequisites": [
+      "de.kafka.why"
+    ],
+    "relatedConcepts": [
+      "de.kafka.partition",
+      "de.kafka.retention"
+    ],
+    "nextConcepts": [
+      "de.kafka.partition"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "fundamentals",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.offset",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Offset",
+    "difficulty": "core",
+    "priority": 86,
+    "shortType": "concept",
+    "definition": "An offset is a monotonically increasing id identifying each record's position within a partition.",
+    "explanation": "Consumers track which offset they have processed. Kafka does not delete a record when it is read; the consumer simply advances its offset. This is what makes replay possible — reset the offset and re-read.",
+    "whyItMatters": "Offset management is the heart of delivery semantics. When you commit the offset (before or after processing) decides at-least-once vs at-most-once.",
+    "interviewLine": "The offset is the consumer's bookmark. Committing it after processing gives at-least-once; committing before gives at-most-once.",
+    "commonMistake": "Assuming Kafka tracks per-message acknowledgement like a queue. It tracks a single committed offset per partition per group.",
+    "interviewQuestion": "A consumer crashes after processing but before committing. What happens on restart?",
+    "visual": {
+      "template": "timeline",
+      "data": {
+        "events": [
+          "off 0",
+          "off 1",
+          "off 2",
+          "committed",
+          "off 4"
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.kafka.partition"
+    ],
+    "relatedConcepts": [
+      "de.kafka.delivery-semantics",
+      "de.kafka.consumer-lag"
+    ],
+    "nextConcepts": [
+      "de.kafka.producer"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "offset",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.rebalancing",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Rebalancing",
+    "difficulty": "intermediate",
+    "priority": 84,
+    "shortType": "concept",
+    "definition": "Rebalancing is Kafka reassigning partitions among a group's consumers when membership changes.",
+    "explanation": "When a consumer joins, leaves, or dies, Kafka redistributes partitions so every partition has one owner. During a stop-the-world rebalance, consumption pauses briefly. Cooperative and static membership reduce that disruption.",
+    "whyItMatters": "Frequent or slow rebalances are a top production pain: they stall consumption and can cause duplicate processing around the pause.",
+    "interviewLine": "Rebalancing keeps partition ownership consistent, but naive rebalances pause the whole group; cooperative rebalancing and static membership mitigate that.",
+    "commonMistake": "Long processing times exceeding max.poll.interval.ms, causing Kafka to eject the consumer and trigger repeated rebalances.",
+    "interviewQuestion": "Your consumers keep rebalancing under load. What do you investigate?",
+    "prerequisites": [
+      "de.kafka.consumer-group"
+    ],
+    "relatedConcepts": [
+      "de.kafka.consumer-lag"
+    ],
+    "nextConcepts": [
+      "de.kafka.replication"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "reliability",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.replication",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Replication",
+    "difficulty": "intermediate",
+    "priority": 84,
+    "shortType": "visual",
+    "definition": "Replication copies each partition to multiple brokers so data survives broker failure.",
+    "explanation": "Each partition has one leader and N-1 followers. Producers and consumers talk to the leader; followers copy its log. If the leader fails, an in-sync follower is promoted, so no data acknowledged under acks=all is lost.",
+    "whyItMatters": "Replication factor is your durability dial. RF=3 is the common production default, tolerating one broker loss with room to spare.",
+    "interviewLine": "One leader serves reads and writes; followers replicate. Replication factor 3 survives a broker failure without data loss under acks=all.",
+    "commonMistake": "Confusing replication factor (copies of data) with partitions (parallel units). They are independent settings.",
+    "interviewQuestion": "With RF=3, how many broker failures can a partition tolerate and still serve writes?",
+    "visual": {
+      "template": "tree",
+      "data": {
+        "root": "Leader (P0)",
+        "children": [
+          "Follower",
+          "Follower"
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.kafka.partition"
+    ],
+    "relatedConcepts": [
+      "de.kafka.isr",
+      "de.kafka.broker"
+    ],
+    "nextConcepts": [
+      "de.kafka.isr"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "durability",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.delivery-semantics",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Delivery Semantics",
+    "difficulty": "advanced",
+    "priority": 83,
+    "shortType": "compare",
+    "definition": "Delivery semantics describe whether records can be lost or duplicated: at-most-once, at-least-once, or exactly-once.",
+    "explanation": "At-most-once commits before processing (may lose). At-least-once commits after processing (may duplicate). Exactly-once uses idempotent producers plus transactions so effects apply once end-to-end.",
+    "whyItMatters": "Choosing the right semantic per pipeline avoids either silent data loss or expensive duplicate handling downstream.",
+    "interviewLine": "At-least-once is the pragmatic default; combine it with idempotent consumers to get effectively-once without full transactions.",
+    "commonMistake": "Believing exactly-once is free. It requires idempotence, transactions, and cooperating sinks, and adds latency.",
+    "interviewQuestion": "How would you achieve effectively-once processing without Kafka transactions?",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "At-least-once",
+        "b": "Exactly-once",
+        "rows": [
+          [
+            "may duplicate",
+            "no duplicates"
+          ],
+          [
+            "commit after",
+            "transactions"
+          ],
+          [
+            "cheap",
+            "more latency"
+          ]
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.kafka.offset"
+    ],
+    "relatedConcepts": [
+      "de.kafka.exactly-once",
+      "de.kafka.consumer-lag"
+    ],
+    "nextConcepts": [
+      "de.kafka.exactly-once"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "reliability",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.consumer-lag",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Consumer Lag",
+    "difficulty": "intermediate",
+    "priority": 83,
+    "shortType": "concept",
+    "definition": "Consumer lag is the gap between the latest offset produced and the offset a consumer has committed.",
+    "explanation": "Lag rising means consumers cannot keep up with producers. You reduce it by adding consumers (up to partition count), adding partitions, or speeding up processing. Sustained lag risks breaching retention and losing data.",
+    "whyItMatters": "Lag is the primary health signal for a streaming pipeline — the first thing to alert on in production.",
+    "interviewLine": "Lag is produced-offset minus committed-offset; growing lag means under-provisioned consumers or slow processing.",
+    "commonMistake": "Adding consumers beyond the partition count to fix lag — they stay idle. Add partitions instead.",
+    "interviewQuestion": "Consumer lag is growing but CPU is idle. What do you investigate?",
+    "visual": {
+      "template": "before-after",
+      "data": {
+        "before": {
+          "title": "Lagging",
+          "items": [
+            "1 consumer",
+            "3 partitions",
+            "lag ↑"
+          ]
+        },
+        "after": {
+          "title": "Scaled",
+          "items": [
+            "3 consumers",
+            "3 partitions",
+            "lag ↓"
+          ]
+        }
+      }
+    },
+    "prerequisites": [
+      "de.kafka.consumer-group"
+    ],
+    "relatedConcepts": [
+      "de.kafka.partition",
+      "de.kafka.rebalancing"
+    ],
+    "nextConcepts": [
+      "de.kafka.broker"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "operations",
+      "debugging",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.producer",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Producer",
+    "difficulty": "core",
+    "priority": 82,
+    "shortType": "concept",
+    "definition": "A producer writes records to a topic and chooses each record's partition, usually by hashing a key.",
+    "explanation": "Producers batch records for throughput and can require acks from replicas for durability. The partitioner sends records with the same key to the same partition, preserving per-key order.",
+    "whyItMatters": "Producer config (acks, key choice, batching) directly trades off durability, ordering, and throughput — a favourite interview area.",
+    "interviewLine": "acks=all waits for all in-sync replicas, giving the strongest durability; the message key controls partition and therefore ordering.",
+    "commonMistake": "Sending a null key at high volume and then expecting per-entity ordering — null keys round-robin across partitions.",
+    "interviewQuestion": "What does acks=all guarantee, and what does it cost?",
+    "example": {
+      "type": "config",
+      "content": "acks=all\nenable.idempotence=true\nlinger.ms=10\nkey=customer_id"
+    },
+    "prerequisites": [
+      "de.kafka.partition"
+    ],
+    "relatedConcepts": [
+      "de.kafka.replication",
+      "de.kafka.exactly-once"
+    ],
+    "nextConcepts": [
+      "de.kafka.consumer"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "producer",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.consumer",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Consumer",
+    "difficulty": "core",
+    "priority": 82,
+    "shortType": "concept",
+    "definition": "A consumer reads records from partitions in order and periodically commits its processed offset.",
+    "explanation": "Consumers poll for batches of records. They belong to a consumer group; Kafka assigns partitions to group members. A consumer processes a partition's records strictly in offset order.",
+    "whyItMatters": "How and when a consumer commits offsets defines correctness under failure — the difference between duplicates, loss, and exactly-once.",
+    "interviewLine": "A consumer pulls, it is not pushed to. It reads a partition in order and controls its own offset commits.",
+    "commonMistake": "Committing offsets automatically on a fixed timer while doing slow processing — a crash can skip or reprocess records.",
+    "interviewQuestion": "Why is Kafka pull-based rather than push-based?",
+    "prerequisites": [
+      "de.kafka.offset"
+    ],
+    "relatedConcepts": [
+      "de.kafka.consumer-group",
+      "de.kafka.consumer-lag"
+    ],
+    "nextConcepts": [
+      "de.kafka.consumer-group"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "consumer",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.isr",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "In-Sync Replicas (ISR)",
+    "difficulty": "advanced",
+    "priority": 82,
+    "shortType": "concept",
+    "definition": "The ISR is the set of replicas fully caught up with the partition leader.",
+    "explanation": "Only replicas in the ISR are eligible to become leader. With acks=all, a write is acknowledged once all ISR members have it. min.insync.replicas sets how many must be in-sync for writes to be accepted.",
+    "whyItMatters": "ISR ties together durability and availability: too strict and writes stall when a replica lags; too loose and you risk data loss on failover.",
+    "interviewLine": "acks=all plus min.insync.replicas=2 means a write is only accepted when at least two replicas hold it, trading some availability for durability.",
+    "commonMistake": "Setting RF=3 but leaving min.insync.replicas=1, which quietly allows data loss on leader failure.",
+    "interviewQuestion": "How do acks=all and min.insync.replicas interact to prevent data loss?",
+    "prerequisites": [
+      "de.kafka.replication"
+    ],
+    "relatedConcepts": [
+      "de.kafka.exactly-once",
+      "de.kafka.delivery-semantics"
+    ],
+    "nextConcepts": [
+      "de.kafka.retention"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "durability",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.exactly-once",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Exactly-Once Semantics",
+    "difficulty": "advanced",
+    "priority": 80,
+    "shortType": "concept",
+    "definition": "Exactly-once ensures each record's effects are applied once, using idempotent producers and transactions.",
+    "explanation": "The idempotent producer removes duplicate writes from retries. Transactions let a consume-process-produce cycle commit records and offsets atomically, so partial failures do not double-apply.",
+    "whyItMatters": "For money movement or counts, exactly-once prevents both loss and double-counting inside Kafka-to-Kafka pipelines.",
+    "interviewLine": "Kafka's exactly-once is the idempotent producer plus transactions committing output records and consumer offsets atomically.",
+    "commonMistake": "Assuming exactly-once extends to external systems automatically. The external sink must also be idempotent or transactional.",
+    "interviewQuestion": "Does Kafka exactly-once cover writes to an external database? Why or why not?",
+    "prerequisites": [
+      "de.kafka.delivery-semantics",
+      "de.kafka.isr"
+    ],
+    "relatedConcepts": [
+      "de.kafka.producer"
+    ],
+    "nextConcepts": [
+      "de.kafka.consumer-lag"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "reliability",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.partition-strategy",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Partition Strategy",
+    "difficulty": "advanced",
+    "priority": 79,
+    "shortType": "concept",
+    "definition": "Partition strategy is how you pick keys and partition counts to balance ordering, parallelism, and even load.",
+    "explanation": "Keying by an entity (customer_id) preserves per-entity order but risks hot partitions if one key dominates. More partitions add parallelism but raise metadata, rebalance, and open-file costs.",
+    "whyItMatters": "Bad partitioning causes skew: one consumer overloaded while others idle — the streaming analogue of Spark data skew.",
+    "interviewLine": "Choose the key for the ordering you need, then size partitions for peak throughput while watching for hot keys.",
+    "commonMistake": "Using a low-cardinality key (like country) and creating a few hot partitions that bottleneck the whole group.",
+    "interviewQuestion": "One partition is much hotter than the rest. How do you rebalance the load?",
+    "prerequisites": [
+      "de.kafka.partition"
+    ],
+    "relatedConcepts": [
+      "de.kafka.consumer-lag",
+      "de.kafka.consumer-group"
+    ],
+    "nextConcepts": [
+      "de.kafka.vs-rabbitmq"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "scaling",
+      "skew",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.retention",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Retention",
+    "difficulty": "core",
+    "priority": 78,
+    "shortType": "concept",
+    "definition": "Retention controls how long Kafka keeps records, by time or by partition size, before deleting old segments.",
+    "explanation": "Kafka keeps records independent of whether they were consumed. Retention (e.g. 7 days) governs the replay window. When time or size limits are hit, the oldest log segments are removed.",
+    "whyItMatters": "Retention defines how far back consumers can replay and how much a slow or new consumer can still recover — a real recovery-planning lever.",
+    "interviewLine": "Retention is consumption-independent: a 7-day retention means any consumer can replay the last 7 days, regardless of prior reads.",
+    "commonMistake": "Assuming a consumed record is gone. It stays until retention expires, which is exactly what enables replay.",
+    "interviewQuestion": "How does retention differ from log compaction?",
+    "prerequisites": [
+      "de.kafka.offset"
+    ],
+    "relatedConcepts": [
+      "de.kafka.log-compaction"
+    ],
+    "nextConcepts": [
+      "de.kafka.log-compaction"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "storage",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.vs-rabbitmq",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Kafka vs RabbitMQ",
+    "difficulty": "intermediate",
+    "priority": 77,
+    "shortType": "compare",
+    "definition": "Kafka is a replayable log for high-throughput streams; RabbitMQ is a broker for flexible per-message routing.",
+    "explanation": "Kafka retains records for replay and scales via partitions, ideal for event streaming and analytics. RabbitMQ pushes messages, deletes on ack, and excels at complex routing and per-message workflows.",
+    "whyItMatters": "Interviewers use this to test whether you match the tool to the workload rather than defaulting to Kafka for everything.",
+    "interviewLine": "Kafka for high-throughput, replayable event streams; RabbitMQ for rich routing and task queues where messages are consumed once.",
+    "commonMistake": "Using Kafka as a task queue and fighting its log model, or using RabbitMQ for terabyte-scale replayable streams.",
+    "interviewQuestion": "A team wants per-message priority and complex routing. Kafka or RabbitMQ?",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "Kafka",
+        "b": "RabbitMQ",
+        "rows": [
+          [
+            "log, replayable",
+            "queue, delete on ack"
+          ],
+          [
+            "partitions scale",
+            "routing keys"
+          ],
+          [
+            "streaming",
+            "task workflows"
+          ]
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.kafka.why"
+    ],
+    "relatedConcepts": [
+      "de.kafka.vs-kinesis"
+    ],
+    "nextConcepts": [
+      "de.kafka.vs-kinesis"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "comparison",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.broker",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Broker",
+    "difficulty": "core",
+    "priority": 76,
+    "shortType": "concept",
+    "definition": "A broker is a Kafka server that stores partition data and serves produce and fetch requests.",
+    "explanation": "A cluster is many brokers. Each broker leads some partitions and follows others. A controller coordinates metadata and leader election. Clients discover partition leaders via any broker's metadata.",
+    "whyItMatters": "Broker count and partition placement drive throughput, fault tolerance, and how failures ripple through the cluster.",
+    "interviewLine": "Brokers store partitions and each leads a subset; the controller handles metadata and leader election on failure.",
+    "commonMistake": "Thinking one broker owns a whole topic. Partitions of a topic are spread across brokers for balance.",
+    "interviewQuestion": "What role does the controller play when a broker fails?",
+    "prerequisites": [
+      "de.kafka.replication"
+    ],
+    "relatedConcepts": [
+      "de.kafka.partition"
+    ],
+    "nextConcepts": [
+      "de.kafka.partition-strategy"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "architecture",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.ai-streaming-ingestion",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Kafka → AI Streaming Ingestion",
+    "difficulty": "system-design",
+    "priority": 76,
+    "shortType": "concept",
+    "definition": "Kafka is the real-time backbone that feeds fresh events into AI systems for indexing, features, and inference.",
+    "explanation": "Events flow producer → Kafka → stream processor → embedding/feature step → vector store or feature store. Kafka's replay and ordering let AI indexes be rebuilt and kept incrementally fresh for RAG and real-time inference.",
+    "whyItMatters": "This is DE Shorts' cross-domain hook: the same Kafka skills power modern real-time AI pipelines, not just analytics.",
+    "interviewLine": "Kafka gives AI systems a durable, replayable event source, so vector indexes and features stay fresh and can be rebuilt on demand.",
+    "commonMistake": "Bolting embeddings onto every event synchronously in the producer path, adding latency and coupling; do it in a stream processor instead.",
+    "interviewQuestion": "How would you keep a RAG vector index fresh from a Kafka event stream?",
+    "visual": {
+      "template": "flow",
+      "data": {
+        "steps": [
+          "Events",
+          "Kafka",
+          "Stream processor",
+          "Embeddings",
+          "Vector store",
+          "RAG"
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.kafka.why",
+      "de.kafka.consumer-group"
+    ],
+    "relatedConcepts": [
+      "de.kafka.exactly-once"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "ai",
+      "rag",
+      "streaming",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.vs-kinesis",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Kafka vs Kinesis",
+    "difficulty": "intermediate",
+    "priority": 75,
+    "shortType": "compare",
+    "definition": "Kafka is self/managed open-source with fine control; Kinesis is AWS-managed with shards and less operational burden.",
+    "explanation": "Kinesis trades Kafka's tunability and ecosystem for a fully managed service: shards instead of partitions, built-in AWS integration, and simpler ops but tighter limits and vendor lock-in.",
+    "whyItMatters": "The choice is really build-vs-buy and control-vs-convenience — a classic senior trade-off question.",
+    "interviewLine": "Kinesis is managed and AWS-native with shard limits; Kafka gives more control, ecosystem, and portability at higher ops cost.",
+    "commonMistake": "Comparing only throughput. The deciding factors are usually ops burden, ecosystem, and lock-in.",
+    "interviewQuestion": "An AWS-only team wants minimal ops. What tips you toward Kinesis vs managed Kafka?",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "Kafka",
+        "b": "Kinesis",
+        "rows": [
+          [
+            "partitions",
+            "shards"
+          ],
+          [
+            "portable",
+            "AWS-native"
+          ],
+          [
+            "you run it",
+            "fully managed"
+          ]
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.kafka.vs-rabbitmq"
+    ],
+    "relatedConcepts": [
+      "de.kafka.why"
+    ],
+    "nextConcepts": [
+      "de.kafka.ai-streaming-ingestion"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "comparison",
+      "cloud",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.kafka.log-compaction",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Log Compaction",
+    "difficulty": "advanced",
+    "priority": 74,
+    "shortType": "concept",
+    "definition": "Compaction retains only the latest record per key, so a topic becomes a durable snapshot of current state.",
+    "explanation": "Unlike time retention, a compacted topic keeps the most recent value for each key indefinitely and discards older versions. This makes topics usable as changelogs for rebuilding state or caches.",
+    "whyItMatters": "Compaction underpins stateful stream processing and CDC-style state topics — you can rebuild a table from the log.",
+    "interviewLine": "Compaction keeps the last value per key, turning a topic into a replayable snapshot of state rather than a full history.",
+    "commonMistake": "Expecting compaction to remove all duplicates immediately — it works per key and only after segments roll.",
+    "interviewQuestion": "When would you choose a compacted topic over a time-retained one?",
+    "prerequisites": [
+      "de.kafka.retention"
+    ],
+    "relatedConcepts": [
+      "de.kafka.topic"
+    ],
+    "nextConcepts": [
+      "de.kafka.delivery-semantics"
+    ],
+    "quickPaths": [
+      "path.de.kafka-fundamentals"
+    ],
+    "tags": [
+      "kafka",
+      "storage",
+      "state",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Kafka",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
     "id": "de.kafka.apache-kafka",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",

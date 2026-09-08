@@ -16,7 +16,7 @@
  * Pure Node (no HTML lib) — the source uses stable class names, so scoped regex is
  * sufficient and dependency-free.
  */
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import type { Concept, Difficulty, SourceRef } from "./types.ts";
@@ -241,6 +241,21 @@ for (const t of techs.values())
 for (const h of hotConcepts) {
   const p = Math.min(90, (topicPeak.get(h.topic) ?? 70) - 5); // slightly below the tech itself
   addStub(h.term, h.topic, p, `Most Asked Concepts · ${h.category}`, "");
+}
+
+// ---------- merge: never clobber hand-authored content ----------
+// Any existing concept with authoringStatus !== "stub" is authored by a human/PR
+// and wins over a regenerated stub. Authored concepts absent from the source
+// (e.g. the Kafka vertical slice) are preserved as-is.
+if (existsSync(OUT_CONCEPTS)) {
+  for (const f of readdirSync(OUT_CONCEPTS).filter((f) => f.endsWith(".json"))) {
+    const existing: Concept[] = JSON.parse(readFileSync(resolve(OUT_CONCEPTS, f), "utf-8"));
+    for (const c of existing) {
+      if (c.authoringStatus && c.authoringStatus !== "stub") {
+        conceptsById.set(c.id, c); // authored wins; keep verbatim
+      }
+    }
+  }
 }
 
 // ---------- write outputs ----------

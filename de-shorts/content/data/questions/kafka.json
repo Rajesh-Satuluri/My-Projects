@@ -1,0 +1,206 @@
+[
+  {
+    "id": "q.de.kafka.partition.001",
+    "schemaVersion": 1,
+    "conceptId": "de.kafka.partition",
+    "topic": "kafka",
+    "difficulty": 3,
+    "type": "mcq",
+    "stem": "In Kafka, ordering of records is guaranteed at what level?",
+    "options": [
+      { "id": "a", "text": "Across the entire topic", "correct": false, "why": "Order is not maintained across partitions of a topic." },
+      { "id": "b", "text": "Within a single partition", "correct": true, "why": "Records are appended in order within one partition." },
+      { "id": "c", "text": "Across a consumer group", "correct": false, "why": "A group parallelises reads; it does not create global order." },
+      { "id": "d", "text": "Across replicas", "correct": false, "why": "Replicas copy a partition; they don't add ordering scope." }
+    ],
+    "explanation": "Kafka guarantees order only within a partition. Global ordering requires a single partition, which sacrifices parallelism.",
+    "sourceRefs": [{ "source": "de_encyclopedia_2025.html", "section": "Apache Kafka", "sourceType": "primary" }]
+  },
+  {
+    "id": "q.de.kafka.partition.002",
+    "schemaVersion": 1,
+    "conceptId": "de.kafka.partition",
+    "topic": "kafka",
+    "difficulty": 4,
+    "type": "mcq",
+    "stem": "You need strict per-customer ordering with high overall throughput. What do you do?",
+    "options": [
+      { "id": "a", "text": "Use one partition for the topic", "correct": false, "why": "Global order, but throughput is capped at one consumer." },
+      { "id": "b", "text": "Key records by customer_id across many partitions", "correct": true, "why": "Same key → same partition preserves per-customer order while partitions scale throughput." },
+      { "id": "c", "text": "Use null keys and many partitions", "correct": false, "why": "Null keys round-robin, breaking per-customer order." },
+      { "id": "d", "text": "Increase replication factor", "correct": false, "why": "Replication is durability, unrelated to ordering or parallelism." }
+    ],
+    "explanation": "Keying by the entity keeps its records in one partition (ordered) while other keys spread across partitions for throughput.",
+    "sourceRefs": [{ "source": "de_encyclopedia_2025.html", "section": "Apache Kafka", "sourceType": "primary" }]
+  },
+  {
+    "id": "q.de.kafka.consumer-group.001",
+    "schemaVersion": 1,
+    "conceptId": "de.kafka.consumer-group",
+    "topic": "kafka",
+    "difficulty": 3,
+    "type": "mcq",
+    "stem": "A topic has 3 partitions and a consumer group has 5 consumers. What happens?",
+    "options": [
+      { "id": "a", "text": "All 5 consumers read all partitions", "correct": false, "why": "Within a group, a partition is owned by exactly one consumer." },
+      { "id": "b", "text": "3 consumers each own a partition; 2 are idle", "correct": true, "why": "Parallelism is capped by partition count, so extras sit idle." },
+      { "id": "c", "text": "Kafka creates 2 more partitions", "correct": false, "why": "Kafka never auto-creates partitions to match consumers." },
+      { "id": "d", "text": "The group fails to start", "correct": false, "why": "It starts fine; the extra consumers are simply unassigned." }
+    ],
+    "explanation": "In a group, each partition has one owner. More consumers than partitions leaves the surplus idle — add partitions to scale further.",
+    "sourceRefs": [{ "source": "de_encyclopedia_2025.html", "section": "Apache Kafka", "sourceType": "primary" }]
+  },
+  {
+    "id": "q.de.kafka.consumer-group.002",
+    "schemaVersion": 1,
+    "conceptId": "de.kafka.consumer-group",
+    "topic": "kafka",
+    "difficulty": 3,
+    "type": "mcq",
+    "stem": "Two separate consumer groups subscribe to the same topic. Each group receives:",
+    "options": [
+      { "id": "a", "text": "Half the records each", "correct": false, "why": "Splitting happens within a group, not across groups." },
+      { "id": "b", "text": "The full stream, independently", "correct": true, "why": "Every group gets every record and tracks its own offsets." },
+      { "id": "c", "text": "Only records after they joined", "correct": false, "why": "Start position depends on offset config, not group count." },
+      { "id": "d", "text": "Nothing until the other group commits", "correct": false, "why": "Groups are independent and never block each other." }
+    ],
+    "explanation": "Different groups each consume the whole topic independently — this fan-out is how one topic feeds many pipelines.",
+    "sourceRefs": [{ "source": "de_encyclopedia_2025.html", "section": "Apache Kafka", "sourceType": "primary" }]
+  },
+  {
+    "id": "q.de.kafka.offset.001",
+    "schemaVersion": 1,
+    "conceptId": "de.kafka.offset",
+    "topic": "kafka",
+    "difficulty": 4,
+    "type": "mcq",
+    "stem": "A consumer processes a record, then crashes before committing its offset. On restart it will:",
+    "options": [
+      { "id": "a", "text": "Skip the record", "correct": false, "why": "That would be at-most-once, which commits before processing." },
+      { "id": "b", "text": "Reprocess the record", "correct": true, "why": "The offset was never committed, so it re-reads — at-least-once, possible duplicate." },
+      { "id": "c", "text": "Lose all uncommitted data permanently", "correct": false, "why": "The data is still in the log within retention." },
+      { "id": "d", "text": "Trigger a topic rebuild", "correct": false, "why": "Nothing about offsets rebuilds a topic." }
+    ],
+    "explanation": "Committing after processing yields at-least-once: a crash before commit means the record is reprocessed. Make consumers idempotent.",
+    "sourceRefs": [{ "source": "de_encyclopedia_2025.html", "section": "Apache Kafka", "sourceType": "primary" }]
+  },
+  {
+    "id": "q.de.kafka.isr.001",
+    "schemaVersion": 1,
+    "conceptId": "de.kafka.isr",
+    "topic": "kafka",
+    "difficulty": 6,
+    "type": "mcq",
+    "stem": "With RF=3, which setting combination best prevents data loss on leader failure?",
+    "options": [
+      { "id": "a", "text": "acks=1, min.insync.replicas=1", "correct": false, "why": "Leader acks alone can lose data if it fails before replication." },
+      { "id": "b", "text": "acks=all, min.insync.replicas=2", "correct": true, "why": "A write needs at least two in-sync replicas, so a single failure keeps the data." },
+      { "id": "c", "text": "acks=0, min.insync.replicas=3", "correct": false, "why": "acks=0 doesn't wait for any ack; min.insync is irrelevant." },
+      { "id": "d", "text": "acks=all, min.insync.replicas=1", "correct": false, "why": "Only one replica need hold it, allowing loss on that broker's failure." }
+    ],
+    "explanation": "acks=all plus min.insync.replicas=2 guarantees two replicas hold each write, surviving one broker loss without data loss.",
+    "sourceRefs": [{ "source": "de_encyclopedia_2025.html", "section": "Apache Kafka", "sourceType": "primary" }]
+  },
+  {
+    "id": "q.de.kafka.consumer-lag.001",
+    "schemaVersion": 1,
+    "conceptId": "de.kafka.consumer-lag",
+    "topic": "kafka",
+    "difficulty": 5,
+    "type": "mcq",
+    "stem": "Consumer lag keeps rising but consumer CPU is nearly idle. Most likely cause?",
+    "options": [
+      { "id": "a", "text": "Too many partitions", "correct": false, "why": "More partitions would help, not hurt, throughput." },
+      { "id": "b", "text": "Blocking on slow downstream calls per record", "correct": true, "why": "Idle CPU with rising lag points to I/O waits, e.g. slow DB/API calls, not compute." },
+      { "id": "c", "text": "Replication factor too high", "correct": false, "why": "RF affects durability/write path, not consumer throughput." },
+      { "id": "d", "text": "Retention set too long", "correct": false, "why": "Retention affects replay window, not processing speed." }
+    ],
+    "explanation": "Idle CPU plus growing lag signals blocking I/O per record. Batch or parallelise downstream calls, or add partitions and consumers.",
+    "sourceRefs": [{ "source": "de_encyclopedia_2025.html", "section": "Apache Kafka", "sourceType": "primary" }]
+  },
+  {
+    "id": "q.de.kafka.delivery-semantics.001",
+    "schemaVersion": 1,
+    "conceptId": "de.kafka.delivery-semantics",
+    "topic": "kafka",
+    "difficulty": 4,
+    "type": "mcq",
+    "stem": "Which approach gives at-least-once delivery?",
+    "options": [
+      { "id": "a", "text": "Commit the offset before processing", "correct": false, "why": "That is at-most-once — a crash loses the in-flight record." },
+      { "id": "b", "text": "Commit the offset after processing", "correct": true, "why": "A crash before commit reprocesses the record: no loss, possible duplicate." },
+      { "id": "c", "text": "Never commit offsets", "correct": false, "why": "Then every restart reprocesses everything within retention." },
+      { "id": "d", "text": "Disable replication", "correct": false, "why": "Replication is about durability, not delivery semantics." }
+    ],
+    "explanation": "Commit-after-processing is at-least-once. Pair it with idempotent consumers to get effectively-once cheaply.",
+    "sourceRefs": [{ "source": "de_encyclopedia_2025.html", "section": "Apache Kafka", "sourceType": "primary" }]
+  },
+  {
+    "id": "q.de.kafka.exactly-once.001",
+    "schemaVersion": 1,
+    "conceptId": "de.kafka.exactly-once",
+    "topic": "kafka",
+    "difficulty": 6,
+    "type": "mcq",
+    "stem": "Does Kafka's exactly-once guarantee automatically extend to writes into an external database?",
+    "options": [
+      { "id": "a", "text": "Yes, transactions cover any sink", "correct": false, "why": "Kafka transactions are Kafka-to-Kafka; external systems are outside them." },
+      { "id": "b", "text": "No, the external sink must be idempotent or transactional", "correct": true, "why": "End-to-end exactly-once needs the sink to cooperate." },
+      { "id": "c", "text": "Yes, if acks=all", "correct": false, "why": "acks is durability of the Kafka write, not external effects." },
+      { "id": "d", "text": "No, exactly-once is impossible in Kafka", "correct": false, "why": "It exists for Kafka-internal consume-process-produce cycles." }
+    ],
+    "explanation": "Kafka EOS covers offsets + output topics atomically. External writes need idempotency keys or their own transactions.",
+    "sourceRefs": [{ "source": "de_encyclopedia_2025.html", "section": "Apache Kafka", "sourceType": "primary" }]
+  },
+  {
+    "id": "q.de.kafka.rebalancing.001",
+    "schemaVersion": 1,
+    "conceptId": "de.kafka.rebalancing",
+    "topic": "kafka",
+    "difficulty": 5,
+    "type": "mcq",
+    "stem": "Consumers repeatedly rebalance under load. The most common root cause is:",
+    "options": [
+      { "id": "a", "text": "Processing exceeds max.poll.interval.ms", "correct": true, "why": "Slow processing misses the poll deadline, so Kafka evicts the consumer and rebalances." },
+      { "id": "b", "text": "Replication factor is too low", "correct": false, "why": "RF doesn't drive consumer group membership." },
+      { "id": "c", "text": "Too few topics", "correct": false, "why": "Topic count doesn't cause rebalances." },
+      { "id": "d", "text": "Compaction is enabled", "correct": false, "why": "Compaction is storage-side and unrelated to group membership." }
+    ],
+    "explanation": "If processing a batch takes longer than max.poll.interval.ms, the broker considers the consumer dead and rebalances. Reduce batch size or raise the limit.",
+    "sourceRefs": [{ "source": "de_encyclopedia_2025.html", "section": "Apache Kafka", "sourceType": "primary" }]
+  },
+  {
+    "id": "q.de.kafka.retention.001",
+    "schemaVersion": 1,
+    "conceptId": "de.kafka.retention",
+    "topic": "kafka",
+    "difficulty": 3,
+    "type": "mcq",
+    "stem": "After a consumer reads a record in a time-retained topic, the record is:",
+    "options": [
+      { "id": "a", "text": "Deleted immediately", "correct": false, "why": "Kafka is a log, not a queue; reading doesn't delete." },
+      { "id": "b", "text": "Kept until retention expires", "correct": true, "why": "Records persist for the retention window regardless of consumption, enabling replay." },
+      { "id": "c", "text": "Moved to a dead-letter topic", "correct": false, "why": "Kafka has no built-in DLQ behaviour on read." },
+      { "id": "d", "text": "Compacted away", "correct": false, "why": "Compaction is a separate cleanup policy, not triggered by reads." }
+    ],
+    "explanation": "Time retention keeps records for a fixed window independent of consumption, which is exactly what makes replay possible.",
+    "sourceRefs": [{ "source": "de_encyclopedia_2025.html", "section": "Apache Kafka", "sourceType": "primary" }]
+  },
+  {
+    "id": "q.de.kafka.vs-rabbitmq.001",
+    "schemaVersion": 1,
+    "conceptId": "de.kafka.vs-rabbitmq",
+    "topic": "kafka",
+    "difficulty": 4,
+    "type": "mcq",
+    "stem": "A team needs complex per-message routing and consumes each message once. Best fit?",
+    "options": [
+      { "id": "a", "text": "Kafka, for its replay log", "correct": false, "why": "Replay and partitions aren't what this workload needs." },
+      { "id": "b", "text": "RabbitMQ, for flexible routing and queues", "correct": true, "why": "RabbitMQ excels at routing keys, exchanges, and consume-once task queues." },
+      { "id": "c", "text": "Kafka, because it is always faster", "correct": false, "why": "Throughput isn't the deciding factor here; routing model is." },
+      { "id": "d", "text": "Neither can do routing", "correct": false, "why": "RabbitMQ is purpose-built for routing." }
+    ],
+    "explanation": "Rich routing plus consume-once semantics favour RabbitMQ. Kafka shines for high-throughput, replayable streams instead.",
+    "sourceRefs": [{ "source": "de_encyclopedia_2025.html", "section": "Apache Kafka", "sourceType": "primary" }]
+  }
+]
