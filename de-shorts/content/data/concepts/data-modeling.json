@@ -1,0 +1,176 @@
+[
+  {
+    "id": "de.data-modeling.slowly-changing-dimensions",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "slowly changing dimensions",
+    "difficulty": "intermediate",
+    "priority": 65,
+    "shortType": "concept",
+    "definition": "TODO: define slowly changing dimensions.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · SQL",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.data-modeling.fact-dimension-table-design",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "fact/dimension table design",
+    "difficulty": "intermediate",
+    "priority": 65,
+    "shortType": "concept",
+    "definition": "TODO: define fact/dimension table design.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Data Modeling",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.data-modeling.data-vault-2-0-concepts",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "data vault 2.0 concepts",
+    "difficulty": "intermediate",
+    "priority": 65,
+    "shortType": "concept",
+    "definition": "TODO: define data vault 2.0 concepts.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Data Modeling",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.data-modeling.grain-definition",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "grain definition",
+    "difficulty": "intermediate",
+    "priority": 65,
+    "shortType": "concept",
+    "definition": "TODO: define grain definition.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Data Modeling",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.data-modeling.surrogate-vs-natural-keys",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "surrogate vs natural keys",
+    "difficulty": "intermediate",
+    "priority": 65,
+    "shortType": "concept",
+    "definition": "TODO: define surrogate vs natural keys.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Data Modeling",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.data-modeling.normalized-vs-denormalized-tradeoffs",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "normalized vs denormalized tradeoffs",
+    "difficulty": "intermediate",
+    "priority": 65,
+    "shortType": "concept",
+    "definition": "TODO: define normalized vs denormalized tradeoffs.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Data Modeling",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  }
+]

@@ -1,0 +1,118 @@
+[
+  {
+    "id": "de.lakehouse.delta-lake",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "lakehouse",
+    "term": "Delta Lake",
+    "difficulty": "advanced",
+    "priority": 56,
+    "shortType": "concept",
+    "definition": "Open table format supporting ACID on object storage. Delta table, time travel, MERGE.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "lakehouse"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Open Table Format / Lakehouse",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.lakehouse.medallion",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "lakehouse",
+    "term": "Medallion",
+    "difficulty": "advanced",
+    "priority": 51,
+    "shortType": "concept",
+    "definition": "TODO: define Medallion.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "lakehouse"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Architecture",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.lakehouse.apache-iceberg",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "lakehouse",
+    "term": "Apache Iceberg",
+    "difficulty": "advanced",
+    "priority": 26,
+    "shortType": "concept",
+    "definition": "Open table format alternative to Delta Lake. Great for multi-engine lakehouse architectures.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "lakehouse"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Open Table Format",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.lakehouse.apache-hudi",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "lakehouse",
+    "term": "Apache Hudi",
+    "difficulty": "advanced",
+    "priority": 15,
+    "shortType": "concept",
+    "definition": "Streaming copy-on-write format with Uber lineage. Less common than Delta/Iceberg.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "lakehouse"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Hudi",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  }
+]

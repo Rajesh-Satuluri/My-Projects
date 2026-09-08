@@ -1,0 +1,60 @@
+[
+  {
+    "id": "de.dbt.dbt",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "dbt",
+    "term": "dbt (SQL transforms)",
+    "difficulty": "intermediate",
+    "priority": 62,
+    "shortType": "concept",
+    "definition": "SQL-based transformation framework — models, tests, lineage, CI/CD for data",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "dbt"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "dbt (SQL transforms)",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.dbt.dbt-core-dbt-cloud",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "dbt",
+    "term": "dbt Core / dbt Cloud",
+    "difficulty": "intermediate",
+    "priority": 62,
+    "shortType": "concept",
+    "definition": "Analytics engineering framework. Staging → intermediate → mart models, tests, lineage.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "dbt"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "dbt Core / dbt Cloud",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  }
+]

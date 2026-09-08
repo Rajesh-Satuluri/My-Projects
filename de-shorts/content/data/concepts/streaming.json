@@ -1,0 +1,60 @@
+[
+  {
+    "id": "de.streaming.apache-flink",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "streaming",
+    "term": "Apache Flink",
+    "difficulty": "advanced",
+    "priority": 20,
+    "shortType": "concept",
+    "definition": "Stateful stream processing, event time semantics, low latency. Rising for real-time analytics.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "streaming"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Stateful Stream Processing",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.streaming.batch-vs-streaming-trade-offs",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "streaming",
+    "term": "batch vs streaming trade-offs",
+    "difficulty": "advanced",
+    "priority": 15,
+    "shortType": "concept",
+    "definition": "TODO: define batch vs streaming trade-offs.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "streaming"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Architecture",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  }
+]

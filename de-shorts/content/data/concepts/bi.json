@@ -1,0 +1,147 @@
+[
+  {
+    "id": "de.bi.power-bi",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "bi",
+    "term": "Power BI",
+    "difficulty": "advanced",
+    "priority": 47,
+    "shortType": "concept",
+    "definition": "Microsoft BI tool. DAX, Power Query, dataflows, Direct Query, Premium capacity.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "bi"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Power BI",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.bi.tableau",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "bi",
+    "term": "Tableau",
+    "difficulty": "advanced",
+    "priority": 32,
+    "shortType": "concept",
+    "definition": "Salesforce BI. VizQL, calculated fields, LOD expressions, Tableau Prep.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "bi"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Tableau",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.bi.looker-looker-studio",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "bi",
+    "term": "Looker / Looker Studio",
+    "difficulty": "advanced",
+    "priority": 22,
+    "shortType": "concept",
+    "definition": "Google/Looker BI. LookML modeling layer, explores, dashboard tiles, Looker Studio.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "bi"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Looker / Looker Studio",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.bi.amazon-quicksight",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "bi",
+    "term": "Amazon QuickSight",
+    "difficulty": "advanced",
+    "priority": 14,
+    "shortType": "concept",
+    "definition": "AWS BI service. SPICE in-memory, Quicksight Paginated reports, Q (NLQ).",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "bi"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Amazon QuickSight",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.bi.apache-superset",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "bi",
+    "term": "Apache Superset",
+    "difficulty": "advanced",
+    "priority": 10,
+    "shortType": "concept",
+    "definition": "Apache BI tool. Rich chart types, SQL Lab, Row Level Security.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "bi"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Superset",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  }
+]

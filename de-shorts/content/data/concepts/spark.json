@@ -1,0 +1,437 @@
+[
+  {
+    "id": "de.spark.apache-spark",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "spark",
+    "term": "Apache Spark",
+    "difficulty": "intermediate",
+    "priority": 78,
+    "shortType": "concept",
+    "definition": "Unified analytics engine for large-scale data processing. Core to nearly all modern DE stacks.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "spark"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Distributed Processing Engine",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.spark.pyspark",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "spark",
+    "term": "PySpark",
+    "difficulty": "intermediate",
+    "priority": 75,
+    "shortType": "concept",
+    "definition": "Python API for Apache Spark — distributed DataFrame processing at scale",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "spark"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "PySpark",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.spark.partitioning",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "spark",
+    "term": "Partitioning",
+    "difficulty": "intermediate",
+    "priority": 73,
+    "shortType": "concept",
+    "definition": "TODO: define Partitioning.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "spark"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Spark",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.spark.broadcast-vs-shuffle-join",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "spark",
+    "term": "broadcast vs shuffle join",
+    "difficulty": "intermediate",
+    "priority": 73,
+    "shortType": "concept",
+    "definition": "TODO: define broadcast vs shuffle join.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "spark"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Spark",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.spark.aqe",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "spark",
+    "term": "AQE",
+    "difficulty": "intermediate",
+    "priority": 73,
+    "shortType": "concept",
+    "definition": "TODO: define AQE.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "spark"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Spark",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.spark.skew-handling-salting",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "spark",
+    "term": "skew handling/salting",
+    "difficulty": "intermediate",
+    "priority": 73,
+    "shortType": "concept",
+    "definition": "TODO: define skew handling/salting.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "spark"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Spark",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.spark.catalyst-optimizer",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "spark",
+    "term": "Catalyst optimizer",
+    "difficulty": "intermediate",
+    "priority": 73,
+    "shortType": "concept",
+    "definition": "TODO: define Catalyst optimizer.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "spark"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Spark",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.spark.rdd-vs-dataframe",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "spark",
+    "term": "RDD vs DataFrame",
+    "difficulty": "intermediate",
+    "priority": 73,
+    "shortType": "concept",
+    "definition": "TODO: define RDD vs DataFrame.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "spark"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Spark",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.spark.lazy-evaluation",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "spark",
+    "term": "lazy evaluation",
+    "difficulty": "intermediate",
+    "priority": 73,
+    "shortType": "concept",
+    "definition": "TODO: define lazy evaluation.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "spark"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Spark",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.spark.spark-ui-analysis",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "spark",
+    "term": "Spark UI analysis",
+    "difficulty": "intermediate",
+    "priority": 73,
+    "shortType": "concept",
+    "definition": "TODO: define Spark UI analysis.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "spark"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Spark",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.spark.caching-strategy",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "spark",
+    "term": "caching strategy",
+    "difficulty": "intermediate",
+    "priority": 73,
+    "shortType": "concept",
+    "definition": "TODO: define caching strategy.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "spark"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Spark",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.spark.bigquery-partitioning-clustering-slots",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "spark",
+    "term": "BigQuery partitioning/clustering/slots",
+    "difficulty": "intermediate",
+    "priority": 73,
+    "shortType": "concept",
+    "definition": "TODO: define BigQuery partitioning/clustering/slots.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "spark"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Cloud",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.spark.databricks-runtime",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "spark",
+    "term": "Databricks Runtime",
+    "difficulty": "intermediate",
+    "priority": 63,
+    "shortType": "concept",
+    "definition": "Databricks optimised Spark runtime with Delta Lake, Unity Catalog, Auto Loader built-in",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "spark"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Databricks Runtime",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.spark.spark-sql",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "spark",
+    "term": "Spark SQL",
+    "difficulty": "advanced",
+    "priority": 51,
+    "shortType": "concept",
+    "definition": "SQL-like interface on Spark — Hive-compatible, great for complex transforms",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "spark"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Spark SQL",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.spark.spark-structured-streaming",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "spark",
+    "term": "Spark Structured Streaming",
+    "difficulty": "advanced",
+    "priority": 44,
+    "shortType": "concept",
+    "definition": "Kafka-to-Delta/Snowflake streaming via Spark. Watermarks, stateful, exactly-once.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "spark"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Spark Structured Streaming",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  }
+]

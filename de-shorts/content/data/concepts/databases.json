@@ -1,0 +1,263 @@
+[
+  {
+    "id": "de.databases.postgresql",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "PostgreSQL",
+    "difficulty": "advanced",
+    "priority": 47,
+    "shortType": "concept",
+    "definition": "Reliable open-source RDBMS. Window functions, partitioning, JSON support, PgBouncer.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "PostgreSQL",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.databases.mysql",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "MySQL",
+    "difficulty": "advanced",
+    "priority": 40,
+    "shortType": "concept",
+    "definition": "Widely deployed RDBMS. Strong in e-commerce, fintech, legacy systems.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "MySQL",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.databases.mongodb",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "MongoDB",
+    "difficulty": "advanced",
+    "priority": 28,
+    "shortType": "concept",
+    "definition": "Document database. JSON-native, flexible schema, aggregation pipeline for analytics.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "MongoDB",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.databases.dynamodb",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "DynamoDB",
+    "difficulty": "advanced",
+    "priority": 22,
+    "shortType": "concept",
+    "definition": "AWS managed NoSQL key-value store. Low-latency, auto-scaling, DynamoDB Streams for CDC.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "DynamoDB",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.databases.redis",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "Redis",
+    "difficulty": "advanced",
+    "priority": 19,
+    "shortType": "concept",
+    "definition": "In-memory data structure store — caching, session management, pub/sub.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Redis",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.databases.cassandra",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "Cassandra",
+    "difficulty": "advanced",
+    "priority": 17,
+    "shortType": "concept",
+    "definition": "Wide-column store. High-write workloads, time-series, IoT. CQL syntax.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Cassandra",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.databases.elasticsearch",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "Elasticsearch",
+    "difficulty": "advanced",
+    "priority": 15,
+    "shortType": "concept",
+    "definition": "Search and analytics engine. Log analytics, full-text search, Kibana dashboards.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Elasticsearch",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.databases.clickhouse",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "ClickHouse",
+    "difficulty": "advanced",
+    "priority": 11,
+    "shortType": "concept",
+    "definition": "Column-oriented OLAP DB. Extremely fast analytics queries. Rising in real-time analytics.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "ClickHouse",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.databases.teradata",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "Teradata",
+    "difficulty": "advanced",
+    "priority": 11,
+    "shortType": "concept",
+    "definition": "Legacy enterprise data warehouse. Being replaced by cloud-native alternatives.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Teradata",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  }
+]

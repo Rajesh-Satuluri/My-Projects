@@ -1,0 +1,147 @@
+[
+  {
+    "id": "de.architecture.debezium",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "architecture",
+    "term": "Debezium (CDC)",
+    "difficulty": "advanced",
+    "priority": 15,
+    "shortType": "concept",
+    "definition": "CDC connector framework. Captures DB changes (inserts/updates/deletes) and streams to Kafka.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "architecture"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Debezium (CDC)",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.architecture.lambda-vs-kappa",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "architecture",
+    "term": "Lambda vs Kappa",
+    "difficulty": "advanced",
+    "priority": 10,
+    "shortType": "concept",
+    "definition": "TODO: define Lambda vs Kappa.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "architecture"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Architecture",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.architecture.cdc-pipeline-design",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "architecture",
+    "term": "CDC pipeline design",
+    "difficulty": "advanced",
+    "priority": 10,
+    "shortType": "concept",
+    "definition": "TODO: define CDC pipeline design.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "architecture"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Architecture",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.architecture.data-mesh-principles",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "architecture",
+    "term": "data mesh principles",
+    "difficulty": "advanced",
+    "priority": 10,
+    "shortType": "concept",
+    "definition": "TODO: define data mesh principles.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "architecture"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Architecture",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.architecture.idempotent-pipeline-design",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "architecture",
+    "term": "idempotent pipeline design",
+    "difficulty": "advanced",
+    "priority": 10,
+    "shortType": "concept",
+    "definition": "TODO: define idempotent pipeline design.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "architecture"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Architecture",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  }
+]

@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://de-shorts/schema/question.schema.json",
+  "title": "Question",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "schemaVersion",
+    "conceptId",
+    "topic",
+    "difficulty",
+    "type",
+    "stem",
+    "options",
+    "explanation",
+    "sourceRefs"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^q\\.(de|ai)\\.[a-z0-9-]+\\.[a-z0-9-]+\\.[0-9]{3}$",
+      "description": "q.{conceptId}.NNN"
+    },
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "conceptId": {
+      "type": "string",
+      "pattern": "^(de|ai)\\.[a-z0-9-]+\\.[a-z0-9-]+$",
+      "description": "REQUIRED. No orphan questions; must reference an existing concept."
+    },
+    "topic": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "difficulty": { "type": "integer", "minimum": 1, "maximum": 8 },
+    "type": { "type": "string", "enum": ["mcq", "true-false"] },
+    "stem": { "type": "string", "minLength": 1, "maxLength": 180 },
+    "options": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "text", "correct", "why"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-d]$" },
+          "text": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "correct": { "type": "boolean" },
+          "why": { "type": "string", "minLength": 1, "maxLength": 200 }
+        }
+      }
+    },
+    "explanation": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "sourceRefs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "section", "sourceType"],
+        "properties": {
+          "source": { "type": "string", "minLength": 1 },
+          "section": { "type": "string", "minLength": 1 },
+          "sourceType": { "type": "string", "enum": ["primary", "secondary"] }
+        }
+      }
+    }
+  }
+}

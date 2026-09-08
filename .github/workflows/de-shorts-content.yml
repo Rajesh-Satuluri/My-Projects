@@ -1,0 +1,30 @@
+name: DE Shorts content validation
+
+on:
+  pull_request:
+    paths:
+      - "de-shorts/content/**"
+      - "de-shorts/tools/**"
+      - "de-shorts/package.json"
+  push:
+    branches: [main]
+    paths:
+      - "de-shorts/content/**"
+      - "de-shorts/tools/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: de-shorts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci || npm install
+      - name: Typecheck tools
+        run: npx tsc --noEmit
+      - name: Validate content (schema + graph integrity)
+        run: npm run validate

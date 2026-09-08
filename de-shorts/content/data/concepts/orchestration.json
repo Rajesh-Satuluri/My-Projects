@@ -1,0 +1,60 @@
+[
+  {
+    "id": "de.orchestration.apache-airflow",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Apache Airflow",
+    "difficulty": "intermediate",
+    "priority": 79,
+    "shortType": "concept",
+    "definition": "Python-based workflow scheduler. DAGs, sensors, operators, XComs, KubernetesPodOperator.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "orchestration"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.orchestration.dagster",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Dagster",
+    "difficulty": "advanced",
+    "priority": 22,
+    "shortType": "concept",
+    "definition": "Asset-oriented orchestrator. Software-defined assets, partitioning, Dagit UI, sensors.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "orchestration"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Dagster",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  }
+]

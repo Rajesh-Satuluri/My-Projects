@@ -1,0 +1,147 @@
+[
+  {
+    "id": "de.ingestion.fivetran",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "ingestion",
+    "term": "Fivetran",
+    "difficulty": "advanced",
+    "priority": 29,
+    "shortType": "concept",
+    "definition": "Modern EL(T) tool. 300+ source connectors, log-based CDC, normalization modes.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "ingestion"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Fivetran",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.ingestion.airbyte",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "ingestion",
+    "term": "Airbyte",
+    "difficulty": "advanced",
+    "priority": 24,
+    "shortType": "concept",
+    "definition": "Open-source EL(T) alternative. Self-hosted or managed. 300+ connectors, custom connectors.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "ingestion"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Airbyte",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.ingestion.informatica-powercenter",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "ingestion",
+    "term": "Informatica PowerCenter",
+    "difficulty": "advanced",
+    "priority": 24,
+    "shortType": "concept",
+    "definition": "Informatica PowerCenter — enterprise ETL tool. Used in banking, insurance, telecom.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "ingestion"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Informatica PowerCenter",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.ingestion.talend",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "ingestion",
+    "term": "Talend",
+    "difficulty": "advanced",
+    "priority": 17,
+    "shortType": "concept",
+    "definition": "Open-source ETL framework with visual designer. Replaced by modern cloud-native ELT.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "ingestion"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Talend",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.ingestion.ssis",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "ingestion",
+    "term": "SSIS",
+    "difficulty": "advanced",
+    "priority": 16,
+    "shortType": "concept",
+    "definition": "Legacy Microsoft ETL tool. SQL Server ecosystem. Being replaced by ADF.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "ingestion"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "SSIS",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  }
+]

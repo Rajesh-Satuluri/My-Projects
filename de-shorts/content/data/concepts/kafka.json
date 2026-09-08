@@ -1,0 +1,31 @@
+[
+  {
+    "id": "de.kafka.apache-kafka",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "kafka",
+    "term": "Apache Kafka",
+    "difficulty": "intermediate",
+    "priority": 60,
+    "shortType": "concept",
+    "definition": "Event streaming platform for real-time pipelines. Topics, partitions, consumer groups.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "kafka"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Event Streaming · Real-time",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  }
+]
