@@ -1,0 +1,205 @@
+[
+  {
+    "id": "de.cloud.azure-devops",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "cloud",
+    "term": "Azure DevOps",
+    "difficulty": "advanced",
+    "priority": 35,
+    "shortType": "concept",
+    "definition": "Azure DevOps pipelines, boards, repos. Enterprise-grade CI/CD on Microsoft stack.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "cloud"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Azure DevOps",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.cloud.azure-adf-databricks-adls-patterns",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "cloud",
+    "term": "Azure ADF + Databricks + ADLS patterns",
+    "difficulty": "advanced",
+    "priority": 30,
+    "shortType": "concept",
+    "definition": "TODO: define Azure ADF + Databricks + ADLS patterns.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "cloud"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Cloud",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.cloud.cross-cloud-service-equivalences",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "cloud",
+    "term": "cross-cloud service equivalences",
+    "difficulty": "advanced",
+    "priority": 30,
+    "shortType": "concept",
+    "definition": "TODO: define cross-cloud service equivalences.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "cloud"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Cloud",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.cloud.iam-security-patterns",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "cloud",
+    "term": "IAM security patterns",
+    "difficulty": "advanced",
+    "priority": 30,
+    "shortType": "concept",
+    "definition": "TODO: define IAM security patterns.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "cloud"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Cloud",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.cloud.cost-optimization",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "cloud",
+    "term": "cost optimization",
+    "difficulty": "advanced",
+    "priority": 30,
+    "shortType": "concept",
+    "definition": "TODO: define cost optimization.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "cloud"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Cloud",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.cloud.azure-purview-microsoft-purview",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "cloud",
+    "term": "Azure Purview / Microsoft Purview",
+    "difficulty": "advanced",
+    "priority": 22,
+    "shortType": "concept",
+    "definition": "Azure governance & cataloging. Data map, data scan, classifications, lineage.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "cloud"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Azure Purview / Microsoft Purview",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.cloud.soda-core-soda-cloud",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "cloud",
+    "term": "Soda Core / Soda Cloud",
+    "difficulty": "advanced",
+    "priority": 12,
+    "shortType": "concept",
+    "definition": "Data quality platform. YAML-based checks, Soda Cloud, freshness and schema tests.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "cloud"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Soda Core / Soda Cloud",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  }
+]

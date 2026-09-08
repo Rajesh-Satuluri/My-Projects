@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://de-shorts/schema/relationship.schema.json",
+  "title": "Relationship",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["from", "rel", "to"],
+  "properties": {
+    "from": { "type": "string", "pattern": "^(de|ai)\\.[a-z0-9-]+\\.[a-z0-9-]+$" },
+    "rel": {
+      "type": "string",
+      "enum": ["requires", "relates-to", "next", "compares-with", "enables"]
+    },
+    "to": { "type": "string", "pattern": "^(de|ai)\\.[a-z0-9-]+\\.[a-z0-9-]+$" }
+  }
+}

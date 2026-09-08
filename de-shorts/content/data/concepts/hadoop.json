@@ -1,0 +1,89 @@
+[
+  {
+    "id": "de.hadoop.hdfs-hadoop",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "hadoop",
+    "term": "HDFS / Hadoop",
+    "difficulty": "advanced",
+    "priority": 35,
+    "shortType": "concept",
+    "definition": "Distributed file system. Legacy but still in Hadoop-based on-prem deployments.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "hadoop"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "HDFS / Hadoop",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.hadoop.mapreduce",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "hadoop",
+    "term": "MapReduce",
+    "difficulty": "advanced",
+    "priority": 15,
+    "shortType": "concept",
+    "definition": "Google/Apache batch processing model. Legacy pattern superseded by Spark.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "hadoop"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "MapReduce",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.hadoop.apache-beam",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "hadoop",
+    "term": "Apache Beam",
+    "difficulty": "advanced",
+    "priority": 12,
+    "shortType": "concept",
+    "definition": "Apache Beam provides unified batch+streaming model running on multiple runners.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "hadoop"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Apache Beam",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  }
+]

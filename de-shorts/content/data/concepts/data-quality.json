@@ -1,0 +1,205 @@
+[
+  {
+    "id": "de.data-quality.databricks-unity-catalog",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-quality",
+    "term": "Databricks Unity Catalog",
+    "difficulty": "advanced",
+    "priority": 35,
+    "shortType": "concept",
+    "definition": "Databricks governance layer. Fine-grained RBAC, column masking, data lineage, metastore federation.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-quality"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Databricks Unity Catalog",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.data-quality.grafana-prometheus",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-quality",
+    "term": "Grafana / Prometheus",
+    "difficulty": "advanced",
+    "priority": 30,
+    "shortType": "concept",
+    "definition": "Metrics & alerting visualization. Prometheus+Grafana is standard data platform monitoring.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-quality"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Grafana / Prometheus",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.data-quality.great-expectations",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-quality",
+    "term": "Great Expectations",
+    "difficulty": "advanced",
+    "priority": 28,
+    "shortType": "concept",
+    "definition": "Open-source data quality framework. Expectation suites, checkpoints, data docs, Pandas+Spark.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-quality"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Data Quality Framework",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.data-quality.monte-carlo",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-quality",
+    "term": "Monte Carlo",
+    "difficulty": "advanced",
+    "priority": 10,
+    "shortType": "concept",
+    "definition": "Data observability platform. Table health monitors, lineage, SLA breach alerts.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-quality"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Monte Carlo",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.data-quality.collibra",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-quality",
+    "term": "Collibra",
+    "difficulty": "advanced",
+    "priority": 8,
+    "shortType": "concept",
+    "definition": "Enterprise data catalog. Business glossary, data lineage, stewardship, compliance.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-quality"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Collibra",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.data-quality.openmetadata-atlan",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-quality",
+    "term": "OpenMetadata / Atlan",
+    "difficulty": "advanced",
+    "priority": 8,
+    "shortType": "concept",
+    "definition": "Open-source metadata platform. Data discovery, tagging, lineage, ML feature store catalog.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-quality"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "OpenMetadata / Atlan",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.data-quality.openlineage",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-quality",
+    "term": "OpenLineage",
+    "difficulty": "advanced",
+    "priority": 8,
+    "shortType": "concept",
+    "definition": "Open standard for data lineage collection & publishing. Integrates with Airflow, dbt, Spark.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-quality"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "OpenLineage",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  }
+]

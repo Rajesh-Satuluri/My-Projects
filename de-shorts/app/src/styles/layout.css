@@ -1,0 +1,144 @@
+/* DE Shorts — 360x800 card layout grid (spec §10/§13). Full-bleed, 100dvh,
+   safe-area aware, no horizontal page scroll ever. */
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden; /* the page never scrolls sideways */
+}
+
+/* the feed: one card per viewport, vertical snap (swipe-up = next) */
+.feed {
+  height: 100dvh;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+}
+.feed::-webkit-scrollbar { display: none; }
+
+/* one card = one full-bleed screen */
+.card {
+  position: relative;
+  height: 100dvh;
+  scroll-snap-align: start;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto; /* meta · term+def · body(visual/expand) · actions */
+  gap: var(--s-3);
+  padding: calc(var(--safe-top) + var(--s-3)) var(--s-4)
+           calc(var(--safe-bottom) + var(--s-3));
+  background:
+    radial-gradient(120% 60% at 50% -10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+    var(--bg);
+  overflow: hidden; /* card content must fit; the render gate enforces this */
+}
+
+.card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.card__topic-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent);
+}
+.card__difficulty { margin-left: auto; }
+
+.card__term {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+}
+.card__def {
+  font-size: var(--fs-h);
+  font-weight: 500;
+  color: var(--text-1);
+  margin-top: var(--s-2);
+}
+
+.card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-height: 0; /* allow the visual to shrink instead of overflowing */
+  overflow: hidden;
+}
+
+.card__visual {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-3);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.card__visual svg { max-width: 100%; height: auto; }
+
+.card__expand { min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.card__expand::-webkit-scrollbar { display: none; }
+
+.section { margin-bottom: var(--s-4); }
+.section__label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  margin-bottom: var(--s-1);
+}
+.section__body { font-size: var(--fs-sm); color: var(--text-2); }
+.section--interview .section__body { color: var(--text-1); font-weight: 500; }
+
+/* code block: scrolls internally only, never the page (spec §40) */
+.code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--s-3);
+  overflow-x: auto;
+  white-space: pre;
+  color: var(--text-1);
+}
+
+/* action area — lower 60% of screen (spec §48 one-handed) */
+.card__actions {
+  display: flex;
+  gap: var(--s-2);
+  align-items: center;
+}
+.btn {
+  flex: 1;
+  min-height: 48px; /* accessible tap target */
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text-1);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-family: inherit;
+}
+.btn--primary { background: var(--accent); color: #0b0b0c; border-color: transparent; }
+.btn--ghost { background: transparent; }
+
+.expand-hint {
+  align-self: center;
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; animation: none !important; }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "de-shorts-content",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "DE Shorts content tooling: schemas, validation, and source parsing (Phase 1).",
+  "scripts": {
+    "parse": "tsx tools/parse-encyclopedia.ts",
+    "validate": "tsx tools/validate.ts"
+  },
+  "dependencies": {
+    "@types/node": "^22.20.1",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3"
+  }
+}

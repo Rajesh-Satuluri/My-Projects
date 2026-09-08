@@ -1,0 +1,118 @@
+[
+  {
+    "id": "de.warehouse.snowflake",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "warehouse",
+    "term": "Snowflake",
+    "difficulty": "intermediate",
+    "priority": 70,
+    "shortType": "concept",
+    "definition": "Cloud-native data warehouse with separation of storage/compute. Time Travel, Snowpipe, Shares.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "warehouse"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Cloud Data Warehouse",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.warehouse.star-vs-snowflake-schema",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "warehouse",
+    "term": "Star vs snowflake schema",
+    "difficulty": "intermediate",
+    "priority": 65,
+    "shortType": "concept",
+    "definition": "TODO: define Star vs snowflake schema.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "warehouse"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Data Modeling",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.warehouse.data-lakehouse-vs-data-warehouse",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "warehouse",
+    "term": "data lakehouse vs data warehouse",
+    "difficulty": "intermediate",
+    "priority": 65,
+    "shortType": "concept",
+    "definition": "TODO: define data lakehouse vs data warehouse.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "warehouse"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Architecture",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  },
+  {
+    "id": "de.warehouse.aws-s3-glue-redshift-patterns",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "warehouse",
+    "term": "AWS S3 + Glue + Redshift patterns",
+    "difficulty": "intermediate",
+    "priority": 65,
+    "shortType": "concept",
+    "definition": "TODO: define AWS S3 + Glue + Redshift patterns.",
+    "prerequisites": [],
+    "relatedConcepts": [],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "warehouse"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Most Asked Concepts · Cloud",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "inferred",
+    "authoringStatus": "stub"
+  }
+]

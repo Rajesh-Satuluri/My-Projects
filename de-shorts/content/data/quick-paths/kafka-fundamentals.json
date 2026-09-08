@@ -1,0 +1,40 @@
+[
+  {
+    "id": "path.de.kafka-fundamentals",
+    "schemaVersion": 1,
+    "title": "Kafka Fundamentals",
+    "topic": "kafka",
+    "durationMin": 15,
+    "difficulty": "core",
+    "objective": "Understand Kafka end-to-end: why it exists, how partitions scale it, and how to reason about ordering, durability, and lag in interviews.",
+    "conceptIds": [
+      "de.kafka.why",
+      "de.kafka.topic",
+      "de.kafka.partition",
+      "de.kafka.offset",
+      "de.kafka.producer",
+      "de.kafka.consumer",
+      "de.kafka.consumer-group",
+      "de.kafka.rebalancing",
+      "de.kafka.replication",
+      "de.kafka.isr",
+      "de.kafka.retention",
+      "de.kafka.log-compaction",
+      "de.kafka.delivery-semantics",
+      "de.kafka.exactly-once",
+      "de.kafka.consumer-lag",
+      "de.kafka.broker",
+      "de.kafka.partition-strategy",
+      "de.kafka.vs-rabbitmq",
+      "de.kafka.vs-kinesis",
+      "de.kafka.ai-streaming-ingestion"
+    ],
+    "quizConceptIds": [
+      "de.kafka.partition",
+      "de.kafka.consumer-group",
+      "de.kafka.offset",
+      "de.kafka.isr",
+      "de.kafka.consumer-lag"
+    ]
+  }
+]

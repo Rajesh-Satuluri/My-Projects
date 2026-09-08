@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://de-shorts/schema/concept.schema.json",
+  "title": "Concept",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "schemaVersion",
+    "contentVersion",
+    "type",
+    "domain",
+    "topic",
+    "term",
+    "difficulty",
+    "priority",
+    "shortType",
+    "definition",
+    "prerequisites",
+    "relatedConcepts",
+    "nextConcepts",
+    "quickPaths",
+    "tags",
+    "sourceRefs",
+    "provenance",
+    "authoringStatus"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^(de|ai)\\.[a-z0-9-]+\\.[a-z0-9-]+$",
+      "description": "Stable id: {domain}.{topic}.{slug}. Immutable once shipped."
+    },
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "contentVersion": { "type": "string", "pattern": "^[0-9]{4}\\.[0-9]{2}\\.[0-9]+$" },
+    "type": { "type": "string", "const": "concept" },
+    "domain": { "type": "string", "enum": ["data-engineering", "ai"] },
+    "topic": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "term": { "type": "string", "minLength": 1, "maxLength": 60 },
+    "difficulty": {
+      "type": "string",
+      "enum": ["fundamental", "core", "intermediate", "advanced", "system-design"]
+    },
+    "priority": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "shortType": { "type": "string", "enum": ["concept", "why", "visual", "compare"] },
+
+    "definition": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "explanation": { "type": "string", "maxLength": 280 },
+    "interviewLine": { "type": "string", "maxLength": 160 },
+    "whyItMatters": { "type": "string", "maxLength": 200 },
+    "commonMistake": { "type": "string", "maxLength": 200 },
+    "interviewQuestion": { "type": "string", "maxLength": 160 },
+
+    "example": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "content"],
+      "properties": {
+        "type": { "type": "string", "enum": ["text", "sql", "python", "config"] },
+        "content": { "type": "string", "minLength": 1, "maxLength": 400 }
+      }
+    },
+
+    "visual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["template", "data"],
+      "properties": {
+        "template": {
+          "type": "string",
+          "enum": ["flow", "partition", "before-after", "comparison", "timeline", "tree"]
+        },
+        "data": { "type": "object" }
+      }
+    },
+
+    "prerequisites": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "relatedConcepts": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "nextConcepts": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "quickPaths": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "tags": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9-]+$" }, "uniqueItems": true },
+
+    "sourceRefs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "section", "sourceType"],
+        "properties": {
+          "source": { "type": "string", "minLength": 1 },
+          "section": { "type": "string", "minLength": 1 },
+          "sourceType": { "type": "string", "enum": ["primary", "secondary"] }
+        }
+      }
+    },
+    "provenance": {
+      "type": "string",
+      "enum": ["source-derived", "external", "inferred", "supplementary"]
+    },
+    "authoringStatus": { "type": "string", "enum": ["stub", "draft", "reviewed"] },
+    "supersedes": { "type": "string" }
+  }
+}

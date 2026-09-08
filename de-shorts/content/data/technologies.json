@@ -1,0 +1,587 @@
+[
+  {
+    "term": "Python",
+    "tooltip": "Primary language for data engineering — ETL, API calls, PySpark, scripting",
+    "demandPct": 94,
+    "heatPts": null,
+    "category": null,
+    "topic": "python",
+    "priority": 94
+  },
+  {
+    "term": "SQL (Advanced)",
+    "tooltip": "Advanced SQL — window functions, CTEs, stored procedures, query optimization",
+    "demandPct": 92,
+    "heatPts": null,
+    "category": null,
+    "topic": "sql",
+    "priority": 92
+  },
+  {
+    "term": "Git / GitHub",
+    "tooltip": "Version control. Branching strategies, PR reviews, rebase, tagging, git hooks.",
+    "demandPct": 90,
+    "heatPts": null,
+    "category": null,
+    "topic": "devops",
+    "priority": 90
+  },
+  {
+    "term": "Apache Airflow",
+    "tooltip": "Python-based workflow scheduler. DAGs, sensors, operators, XComs, KubernetesPodOperator.",
+    "demandPct": 79,
+    "heatPts": null,
+    "category": "Workflow Orchestration",
+    "topic": "orchestration",
+    "priority": 79
+  },
+  {
+    "term": "Apache Spark",
+    "tooltip": "Unified analytics engine for large-scale data processing. Core to nearly all modern DE stacks.",
+    "demandPct": 78,
+    "heatPts": null,
+    "category": "Distributed Processing Engine",
+    "topic": "spark",
+    "priority": 78
+  },
+  {
+    "term": "PySpark",
+    "tooltip": "Python API for Apache Spark — distributed DataFrame processing at scale",
+    "demandPct": 75,
+    "heatPts": null,
+    "category": null,
+    "topic": "spark",
+    "priority": 75
+  },
+  {
+    "term": "Snowflake",
+    "tooltip": "Cloud-native data warehouse with separation of storage/compute. Time Travel, Snowpipe, Shares.",
+    "demandPct": 70,
+    "heatPts": null,
+    "category": "Cloud Data Warehouse",
+    "topic": "warehouse",
+    "priority": 70
+  },
+  {
+    "term": "Docker",
+    "tooltip": "Container runtime. Dockerfile, docker-compose, multi-stage builds, image layering.",
+    "demandPct": 65,
+    "heatPts": null,
+    "category": null,
+    "topic": "devops",
+    "priority": 65
+  },
+  {
+    "term": "Databricks Runtime",
+    "tooltip": "Databricks optimised Spark runtime with Delta Lake, Unity Catalog, Auto Loader built-in",
+    "demandPct": 63,
+    "heatPts": null,
+    "category": null,
+    "topic": "spark",
+    "priority": 63
+  },
+  {
+    "term": "dbt (SQL transforms)",
+    "tooltip": "SQL-based transformation framework — models, tests, lineage, CI/CD for data",
+    "demandPct": 62,
+    "heatPts": null,
+    "category": null,
+    "topic": "dbt",
+    "priority": 62
+  },
+  {
+    "term": "dbt Core / dbt Cloud",
+    "tooltip": "Analytics engineering framework. Staging → intermediate → mart models, tests, lineage.",
+    "demandPct": 62,
+    "heatPts": null,
+    "category": null,
+    "topic": "dbt",
+    "priority": 62
+  },
+  {
+    "term": "Apache Kafka",
+    "tooltip": "Event streaming platform for real-time pipelines. Topics, partitions, consumer groups.",
+    "demandPct": 60,
+    "heatPts": null,
+    "category": "Event Streaming · Real-time",
+    "topic": "kafka",
+    "priority": 60
+  },
+  {
+    "term": "Delta Lake",
+    "tooltip": "Open table format supporting ACID on object storage. Delta table, time travel, MERGE.",
+    "demandPct": 56,
+    "heatPts": null,
+    "category": "Open Table Format / Lakehouse",
+    "topic": "lakehouse",
+    "priority": 56
+  },
+  {
+    "term": "Kubernetes (K8s)",
+    "tooltip": "Container orchestration. Pods, deployments, Helm charts, Spark on K8s, Airflow on K8s.",
+    "demandPct": 55,
+    "heatPts": null,
+    "category": null,
+    "topic": "devops",
+    "priority": 55
+  },
+  {
+    "term": "GitHub Actions",
+    "tooltip": "CI/CD automation natively in GitHub. Matrix builds, composite actions, environments.",
+    "demandPct": 55,
+    "heatPts": null,
+    "category": null,
+    "topic": "devops",
+    "priority": 55
+  },
+  {
+    "term": "Terraform",
+    "tooltip": "Infrastructure as code. Providers, modules, state management, workspaces, remote state.",
+    "demandPct": 52,
+    "heatPts": null,
+    "category": "Infrastructure as Code",
+    "topic": "devops",
+    "priority": 52
+  },
+  {
+    "term": "Spark SQL",
+    "tooltip": "SQL-like interface on Spark — Hive-compatible, great for complex transforms",
+    "demandPct": 51,
+    "heatPts": null,
+    "category": null,
+    "topic": "spark",
+    "priority": 51
+  },
+  {
+    "term": "PostgreSQL",
+    "tooltip": "Reliable open-source RDBMS. Window functions, partitioning, JSON support, PgBouncer.",
+    "demandPct": 47,
+    "heatPts": null,
+    "category": null,
+    "topic": "databases",
+    "priority": 47
+  },
+  {
+    "term": "Power BI",
+    "tooltip": "Microsoft BI tool. DAX, Power Query, dataflows, Direct Query, Premium capacity.",
+    "demandPct": 47,
+    "heatPts": null,
+    "category": null,
+    "topic": "bi",
+    "priority": 47
+  },
+  {
+    "term": "Pandas",
+    "tooltip": "Data manipulation library — tabular data, groupby, merge, time series",
+    "demandPct": 46,
+    "heatPts": null,
+    "category": null,
+    "topic": "python",
+    "priority": 46
+  },
+  {
+    "term": "Spark Structured Streaming",
+    "tooltip": "Kafka-to-Delta/Snowflake streaming via Spark. Watermarks, stateful, exactly-once.",
+    "demandPct": 44,
+    "heatPts": null,
+    "category": null,
+    "topic": "spark",
+    "priority": 44
+  },
+  {
+    "term": "MySQL",
+    "tooltip": "Widely deployed RDBMS. Strong in e-commerce, fintech, legacy systems.",
+    "demandPct": 40,
+    "heatPts": null,
+    "category": null,
+    "topic": "databases",
+    "priority": 40
+  },
+  {
+    "term": "Scala",
+    "tooltip": "JVM language with powerful type system — native Spark language, performant",
+    "demandPct": 38,
+    "heatPts": null,
+    "category": null,
+    "topic": "python",
+    "priority": 38
+  },
+  {
+    "term": "Shell Scripting / Bash",
+    "tooltip": "Shell automation — cron jobs, file transfers, environment setup, pipeline scripts",
+    "demandPct": 36,
+    "heatPts": null,
+    "category": null,
+    "topic": "python",
+    "priority": 36
+  },
+  {
+    "term": "HDFS / Hadoop",
+    "tooltip": "Distributed file system. Legacy but still in Hadoop-based on-prem deployments.",
+    "demandPct": 35,
+    "heatPts": null,
+    "category": null,
+    "topic": "hadoop",
+    "priority": 35
+  },
+  {
+    "term": "Azure DevOps",
+    "tooltip": "Azure DevOps pipelines, boards, repos. Enterprise-grade CI/CD on Microsoft stack.",
+    "demandPct": 35,
+    "heatPts": null,
+    "category": null,
+    "topic": "cloud",
+    "priority": 35
+  },
+  {
+    "term": "Databricks Unity Catalog",
+    "tooltip": "Databricks governance layer. Fine-grained RBAC, column masking, data lineage, metastore federation.",
+    "demandPct": 35,
+    "heatPts": null,
+    "category": null,
+    "topic": "data-quality",
+    "priority": 35
+  },
+  {
+    "term": "PL/SQL / Stored Procedures",
+    "tooltip": "Enterprise DB language — stored procedures, triggers, legacy ETL heavy usage",
+    "demandPct": 33,
+    "heatPts": null,
+    "category": null,
+    "topic": "sql",
+    "priority": 33
+  },
+  {
+    "term": "SQL Server (MS SQL)",
+    "tooltip": "Microsoft RDBMS. SSIS, SSAS, SSRS ecosystem. Strong in enterprise/banking.",
+    "demandPct": 33,
+    "heatPts": null,
+    "category": null,
+    "topic": "sql",
+    "priority": 33
+  },
+  {
+    "term": "Tableau",
+    "tooltip": "Salesforce BI. VizQL, calculated fields, LOD expressions, Tableau Prep.",
+    "demandPct": 32,
+    "heatPts": null,
+    "category": null,
+    "topic": "bi",
+    "priority": 32
+  },
+  {
+    "term": "Jenkins",
+    "tooltip": "CI/CD automation platform. Pipelines, stages, shared libraries, plugin ecosystem.",
+    "demandPct": 30,
+    "heatPts": null,
+    "category": null,
+    "topic": "devops",
+    "priority": 30
+  },
+  {
+    "term": "Grafana / Prometheus",
+    "tooltip": "Metrics & alerting visualization. Prometheus+Grafana is standard data platform monitoring.",
+    "demandPct": 30,
+    "heatPts": null,
+    "category": null,
+    "topic": "data-quality",
+    "priority": 30
+  },
+  {
+    "term": "Java",
+    "tooltip": "JVM language widely used in Kafka ecosystems and enterprise data tools",
+    "demandPct": 29,
+    "heatPts": null,
+    "category": null,
+    "topic": "python",
+    "priority": 29
+  },
+  {
+    "term": "Fivetran",
+    "tooltip": "Modern EL(T) tool. 300+ source connectors, log-based CDC, normalization modes.",
+    "demandPct": 29,
+    "heatPts": null,
+    "category": null,
+    "topic": "ingestion",
+    "priority": 29
+  },
+  {
+    "term": "MongoDB",
+    "tooltip": "Document database. JSON-native, flexible schema, aggregation pipeline for analytics.",
+    "demandPct": 28,
+    "heatPts": null,
+    "category": null,
+    "topic": "databases",
+    "priority": 28
+  },
+  {
+    "term": "GitLab CI/CD",
+    "tooltip": "GitLab's integrated CI/CD pipelines. Runners, artifacts, environments, GitOps.",
+    "demandPct": 28,
+    "heatPts": null,
+    "category": null,
+    "topic": "devops",
+    "priority": 28
+  },
+  {
+    "term": "Great Expectations",
+    "tooltip": "Open-source data quality framework. Expectation suites, checkpoints, data docs, Pandas+Spark.",
+    "demandPct": 28,
+    "heatPts": null,
+    "category": "Data Quality Framework",
+    "topic": "data-quality",
+    "priority": 28
+  },
+  {
+    "term": "Apache Iceberg",
+    "tooltip": "Open table format alternative to Delta Lake. Great for multi-engine lakehouse architectures.",
+    "demandPct": 26,
+    "heatPts": null,
+    "category": "Open Table Format",
+    "topic": "lakehouse",
+    "priority": 26
+  },
+  {
+    "term": "Airbyte",
+    "tooltip": "Open-source EL(T) alternative. Self-hosted or managed. 300+ connectors, custom connectors.",
+    "demandPct": 24,
+    "heatPts": null,
+    "category": null,
+    "topic": "ingestion",
+    "priority": 24
+  },
+  {
+    "term": "Informatica PowerCenter",
+    "tooltip": "Informatica PowerCenter — enterprise ETL tool. Used in banking, insurance, telecom.",
+    "demandPct": 24,
+    "heatPts": null,
+    "category": null,
+    "topic": "ingestion",
+    "priority": 24
+  },
+  {
+    "term": "DynamoDB",
+    "tooltip": "AWS managed NoSQL key-value store. Low-latency, auto-scaling, DynamoDB Streams for CDC.",
+    "demandPct": 22,
+    "heatPts": null,
+    "category": null,
+    "topic": "databases",
+    "priority": 22
+  },
+  {
+    "term": "Dagster",
+    "tooltip": "Asset-oriented orchestrator. Software-defined assets, partitioning, Dagit UI, sensors.",
+    "demandPct": 22,
+    "heatPts": null,
+    "category": null,
+    "topic": "orchestration",
+    "priority": 22
+  },
+  {
+    "term": "Azure Purview / Microsoft Purview",
+    "tooltip": "Azure governance & cataloging. Data map, data scan, classifications, lineage.",
+    "demandPct": 22,
+    "heatPts": null,
+    "category": null,
+    "topic": "cloud",
+    "priority": 22
+  },
+  {
+    "term": "Looker / Looker Studio",
+    "tooltip": "Google/Looker BI. LookML modeling layer, explores, dashboard tiles, Looker Studio.",
+    "demandPct": 22,
+    "heatPts": null,
+    "category": null,
+    "topic": "bi",
+    "priority": 22
+  },
+  {
+    "term": "Apache Flink",
+    "tooltip": "Stateful stream processing, event time semantics, low latency. Rising for real-time analytics.",
+    "demandPct": 20,
+    "heatPts": null,
+    "category": "Stateful Stream Processing",
+    "topic": "streaming",
+    "priority": 20
+  },
+  {
+    "term": "Redis",
+    "tooltip": "In-memory data structure store — caching, session management, pub/sub.",
+    "demandPct": 19,
+    "heatPts": null,
+    "category": null,
+    "topic": "databases",
+    "priority": 19
+  },
+  {
+    "term": "Cassandra",
+    "tooltip": "Wide-column store. High-write workloads, time-series, IoT. CQL syntax.",
+    "demandPct": 17,
+    "heatPts": null,
+    "category": null,
+    "topic": "databases",
+    "priority": 17
+  },
+  {
+    "term": "Talend",
+    "tooltip": "Open-source ETL framework with visual designer. Replaced by modern cloud-native ELT.",
+    "demandPct": 17,
+    "heatPts": null,
+    "category": null,
+    "topic": "ingestion",
+    "priority": 17
+  },
+  {
+    "term": "SSIS",
+    "tooltip": "Legacy Microsoft ETL tool. SQL Server ecosystem. Being replaced by ADF.",
+    "demandPct": 16,
+    "heatPts": null,
+    "category": null,
+    "topic": "ingestion",
+    "priority": 16
+  },
+  {
+    "term": "Apache Hudi",
+    "tooltip": "Streaming copy-on-write format with Uber lineage. Less common than Delta/Iceberg.",
+    "demandPct": 15,
+    "heatPts": null,
+    "category": null,
+    "topic": "lakehouse",
+    "priority": 15
+  },
+  {
+    "term": "MapReduce",
+    "tooltip": "Google/Apache batch processing model. Legacy pattern superseded by Spark.",
+    "demandPct": 15,
+    "heatPts": null,
+    "category": null,
+    "topic": "hadoop",
+    "priority": 15
+  },
+  {
+    "term": "Elasticsearch",
+    "tooltip": "Search and analytics engine. Log analytics, full-text search, Kibana dashboards.",
+    "demandPct": 15,
+    "heatPts": null,
+    "category": null,
+    "topic": "databases",
+    "priority": 15
+  },
+  {
+    "term": "Debezium (CDC)",
+    "tooltip": "CDC connector framework. Captures DB changes (inserts/updates/deletes) and streams to Kafka.",
+    "demandPct": 15,
+    "heatPts": null,
+    "category": null,
+    "topic": "architecture",
+    "priority": 15
+  },
+  {
+    "term": "Ansible",
+    "tooltip": "Configuration management. Playbooks, roles, idempotent tasks, Ansible Tower.",
+    "demandPct": 15,
+    "heatPts": null,
+    "category": null,
+    "topic": "devops",
+    "priority": 15
+  },
+  {
+    "term": "Amazon QuickSight",
+    "tooltip": "AWS BI service. SPICE in-memory, Quicksight Paginated reports, Q (NLQ).",
+    "demandPct": 14,
+    "heatPts": null,
+    "category": null,
+    "topic": "bi",
+    "priority": 14
+  },
+  {
+    "term": "Apache Beam",
+    "tooltip": "Apache Beam provides unified batch+streaming model running on multiple runners.",
+    "demandPct": 12,
+    "heatPts": null,
+    "category": null,
+    "topic": "hadoop",
+    "priority": 12
+  },
+  {
+    "term": "Soda Core / Soda Cloud",
+    "tooltip": "Data quality platform. YAML-based checks, Soda Cloud, freshness and schema tests.",
+    "demandPct": 12,
+    "heatPts": null,
+    "category": null,
+    "topic": "cloud",
+    "priority": 12
+  },
+  {
+    "term": "ClickHouse",
+    "tooltip": "Column-oriented OLAP DB. Extremely fast analytics queries. Rising in real-time analytics.",
+    "demandPct": 11,
+    "heatPts": null,
+    "category": null,
+    "topic": "databases",
+    "priority": 11
+  },
+  {
+    "term": "Teradata",
+    "tooltip": "Legacy enterprise data warehouse. Being replaced by cloud-native alternatives.",
+    "demandPct": 11,
+    "heatPts": null,
+    "category": null,
+    "topic": "databases",
+    "priority": 11
+  },
+  {
+    "term": "Monte Carlo",
+    "tooltip": "Data observability platform. Table health monitors, lineage, SLA breach alerts.",
+    "demandPct": 10,
+    "heatPts": null,
+    "category": null,
+    "topic": "data-quality",
+    "priority": 10
+  },
+  {
+    "term": "Apache Superset",
+    "tooltip": "Apache BI tool. Rich chart types, SQL Lab, Row Level Security.",
+    "demandPct": 10,
+    "heatPts": null,
+    "category": null,
+    "topic": "bi",
+    "priority": 10
+  },
+  {
+    "term": "Collibra",
+    "tooltip": "Enterprise data catalog. Business glossary, data lineage, stewardship, compliance.",
+    "demandPct": 8,
+    "heatPts": null,
+    "category": null,
+    "topic": "data-quality",
+    "priority": 8
+  },
+  {
+    "term": "OpenMetadata / Atlan",
+    "tooltip": "Open-source metadata platform. Data discovery, tagging, lineage, ML feature store catalog.",
+    "demandPct": 8,
+    "heatPts": null,
+    "category": null,
+    "topic": "data-quality",
+    "priority": 8
+  },
+  {
+    "term": "OpenLineage",
+    "tooltip": "Open standard for data lineage collection & publishing. Integrates with Airflow, dbt, Spark.",
+    "demandPct": 8,
+    "heatPts": null,
+    "category": null,
+    "topic": "data-quality",
+    "priority": 8
+  },
+  {
+    "term": "R",
+    "tooltip": "Statistical computing language — used in analytics and data science teams",
+    "demandPct": 7,
+    "heatPts": null,
+    "category": null,
+    "topic": "python",
+    "priority": 7
+  }
+]
