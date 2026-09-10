@@ -7,16 +7,38 @@
     "domain": "data-engineering",
     "topic": "orchestration",
     "term": "Apache Airflow",
-    "difficulty": "intermediate",
+    "difficulty": "fundamental",
     "priority": 79,
-    "shortType": "concept",
-    "definition": "Python-based workflow scheduler. DAGs, sensors, operators, XComs, KubernetesPodOperator.",
+    "shortType": "why",
+    "definition": "Python-based orchestrator: you define workflows as DAGs of tasks that Airflow schedules, runs, retries, and monitors.",
+    "explanation": "Batch pipelines are many steps with dependencies that must run in order, on schedule, and recover from failure. Airflow is the control plane: code defines the graph, and the scheduler + executor make it happen and show you what ran.",
+    "interviewLine": "Airflow is workflow-as-code: DAGs of tasks that a scheduler triggers on a data interval and an executor runs, with retries and a UI.",
+    "whyItMatters": "It replaced brittle cron + shell glue with versioned, observable pipelines. It is the default orchestrator most data teams are expected to know.",
+    "interviewQuestion": "Why is a cron of shell scripts not enough once pipelines have dependencies and failures?",
+    "visual": {
+      "template": "flow",
+      "data": {
+        "steps": [
+          "Author DAG",
+          "Scheduler",
+          "Executor",
+          "Monitor"
+        ]
+      }
+    },
     "prerequisites": [],
-    "relatedConcepts": [],
-    "nextConcepts": [],
+    "relatedConcepts": [
+      "de.orchestration.dag",
+      "de.orchestration.scheduler"
+    ],
+    "nextConcepts": [
+      "de.orchestration.dag"
+    ],
     "quickPaths": [],
     "tags": [
-      "orchestration"
+      "orchestration",
+      "airflow",
+      "fundamentals"
     ],
     "sourceRefs": [
       {
@@ -26,7 +48,932 @@
       }
     ],
     "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.dag",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "DAG",
+    "difficulty": "core",
+    "priority": 88,
+    "shortType": "visual",
+    "definition": "A DAG is a Directed Acyclic Graph: tasks plus dependency edges with no cycles, so run order is always well-defined.",
+    "explanation": "You write the DAG in Python — tasks and their >> dependencies. 'Acyclic' means no task can depend on itself directly or transitively, which guarantees a finite, ordered execution.",
+    "interviewLine": "A DAG is tasks plus directed edges with no cycles; the acyclic property is what makes a deterministic run order possible.",
+    "whyItMatters": "The DAG is the contract: it encodes what runs, in what order, and what can run in parallel. Everything else (scheduling, retries) hangs off it.",
+    "commonMistake": "Putting heavy logic at DAG parse time. The scheduler re-parses files constantly — keep the top level cheap.",
+    "interviewQuestion": "Why must a DAG be acyclic, and what breaks if you introduce a cycle?",
+    "visual": {
+      "template": "tree",
+      "data": {
+        "root": "etl_dag",
+        "children": [
+          "extract",
+          "transform",
+          "load",
+          "notify"
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.orchestration.apache-airflow"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.task",
+      "de.orchestration.dag-run"
+    ],
+    "nextConcepts": [
+      "de.orchestration.operator"
+    ],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.operator",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Operator",
+    "difficulty": "core",
+    "priority": 80,
+    "shortType": "concept",
+    "definition": "An operator is a template for one unit of work — BashOperator, PythonOperator, SQL — instantiated as a task in a DAG.",
+    "explanation": "Operators wrap 'what to do'. You pick an operator and configure it; each instance becomes a task node. Provider packages add operators for Snowflake, S3, dbt, and more.",
+    "interviewLine": "An operator is a task template; instantiating it in a DAG creates a task. Providers ship operators for external systems.",
+    "whyItMatters": "Operators are the reusable building blocks. Knowing which operator (and provider) fits a job is most of day-to-day Airflow authoring.",
+    "commonMistake": "Reaching for BashOperator to shell out to Python. Use PythonOperator/@task so failures and logs are first-class.",
+    "visual": {
+      "template": "tree",
+      "data": {
+        "root": "Operators",
+        "children": [
+          "Bash",
+          "Python",
+          "SQL",
+          "Sensor",
+          "Empty"
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.orchestration.dag"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.hooks",
+      "de.orchestration.sensor"
+    ],
+    "nextConcepts": [
+      "de.orchestration.task"
+    ],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.task",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Task & Task Instance",
+    "difficulty": "core",
+    "priority": 78,
+    "shortType": "concept",
+    "definition": "A task is a node in the DAG; a task instance is that task for one specific run — the thing that actually has a state.",
+    "explanation": "Task = definition. Task instance (TI) = task + a DAG run. The TI moves through states (scheduled, queued, running, success/failed, up_for_retry) and is the unit Airflow schedules and retries.",
+    "interviewLine": "A task is the template; a task instance is task + run and carries the state Airflow schedules, retries, and shows in the grid.",
+    "whyItMatters": "Debugging Airflow is reading task-instance states and logs. Confusing the task with its instance hides why one run failed while others passed.",
+    "interviewQuestion": "Your task passed yesterday and failed today. Where do you look first, and what object holds that state?",
+    "visual": {
+      "template": "timeline",
+      "data": {
+        "events": [
+          "scheduled",
+          "queued",
+          "running",
+          "success",
+          "retry"
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.orchestration.dag"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.dag-run",
+      "de.orchestration.xcom"
+    ],
+    "nextConcepts": [
+      "de.orchestration.scheduler"
+    ],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.scheduler",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Scheduler",
+    "difficulty": "intermediate",
+    "priority": 76,
+    "shortType": "concept",
+    "definition": "The scheduler parses DAGs, creates DAG runs on schedule, and queues task instances whose dependencies are satisfied.",
+    "explanation": "It loops: parse DAG files, decide which DAG runs are due, then for each, find task instances whose upstreams are done and hand them to the executor. It does not run task code itself.",
+    "interviewLine": "The scheduler creates DAG runs and enqueues ready task instances; the executor runs them. Keep them separate in your head.",
+    "whyItMatters": "It is the heartbeat. Parse time, scheduling latency, and DAG file count directly shape how quickly tasks start.",
+    "commonMistake": "Blaming the scheduler for slow tasks. The scheduler queues work; the executor and workers determine run speed.",
+    "visual": {
+      "template": "flow",
+      "data": {
+        "steps": [
+          "Parse DAGs",
+          "Create run",
+          "Check deps",
+          "Queue tasks"
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.orchestration.dag"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.executor",
+      "de.orchestration.dag-run"
+    ],
+    "nextConcepts": [
+      "de.orchestration.executor"
+    ],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.executor",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Executor",
+    "difficulty": "intermediate",
+    "priority": 74,
+    "shortType": "compare",
+    "definition": "The executor decides where task instances run: Local (subprocess), Celery (worker pool), or Kubernetes (pod per task).",
+    "explanation": "Same DAG, different execution backend. Local is simplest; Celery keeps a warm worker fleet; Kubernetes spins a pod per task for isolation and elastic scale at the cost of startup latency.",
+    "interviewLine": "Celery gives fast starts from a fixed warm pool; Kubernetes gives per-task isolation and elasticity but pays pod startup cost.",
+    "whyItMatters": "Executor choice is a core scaling and cost decision, and a very common interview question about running Airflow in production.",
+    "interviewQuestion": "High-volume short tasks vs heavy isolated jobs — which executor for each, and why?",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "Celery",
+        "b": "Kubernetes",
+        "rows": [
+          [
+            "warm workers",
+            "pod per task"
+          ],
+          [
+            "fast start",
+            "strong isolation"
+          ],
+          [
+            "fixed pool",
+            "elastic"
+          ]
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.orchestration.scheduler"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.dag-run"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.dag-run",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "DAG Run",
+    "difficulty": "core",
+    "priority": 72,
+    "shortType": "concept",
+    "definition": "A DAG run is one execution of a DAG for a specific data interval, with its own task instances and overall state.",
+    "explanation": "Each run is keyed by its logical date / data interval. Runs are independent: rerunning one interval does not touch another, which is what makes backfills and reruns safe.",
+    "interviewLine": "A DAG run is a DAG executed for one data interval; each has independent task instances and state, so intervals rerun in isolation.",
+    "whyItMatters": "Thinking in runs-per-interval is the mental model behind scheduling, backfill, and idempotency in Airflow.",
+    "visual": {
+      "template": "timeline",
+      "data": {
+        "events": [
+          "queued",
+          "running",
+          "success",
+          "failed",
+          "rerun"
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.orchestration.dag"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.schedule",
+      "de.orchestration.task"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.schedule",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Schedule & Data Interval",
+    "difficulty": "intermediate",
+    "priority": 75,
+    "shortType": "concept",
+    "definition": "A DAG runs per schedule; each run covers a data interval and fires at the interval's end, not its start.",
+    "explanation": "A daily DAG for 2026-09-10 runs just after that day ends, because the data for the interval only exists once it is over. The logical date names the interval, not the wall-clock moment of execution.",
+    "interviewLine": "Airflow schedules on data intervals: a run for an interval fires at its end, and logical_date names the interval it covers.",
+    "whyItMatters": "The interval-end firing rule is the single most confusing part of Airflow and a frequent interview trap.",
+    "commonMistake": "Reading logical_date as 'now'. It is the interval start; a daily run executes after the interval completes.",
+    "interviewQuestion": "A daily DAG's logical date is the 10th. When does it actually run, and why the delay?",
+    "visual": {
+      "template": "timeline",
+      "data": {
+        "events": [
+          "interval start",
+          "collect data",
+          "interval end",
+          "run fires"
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.orchestration.dag-run"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.backfill-catchup"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.sensor",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Sensor",
+    "difficulty": "intermediate",
+    "priority": 70,
+    "shortType": "concept",
+    "definition": "A sensor is a task that waits for a condition — a file, a partition, a time — before downstream tasks may run.",
+    "explanation": "Sensors poll until success or timeout. 'poke' mode holds a worker slot the whole time; 'reschedule' and deferrable sensors free the slot between checks, which matters at scale.",
+    "interviewLine": "Sensors block until a condition holds; use reschedule or deferrable mode so waiting doesn't pin a worker slot.",
+    "whyItMatters": "Naive poke sensors silently exhaust worker slots and stall the whole cluster — a classic production incident.",
+    "commonMistake": "Many poke-mode sensors waiting for hours, each occupying a slot, until no tasks can run at all.",
+    "interviewQuestion": "You have 200 file sensors waiting hours. Why does the cluster grind to a halt, and what's the fix?",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "poke",
+        "b": "reschedule / deferrable",
+        "rows": [
+          [
+            "holds slot",
+            "frees slot"
+          ],
+          [
+            "simple",
+            "scales"
+          ],
+          [
+            "short waits",
+            "long waits"
+          ]
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.orchestration.operator"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.trigger-rules"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.xcom",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "XCom",
+    "difficulty": "intermediate",
+    "priority": 68,
+    "shortType": "concept",
+    "definition": "XCom (cross-communication) passes small values between tasks through the metadata DB — keys and hints, not large data.",
+    "explanation": "A task pushes a value; a downstream task pulls it by key. It travels through the metadata database, so it is meant for ids, counts, and paths — never DataFrames or files.",
+    "interviewLine": "XCom moves small values between tasks via the metadata DB; pass a path or id and keep the real data in storage.",
+    "whyItMatters": "Overusing XCom for big payloads bloats the metadata DB and slows the whole instance — a frequent anti-pattern.",
+    "commonMistake": "Pushing a DataFrame or file contents through XCom. Store the data externally and pass a reference.",
+    "visual": {
+      "template": "flow",
+      "data": {
+        "steps": [
+          "Task A returns",
+          "XCom (meta DB)",
+          "Task B pulls"
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.orchestration.task"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.taskflow"
+    ],
+    "nextConcepts": [
+      "de.orchestration.taskflow"
+    ],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.taskflow",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "TaskFlow API",
+    "difficulty": "intermediate",
+    "priority": 66,
+    "shortType": "concept",
+    "definition": "TaskFlow (@task) turns plain Python functions into tasks and wires XComs automatically from return values and arguments.",
+    "explanation": "Instead of PythonOperator plus manual xcom_push/pull, you decorate a function with @task and call it; return values become XComs and dependencies are inferred from how you pass them.",
+    "interviewLine": "TaskFlow's @task makes functions into tasks and auto-manages XCom, so dependencies follow ordinary Python calls.",
+    "whyItMatters": "TaskFlow is the modern authoring style — less boilerplate, clearer data flow, and fewer XCom mistakes.",
+    "example": {
+      "type": "python",
+      "content": "@task\ndef extract():\n    return load_rows()  # becomes an XCom\n\n@task\ndef transform(rows):\n    return clean(rows)\n\ntransform(extract())  # dependency inferred"
+    },
+    "visual": {
+      "template": "before-after",
+      "data": {
+        "before": {
+          "title": "Classic",
+          "items": [
+            "PythonOperator",
+            "manual XCom",
+            "verbose"
+          ]
+        },
+        "after": {
+          "title": "TaskFlow",
+          "items": [
+            "@task",
+            "auto XCom",
+            "clean"
+          ]
+        }
+      }
+    },
+    "prerequisites": [
+      "de.orchestration.xcom"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.operator"
+    ],
+    "nextConcepts": [
+      "de.orchestration.dynamic-task-mapping"
+    ],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.connections",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Connections & Variables",
+    "difficulty": "core",
+    "priority": 64,
+    "shortType": "concept",
+    "definition": "Connections store credentials and endpoints; Variables store config — both in the metadata DB or a secrets backend.",
+    "explanation": "A Connection (conn_id) holds host, login, password, extras for a system; Variables hold key/value config. Hooks and operators look them up by id, so DAG code stays free of secrets.",
+    "interviewLine": "Connections and Variables externalize credentials and config so DAGs reference a conn_id, not hardcoded secrets.",
+    "whyItMatters": "Centralizing secrets and config is what lets the same DAG run across dev/staging/prod without code edits.",
+    "commonMistake": "Hardcoding passwords or environment specifics in DAG code instead of using a Connection or secrets backend.",
+    "prerequisites": [
+      "de.orchestration.apache-airflow"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.hooks"
+    ],
+    "nextConcepts": [
+      "de.orchestration.hooks"
+    ],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.hooks",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Hooks",
+    "difficulty": "core",
+    "priority": 62,
+    "shortType": "concept",
+    "definition": "A hook is a reusable client to an external system (Postgres, S3, HTTP) that uses a Connection; operators build on hooks.",
+    "explanation": "Hooks encapsulate 'how to talk to' a system — auth, connection handling, common calls — using a conn_id. Operators are often thin wrappers over a hook, and you can call hooks directly inside @task functions.",
+    "interviewLine": "A hook is a Connection-backed client for an external system; operators wrap hooks, and you can also call them directly.",
+    "whyItMatters": "Hooks are the reuse layer for integrations; reaching for the right hook beats hand-rolling clients per DAG.",
+    "visual": {
+      "template": "tree",
+      "data": {
+        "root": "Hook",
+        "children": [
+          "Postgres",
+          "S3",
+          "HTTP",
+          "Snowflake"
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.orchestration.connections"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.operator"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.trigger-rules",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Trigger Rules",
+    "difficulty": "advanced",
+    "priority": 58,
+    "shortType": "concept",
+    "definition": "Trigger rules decide when a task runs given upstream states: all_success (default), all_done, one_failed, none_failed…",
+    "explanation": "By default a task runs only if all upstreams succeeded. Change the rule to run cleanup on all_done, alert on one_failed, or continue on none_failed_min_one_success for branching.",
+    "interviewLine": "Trigger rules override the default all_success; all_done runs cleanup regardless, one_failed drives alerting paths.",
+    "whyItMatters": "Cleanup, alerting, and branch-join logic all depend on picking the right trigger rule — a common advanced gotcha.",
+    "commonMistake": "Expecting a cleanup task to run after an upstream failure while it still uses the default all_success rule.",
+    "interviewQuestion": "A teardown task must always run even if the pipeline failed. Which trigger rule, and why not the default?",
+    "prerequisites": [
+      "de.orchestration.task"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.sensor"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.backfill-catchup",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Backfill & Catchup",
+    "difficulty": "advanced",
+    "priority": 60,
+    "shortType": "concept",
+    "definition": "Catchup runs every missed interval since start_date; backfill re-runs a chosen past date range on demand.",
+    "explanation": "If catchup is on, enabling a DAG with an old start_date schedules all intervals in between. Backfill is the deliberate version: rerun a bounded historical range, e.g. after fixing a bug.",
+    "interviewLine": "Catchup auto-fills missed intervals from start_date; backfill re-runs a bounded past range deliberately.",
+    "whyItMatters": "A wrong catchup setting floods the cluster with historical runs — a very common first-day-in-prod mistake.",
+    "commonMistake": "Shipping a DAG with an old start_date and catchup=True, triggering hundreds of historical runs at once.",
+    "interviewQuestion": "You enable a new daily DAG with start_date a year ago and it launches 365 runs. What setting caused it?",
+    "prerequisites": [
+      "de.orchestration.schedule"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.idempotency"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.retries-sla",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Retries & SLAs",
+    "difficulty": "intermediate",
+    "priority": 61,
+    "shortType": "concept",
+    "definition": "Tasks retry on failure with a delay (retries, retry_delay); SLAs flag tasks that run longer than an expected time.",
+    "explanation": "Configure retries and retry_delay (often with exponential backoff) so transient failures self-heal. An SLA marks a task as missing its expected duration so you get alerted without failing the run.",
+    "interviewLine": "Retries with backoff absorb transient failures; SLAs flag tasks exceeding an expected runtime without failing them.",
+    "whyItMatters": "Sensible retries hide transient blips; SLAs surface silent slowdowns before they become outages.",
+    "commonMistake": "Retries on a non-idempotent task, so each attempt double-writes or double-charges.",
+    "visual": {
+      "template": "timeline",
+      "data": {
+        "events": [
+          "fail",
+          "retry_delay",
+          "retry",
+          "success / SLA miss"
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.orchestration.task"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.idempotency"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.dynamic-task-mapping",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Dynamic Task Mapping",
+    "difficulty": "advanced",
+    "priority": 55,
+    "shortType": "concept",
+    "definition": "expand() creates task instances at runtime from a list — a parallel task per input, without knowing the count upfront.",
+    "explanation": "Map a task over a collection produced by an upstream task; Airflow fans out one mapped instance per element. It is the native replacement for building tasks in a loop at parse time.",
+    "interviewLine": "Dynamic task mapping uses expand() to fan a task out over a runtime list, one mapped instance per element.",
+    "whyItMatters": "Dynamic mapping handles variable-width work (N files, N partitions) cleanly and is a modern-Airflow interview topic.",
+    "example": {
+      "type": "python",
+      "content": "@task\ndef files():\n    return list_new_files()\n\n@task\ndef process(f):\n    load(f)\n\nprocess.expand(f=files())  # one task per file"
+    },
+    "visual": {
+      "template": "partition",
+      "data": {
+        "source": "expand()",
+        "partitions": 4,
+        "consumers": [
+          "file1",
+          "file2",
+          "file3",
+          "file4"
+        ]
+      }
+    },
+    "prerequisites": [
+      "de.orchestration.taskflow"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.operator"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.idempotency",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Idempotency",
+    "difficulty": "advanced",
+    "priority": 63,
+    "shortType": "why",
+    "definition": "An idempotent task yields the same result when re-run for the same interval — the key to safe retries and backfills.",
+    "explanation": "Design each run to overwrite or upsert its own interval's data rather than append. Then retries and backfills are harmless: running an interval twice leaves the same state as running it once.",
+    "interviewLine": "Idempotency means rerunning an interval gives the same result; achieve it with overwrite/upsert-by-interval, not append.",
+    "whyItMatters": "Retries and backfills only work if tasks are idempotent; otherwise reruns silently double data. It underpins every other Airflow feature.",
+    "commonMistake": "Appending rows per run, so a retry or backfill duplicates the interval's data.",
+    "interviewQuestion": "Why must Airflow tasks be idempotent, and how do you make a load step idempotent per interval?",
+    "prerequisites": [
+      "de.orchestration.dag-run"
+    ],
+    "relatedConcepts": [
+      "de.orchestration.backfill-catchup",
+      "de.orchestration.retries-sla"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "reviewed"
+  },
+  {
+    "id": "de.orchestration.airflow-vs-dagster",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "orchestration",
+    "term": "Airflow vs Dagster",
+    "difficulty": "advanced",
+    "priority": 40,
+    "shortType": "compare",
+    "definition": "Airflow orchestrates tasks (imperative DAGs); Dagster centers software-defined assets with data-aware lineage.",
+    "explanation": "Airflow asks 'what tasks run, in what order'. Dagster asks 'what data assets exist and how are they built', tracking lineage, types, and partitions. Different mental models for the same batch problem.",
+    "interviewLine": "Airflow is task-centric orchestration; Dagster is asset-centric with typed IO and lineage — pick by whether you think in tasks or assets.",
+    "whyItMatters": "Knowing the task-vs-asset framing lets you justify a tooling choice instead of defaulting to what you've used.",
+    "interviewQuestion": "When would asset-centric Dagster beat task-centric Airflow, and what do you give up?",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "Airflow",
+        "b": "Dagster",
+        "rows": [
+          [
+            "task-centric",
+            "asset-centric"
+          ],
+          [
+            "schedule DAGs",
+            "materialize assets"
+          ],
+          [
+            "huge ecosystem",
+            "typed IO, lineage"
+          ]
+        ]
+      }
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.orchestration.apache-airflow",
+      "de.orchestration.dagster"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "orchestration",
+      "airflow",
+      "dagster",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ],
+    "provenance": "source-derived",
+    "authoringStatus": "reviewed"
   },
   {
     "id": "de.orchestration.dagster",
@@ -39,22 +986,38 @@
     "difficulty": "advanced",
     "priority": 22,
     "shortType": "concept",
-    "definition": "Asset-oriented orchestrator. Software-defined assets, partitioning, Dagit UI, sensors.",
+    "definition": "Asset-oriented orchestrator: you declare software-defined assets and Dagster tracks lineage, partitions, and freshness.",
+    "explanation": "Instead of tasks, you define the data assets you want to exist; Dagster figures out how to materialize them, records lineage between them, and can check freshness — a data-aware take on orchestration.",
+    "interviewLine": "Dagster models software-defined assets and their lineage, materializing data rather than just sequencing tasks.",
+    "whyItMatters": "Dagster is the most cited Airflow alternative; understanding its asset model rounds out the orchestration landscape.",
+    "visual": {
+      "template": "flow",
+      "data": {
+        "steps": [
+          "Define assets",
+          "Materialize",
+          "Track lineage"
+        ]
+      }
+    },
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.orchestration.airflow-vs-dagster"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "orchestration"
+      "orchestration",
+      "dagster"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Dagster",
+        "section": "Workflow Orchestration",
         "sourceType": "primary"
       }
     ],
     "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "authoringStatus": "reviewed"
   }
 ]

@@ -1,0 +1,518 @@
+[
+  {
+    "id": "q.de.orchestration.dag.001",
+    "schemaVersion": 1,
+    "conceptId": "de.orchestration.dag",
+    "topic": "orchestration",
+    "difficulty": 2,
+    "type": "mcq",
+    "stem": "What does the 'acyclic' in DAG guarantee for an Airflow workflow?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Tasks can run in any order",
+        "correct": false,
+        "why": "Order is defined by the edges, not arbitrary."
+      },
+      {
+        "id": "b",
+        "text": "A deterministic, finite run order exists",
+        "correct": true,
+        "why": "No cycles means dependencies resolve to a clear order."
+      },
+      {
+        "id": "c",
+        "text": "Tasks never fail",
+        "correct": false,
+        "why": "Acyclicity is about ordering, not failure."
+      },
+      {
+        "id": "d",
+        "text": "Every task runs in parallel",
+        "correct": false,
+        "why": "Dependencies still serialize connected tasks."
+      }
+    ],
+    "explanation": "Without cycles, dependencies resolve into a finite, well-defined execution order — the basis for scheduling.",
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ]
+  },
+  {
+    "id": "q.de.orchestration.schedule.001",
+    "schemaVersion": 1,
+    "conceptId": "de.orchestration.schedule",
+    "topic": "orchestration",
+    "difficulty": 4,
+    "type": "mcq",
+    "stem": "A daily Airflow DAG has logical date 2026-09-10. When does that run actually start?",
+    "options": [
+      {
+        "id": "a",
+        "text": "At the start of the 10th",
+        "correct": false,
+        "why": "The interval must complete before the run fires."
+      },
+      {
+        "id": "b",
+        "text": "Just after the 10th ends",
+        "correct": true,
+        "why": "Runs fire at the end of the data interval they cover."
+      },
+      {
+        "id": "c",
+        "text": "Exactly at noon on the 10th",
+        "correct": false,
+        "why": "Firing is tied to interval end, not a fixed clock time."
+      },
+      {
+        "id": "d",
+        "text": "A week later",
+        "correct": false,
+        "why": "Only one interval's length passes, not a week."
+      }
+    ],
+    "explanation": "Airflow fires a run at the END of its data interval, since the interval's data only exists once it is over.",
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ]
+  },
+  {
+    "id": "q.de.orchestration.executor.001",
+    "schemaVersion": 1,
+    "conceptId": "de.orchestration.executor",
+    "topic": "orchestration",
+    "difficulty": 5,
+    "type": "mcq",
+    "stem": "Which executor gives per-task isolation by running each task in its own pod?",
+    "options": [
+      {
+        "id": "a",
+        "text": "LocalExecutor",
+        "correct": false,
+        "why": "Local runs tasks as subprocesses on one host."
+      },
+      {
+        "id": "b",
+        "text": "CeleryExecutor",
+        "correct": false,
+        "why": "Celery uses a shared pool of warm workers."
+      },
+      {
+        "id": "c",
+        "text": "KubernetesExecutor",
+        "correct": true,
+        "why": "It launches one pod per task instance."
+      },
+      {
+        "id": "d",
+        "text": "SequentialExecutor",
+        "correct": false,
+        "why": "Sequential runs one task at a time locally."
+      }
+    ],
+    "explanation": "KubernetesExecutor spins up a pod per task for isolation and elasticity, at the cost of pod startup latency.",
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ]
+  },
+  {
+    "id": "q.de.orchestration.sensor.001",
+    "schemaVersion": 1,
+    "conceptId": "de.orchestration.sensor",
+    "topic": "orchestration",
+    "difficulty": 5,
+    "type": "mcq",
+    "stem": "Why can many poke-mode sensors stall an Airflow cluster?",
+    "options": [
+      {
+        "id": "a",
+        "text": "They corrupt the metadata DB",
+        "correct": false,
+        "why": "The issue is slot occupancy, not corruption."
+      },
+      {
+        "id": "b",
+        "text": "Each holds a worker slot while waiting",
+        "correct": true,
+        "why": "Poke mode occupies a slot for the whole wait."
+      },
+      {
+        "id": "c",
+        "text": "They disable the scheduler",
+        "correct": false,
+        "why": "The scheduler keeps running; workers are exhausted."
+      },
+      {
+        "id": "d",
+        "text": "They delete task logs",
+        "correct": false,
+        "why": "Logs are unaffected."
+      }
+    ],
+    "explanation": "Poke-mode sensors hold a worker slot the entire time they wait; enough of them starve the cluster. Use reschedule/deferrable.",
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ]
+  },
+  {
+    "id": "q.de.orchestration.xcom.001",
+    "schemaVersion": 1,
+    "conceptId": "de.orchestration.xcom",
+    "topic": "orchestration",
+    "difficulty": 4,
+    "type": "mcq",
+    "stem": "What kind of data is XCom designed to pass between tasks?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Large DataFrames",
+        "correct": false,
+        "why": "Big payloads bloat the metadata DB."
+      },
+      {
+        "id": "b",
+        "text": "Small values like ids or paths",
+        "correct": true,
+        "why": "XCom travels through the metadata DB; keep it small."
+      },
+      {
+        "id": "c",
+        "text": "Raw files",
+        "correct": false,
+        "why": "Store files externally and pass a reference."
+      },
+      {
+        "id": "d",
+        "text": "Streaming records",
+        "correct": false,
+        "why": "XCom is not a streaming channel."
+      }
+    ],
+    "explanation": "XCom moves small values via the metadata DB; large data should live in storage with only a reference passed.",
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ]
+  },
+  {
+    "id": "q.de.orchestration.idempotency.001",
+    "schemaVersion": 1,
+    "conceptId": "de.orchestration.idempotency",
+    "topic": "orchestration",
+    "difficulty": 5,
+    "type": "mcq",
+    "stem": "Why must Airflow tasks be idempotent?",
+    "options": [
+      {
+        "id": "a",
+        "text": "So the UI renders faster",
+        "correct": false,
+        "why": "Idempotency is about correctness, not UI."
+      },
+      {
+        "id": "b",
+        "text": "So retries and backfills don't duplicate data",
+        "correct": true,
+        "why": "Re-running an interval must yield the same state."
+      },
+      {
+        "id": "c",
+        "text": "So DAGs parse faster",
+        "correct": false,
+        "why": "Parsing is unrelated to idempotency."
+      },
+      {
+        "id": "d",
+        "text": "So tasks can skip dependencies",
+        "correct": false,
+        "why": "Dependencies are unaffected."
+      }
+    ],
+    "explanation": "Retries and backfills re-run intervals; only idempotent tasks (overwrite/upsert per interval) avoid duplicating data.",
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ]
+  },
+  {
+    "id": "q.de.orchestration.backfill-catchup.001",
+    "schemaVersion": 1,
+    "conceptId": "de.orchestration.backfill-catchup",
+    "topic": "orchestration",
+    "difficulty": 4,
+    "type": "mcq",
+    "stem": "A new daily DAG with a year-old start_date launches 365 runs at once. What caused it?",
+    "options": [
+      {
+        "id": "a",
+        "text": "retries set too high",
+        "correct": false,
+        "why": "Retries re-run a failed task, not whole intervals."
+      },
+      {
+        "id": "b",
+        "text": "catchup=True over missed intervals",
+        "correct": true,
+        "why": "Catchup schedules every interval since start_date."
+      },
+      {
+        "id": "c",
+        "text": "Too many workers",
+        "correct": false,
+        "why": "Workers run tasks; they don't create runs."
+      },
+      {
+        "id": "d",
+        "text": "A trigger rule",
+        "correct": false,
+        "why": "Trigger rules gate tasks, not run creation."
+      }
+    ],
+    "explanation": "With catchup enabled, enabling a DAG whose start_date is far in the past schedules all missed intervals immediately.",
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ]
+  },
+  {
+    "id": "q.de.orchestration.trigger-rules.001",
+    "schemaVersion": 1,
+    "conceptId": "de.orchestration.trigger-rules",
+    "topic": "orchestration",
+    "difficulty": 5,
+    "type": "mcq",
+    "stem": "A teardown task must run even when upstream tasks fail. Which trigger rule fits?",
+    "options": [
+      {
+        "id": "a",
+        "text": "all_success (default)",
+        "correct": false,
+        "why": "It skips the task if any upstream failed."
+      },
+      {
+        "id": "b",
+        "text": "all_done",
+        "correct": true,
+        "why": "It runs once upstreams finish, regardless of outcome."
+      },
+      {
+        "id": "c",
+        "text": "one_success",
+        "correct": false,
+        "why": "It needs at least one success, not any completion."
+      },
+      {
+        "id": "d",
+        "text": "none_skipped",
+        "correct": false,
+        "why": "It gates on skips, not on failure."
+      }
+    ],
+    "explanation": "all_done runs the task after all upstreams complete whatever their state — the rule for cleanup/teardown tasks.",
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ]
+  },
+  {
+    "id": "q.de.orchestration.scheduler.001",
+    "schemaVersion": 1,
+    "conceptId": "de.orchestration.scheduler",
+    "topic": "orchestration",
+    "difficulty": 3,
+    "type": "mcq",
+    "stem": "In Airflow, which component actually runs a task's code?",
+    "options": [
+      {
+        "id": "a",
+        "text": "The scheduler",
+        "correct": false,
+        "why": "It queues ready task instances but doesn't run code."
+      },
+      {
+        "id": "b",
+        "text": "The webserver",
+        "correct": false,
+        "why": "The UI displays state; it doesn't execute tasks."
+      },
+      {
+        "id": "c",
+        "text": "The executor/workers",
+        "correct": true,
+        "why": "The executor runs the queued task instances."
+      },
+      {
+        "id": "d",
+        "text": "The metadata DB",
+        "correct": false,
+        "why": "It stores state, not compute."
+      }
+    ],
+    "explanation": "The scheduler decides what is ready and queues it; the executor and its workers run the actual task code.",
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ]
+  },
+  {
+    "id": "q.de.orchestration.taskflow.001",
+    "schemaVersion": 1,
+    "conceptId": "de.orchestration.taskflow",
+    "topic": "orchestration",
+    "difficulty": 3,
+    "type": "mcq",
+    "stem": "What does the TaskFlow @task decorator handle automatically?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Cluster autoscaling",
+        "correct": false,
+        "why": "Scaling is an executor/infra concern."
+      },
+      {
+        "id": "b",
+        "text": "Turning functions into tasks and wiring XComs",
+        "correct": true,
+        "why": "Return values become XComs; deps follow calls."
+      },
+      {
+        "id": "c",
+        "text": "Database backups",
+        "correct": false,
+        "why": "Unrelated to TaskFlow."
+      },
+      {
+        "id": "d",
+        "text": "Log rotation",
+        "correct": false,
+        "why": "Unrelated to TaskFlow."
+      }
+    ],
+    "explanation": "TaskFlow makes a decorated function a task and manages XCom from its return value and arguments, cutting boilerplate.",
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ]
+  },
+  {
+    "id": "q.de.orchestration.dynamic-task-mapping.001",
+    "schemaVersion": 1,
+    "conceptId": "de.orchestration.dynamic-task-mapping",
+    "topic": "orchestration",
+    "difficulty": 6,
+    "type": "mcq",
+    "stem": "What does expand() enable in modern Airflow?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Compressing DAG files",
+        "correct": false,
+        "why": "It is not about file size."
+      },
+      {
+        "id": "b",
+        "text": "Creating one task instance per runtime input",
+        "correct": true,
+        "why": "It fans a task out over a list at run time."
+      },
+      {
+        "id": "c",
+        "text": "Skipping the scheduler",
+        "correct": false,
+        "why": "Scheduling still applies."
+      },
+      {
+        "id": "d",
+        "text": "Merging two DAGs",
+        "correct": false,
+        "why": "It maps a task, not DAGs."
+      }
+    ],
+    "explanation": "Dynamic task mapping via expand() creates a mapped task instance per element of a runtime list — parallel fan-out without a fixed count.",
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ]
+  },
+  {
+    "id": "q.de.orchestration.connections.001",
+    "schemaVersion": 1,
+    "conceptId": "de.orchestration.connections",
+    "topic": "orchestration",
+    "difficulty": 3,
+    "type": "mcq",
+    "stem": "Where should database credentials for a DAG live?",
+    "options": [
+      {
+        "id": "a",
+        "text": "Hardcoded in the DAG file",
+        "correct": false,
+        "why": "That leaks secrets and blocks env promotion."
+      },
+      {
+        "id": "b",
+        "text": "In an Airflow Connection / secrets backend",
+        "correct": true,
+        "why": "DAGs reference a conn_id, not raw secrets."
+      },
+      {
+        "id": "c",
+        "text": "In task logs",
+        "correct": false,
+        "why": "Logs must never hold secrets."
+      },
+      {
+        "id": "d",
+        "text": "In XCom",
+        "correct": false,
+        "why": "XCom is not a secret store."
+      }
+    ],
+    "explanation": "Connections (or a secrets backend) hold credentials so DAG code references a conn_id and can move across environments safely.",
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Workflow Orchestration",
+        "sourceType": "primary"
+      }
+    ]
+  }
+]
