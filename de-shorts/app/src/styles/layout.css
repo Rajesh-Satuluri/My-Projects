@@ -195,6 +195,20 @@ body {
 .topbar__title { font-size: var(--fs-sm); font-weight: 600; text-transform: capitalize; color: var(--text-2); }
 .feed--withbar .card { height: calc(100dvh - 56px - var(--safe-top)); }
 
+/* ---- one-card-per-swipe pager (Inshorts / Reels): exactly one card per swipe ---- */
+.screen { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+.pager { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+.pager__track {
+  height: 100%;
+  transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+.pager__slot { height: 100%; }
+.pager .card { height: 100%; } /* fill the slot exactly so one 100% step = one card */
+@media (prefers-reduced-motion: reduce) {
+  .pager__track { transition: none; }
+}
+
 /* stub / placeholder card */
 .badge-stub {
   font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
