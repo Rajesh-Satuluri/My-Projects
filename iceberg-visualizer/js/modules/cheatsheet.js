@@ -345,6 +345,37 @@
         },
       ],
     },
+    {
+      title: 'Incremental & Changelog Reads (CDC out)',
+      snippets: [
+        {
+          title: 'Incremental append scan (appended rows only)',
+          code: `<span class="hi-cm">-- Spark: read only files appended between two snapshots</span>
+spark.read.format(<span class="hi-str">"iceberg"</span>)
+  .option(<span class="hi-str">"start-snapshot-id"</span>, <span class="hi-num">9821443008</span>)  <span class="hi-cm">-- last consumed</span>
+  .option(<span class="hi-str">"end-snapshot-id"</span>,   <span class="hi-num">9821443991</span>)  <span class="hi-cm">-- current</span>
+  .load(<span class="hi-str">"shopkart.orders.events"</span>);
+<span class="hi-cm">-- Appends only — does NOT include updates/deletes.
+-- Checkpoint end-snapshot-id → next run's start.</span>`,
+        },
+        {
+          title: 'Changelog view — row-level INSERT/UPDATE/DELETE',
+          code: `<span class="hi-kw">CALL</span> shopkart.system.create_changelog_view(
+  table   => <span class="hi-str">'orders.events'</span>,
+  options => map(
+    <span class="hi-str">'start-snapshot-id'</span>, <span class="hi-str">'9821443008'</span>,
+    <span class="hi-str">'end-snapshot-id'</span>,   <span class="hi-str">'9821443991'</span>),
+  changelog_view => <span class="hi-str">'orders_changes'</span>
+);
+
+<span class="hi-kw">SELECT</span> _change_type,   <span class="hi-cm">-- INSERT / UPDATE_BEFORE / UPDATE_AFTER / DELETE</span>
+       _commit_snapshot_id, _change_ordinal,
+       order_id, order_status
+<span class="hi-kw">FROM</span> orders_changes
+<span class="hi-kw">ORDER BY</span> _change_ordinal;`,
+        },
+      ],
+    },
   ];
 
   /* ── Maintenance snippets ────────────────────────────────── */
@@ -411,6 +442,29 @@
 <span class="hi-cm">-- Safe: reads all metadata first, then diffs
 -- Run dry_run=true first to preview
 -- Schedule: weekly</span>`,
+        },
+      ],
+    },
+    {
+      title: 'Migrate from Hive / Parquet',
+      snippets: [
+        {
+          title: 'snapshot · migrate · add_files (no data rewrite)',
+          code: `<span class="hi-cm">-- 1. Test safely: independent copy, source stays Hive</span>
+<span class="hi-kw">CALL</span> shopkart.system.snapshot(
+  <span class="hi-str">'hive_db.orders'</span>, <span class="hi-str">'shopkart.orders.events_test'</span>
+);
+
+<span class="hi-cm">-- 2. In-place conversion (keeps name; leaves __BACKUP_)</span>
+<span class="hi-kw">CALL</span> shopkart.system.migrate(<span class="hi-str">'hive_db.orders'</span>);
+
+<span class="hi-cm">-- 3. Import existing Parquet into an Iceberg table</span>
+<span class="hi-kw">CALL</span> shopkart.system.add_files(
+  table        => <span class="hi-str">'shopkart.orders.events'</span>,
+  source_table => <span class="hi-str">'hive_db.orders'</span>
+);
+<span class="hi-cm">-- Only metadata is written — 0 bytes of data rewritten.
+-- After migrating, compact tiny files with rewrite_data_files.</span>`,
         },
       ],
     },
