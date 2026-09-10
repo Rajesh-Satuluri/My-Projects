@@ -472,12 +472,14 @@ spark.read.format(<span class="hi-str">"iceberg"</span>)
 
   /* ── Properties table data ───────────────────────────────── */
   const PROPERTIES = [
-    { key: 'format-version', default: '1', desc: 'Iceberg spec version (use 2 for row-level deletes, OCC)' },
+    { key: 'format-version', default: '1', desc: 'Iceberg spec version: 2 = row-level deletes + OCC; 3 = deletion vectors, row lineage, variant/geo types, default values (upgrade only when all engines support it)' },
     { key: 'write.target-file-size-bytes', default: '536870912', desc: 'Target output file size (512 MB). Tune smaller for streaming.' },
     { key: 'write.delete.mode', default: 'copy-on-write', desc: 'Row delete strategy: copy-on-write or merge-on-read' },
     { key: 'write.update.mode', default: 'copy-on-write', desc: 'Row update strategy: copy-on-write or merge-on-read' },
     { key: 'write.merge.mode', default: 'copy-on-write', desc: 'MERGE INTO strategy: copy-on-write or merge-on-read' },
-    { key: 'write.distribution-mode', default: 'none', desc: 'Output distribution: none | hash | range (sort by sort-order)' },
+    { key: 'write.distribution-mode', default: 'none', desc: 'Output distribution: none (no shuffle → tiny files) | hash (shuffle by partition) | range (range+sort → fewest/largest files, tight min/max)' },
+    { key: 'write.spark.fanout.enabled', default: 'false', desc: 'Keep one open writer per partition so unsorted input lands in the right files without a pre-sort (costs memory)' },
+    { key: 'write.metadata.metrics.default', default: 'truncate(16)', desc: 'Per-column stats stored in manifests: full | truncate(N) | counts | none. Override per column with write.metadata.metrics.column.<name>' },
     { key: 'write.parquet.bloom-filter-enabled.column.X', default: 'false', desc: 'Enable Bloom filter for column X (high-cardinality join keys)' },
     { key: 'read.split.target-size', default: '134217728', desc: 'Target bytes per Spark task (128 MB default)' },
     { key: 'read.split.open-file-cost', default: '4194304', desc: 'Assumed cost to open a file (4 MB). Increase for object stores.' },

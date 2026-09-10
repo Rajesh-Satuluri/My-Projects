@@ -7,6 +7,79 @@
 window.IcebergViz = window.IcebergViz || {};
 
 window.IcebergViz.QuestionBank = {
+  'format-v3': [
+    {
+      q: 'What is the headline feature of Iceberg format-version 3?',
+      options: [
+        'A new file format replacing Parquet',
+        'Deletion vectors — one roaring bitmap per data file instead of many positional delete files',
+        'Removal of time travel',
+        'Mandatory REST catalog',
+      ],
+      correct: 1,
+      explanation: 'v3\'s headline change is deletion vectors: a single compressed bitmap per data file (Puffin-backed) that replaces v2\'s many positional delete files. v3 also adds row lineage, variant/geo types, nanosecond timestamps, and default column values.',
+      difficulty: 'basic',
+    },
+    {
+      q: 'How does a v3 deletion vector improve on v2 positional delete files for a high-churn table?',
+      options: [
+        'It rewrites the data file on every delete',
+        'One bitmap per data file, maintained in place — reads apply a single vector instead of merging many files',
+        'It stores deletes inside the Parquet footer',
+        'It disables Merge-on-Read',
+      ],
+      correct: 1,
+      explanation: 'A deletion vector is one roaring bitmap of deleted positions per data file. Read cost stops scaling with the number of delete operations, and the delete-side small-file problem goes away.',
+      difficulty: 'intermediate',
+    },
+    {
+      q: 'What must be true before you switch a production table to format-version 3?',
+      options: [
+        'The table must be empty',
+        'Every engine that reads or writes it must support v3',
+        'You must first run expire_snapshots',
+        'The catalog must be Hive Metastore',
+      ],
+      correct: 1,
+      explanation: 'v3 changes the on-disk spec (deletion vectors, row lineage, new types). A reader or writer on a v3-incapable version cannot use the table, so upgrade only once the whole fleet supports v3.',
+      difficulty: 'advanced',
+    },
+  ],
+
+  'write-tuning': [
+    {
+      q: 'Why can you still get thousands of tiny files even though you run compaction nightly?',
+      options: [
+        'Snapshots are not expired',
+        'write.distribution-mode = none creates tasks × partitions tiny files on every write',
+        'Bloom filters are off',
+        'The target file size is too large',
+      ],
+      correct: 1,
+      explanation: 'With no shuffle (distribution-mode = none), each task writes into every partition it holds, producing many tiny files on write. Shape files at write time with hash/range distribution + target file size; compaction is the safety net.',
+      difficulty: 'basic',
+    },
+    {
+      q: 'Which write.distribution-mode gives the fewest, largest files AND the tightest per-file min/max for pruning?',
+      options: ['none', 'hash', 'range', 'random'],
+      correct: 2,
+      explanation: 'range range-partitions rows on the sort order, so each file covers a narrow key range — fewest/largest files and tight bounds for pruning. hash shuffles by partition key (good default); none does no shuffle.',
+      difficulty: 'intermediate',
+    },
+    {
+      q: 'You set write.metadata.metrics to \'none\' for a large JSON payload column. What happens?',
+      options: [
+        'The column is dropped',
+        'No stats are stored for it: smaller manifests, but no pruning on that column',
+        'Queries on it fail',
+        'It is stored uncompressed',
+      ],
+      correct: 1,
+      explanation: 'Metrics modes (full / truncate / counts / none) trade manifest size against pruning. Turning a rarely-filtered wide column to none keeps manifests small; keep filter/join keys on full or truncate so they still prune.',
+      difficulty: 'advanced',
+    },
+  ],
+
   'migrate-to-iceberg': [
     {
       q: 'How much data is rewritten when you migrate a Hive/Parquet table to Iceberg?',
