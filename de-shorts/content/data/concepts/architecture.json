@@ -1,147 +1,564 @@
 [
   {
-    "id": "de.architecture.debezium",
+    "id": "de.architecture.batch-vs-streaming",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "architecture",
-    "term": "Debezium (CDC)",
-    "difficulty": "advanced",
-    "priority": 15,
-    "shortType": "concept",
-    "definition": "CDC connector framework. Captures DB changes (inserts/updates/deletes) and streams to Kafka.",
+    "term": "Batch vs streaming",
+    "difficulty": "core",
+    "priority": 86,
+    "shortType": "compare",
+    "definition": "The first architectural fork: process data on a schedule in chunks, or continuously as it arrives.",
+    "explanation": "Batch favors simplicity and throughput when minutes-to-hours latency is fine. Streaming favors freshness when seconds matter, at the cost of state, ordering, and delivery semantics. Many systems combine both.",
+    "interviewLine": "The batch-vs-streaming fork follows the latency requirement: batch for throughput and simplicity, streaming when seconds of freshness matter.",
+    "whyItMatters": "It's usually the first question in a data system-design round — set latency needs before tools.",
+    "interviewQuestion": "What latency requirement would push you from batch to streaming?",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "Batch",
+        "b": "Streaming",
+        "rows": [
+          [
+            "scheduled",
+            "continuous"
+          ],
+          [
+            "simple",
+            "stateful"
+          ],
+          [
+            "minutes+",
+            "sub-second"
+          ]
+        ]
+      }
+    },
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.architecture.etl-vs-elt",
+      "de.architecture.lambda",
+      "de.architecture.kappa"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "architecture"
+      "architecture",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Debezium (CDC)",
-        "sourceType": "primary"
+        "section": "Batch vs streaming",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.architecture.lambda-vs-kappa",
+    "id": "de.architecture.etl-vs-elt",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "architecture",
-    "term": "Lambda vs Kappa",
-    "difficulty": "advanced",
-    "priority": 10,
-    "shortType": "concept",
-    "definition": "TODO: define Lambda vs Kappa.",
+    "term": "ETL vs ELT",
+    "difficulty": "core",
+    "priority": 85,
+    "shortType": "compare",
+    "definition": "ETL transforms before loading; ELT loads raw then transforms inside a powerful warehouse.",
+    "explanation": "ETL (transform en route) suited expensive, limited warehouses. Cheap, scalable cloud warehouses flipped it: load raw first (ELT), then transform with SQL (dbt). ELT keeps raw data for reprocessing and shifts logic into the warehouse.",
+    "interviewLine": "ELT loads raw into a scalable warehouse then transforms in SQL, unlike ETL's transform-before-load — keeping raw data and using cheap compute.",
+    "whyItMatters": "ELT is the backbone of the modern data stack — explaining why it won is a core interview beat.",
+    "interviewQuestion": "Why did cheap cloud warehouses make ELT beat ETL?",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.architecture.modern-data-stack",
+      "de.architecture.medallion",
+      "de.architecture.data-warehouse"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "architecture"
+      "architecture",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Most Asked Concepts · Architecture",
-        "sourceType": "primary"
+        "section": "ETL vs ELT",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "inferred",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.architecture.cdc-pipeline-design",
+    "id": "de.architecture.lambda",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "architecture",
-    "term": "CDC pipeline design",
+    "term": "Lambda architecture",
     "difficulty": "advanced",
-    "priority": 10,
-    "shortType": "concept",
-    "definition": "TODO: define CDC pipeline design.",
+    "priority": 74,
+    "shortType": "visual",
+    "definition": "A design running a batch layer for accuracy and a speed layer for freshness, merged at query time.",
+    "explanation": "Batch layer recomputes correct views from all data (slow, accurate); speed layer processes recent events (fast, approximate); the serving layer merges them. Powerful but duplicates logic in two codebases.",
+    "interviewLine": "Lambda runs a slow-accurate batch layer plus a fast-approximate speed layer, merged for queries — at the cost of maintaining logic twice.",
+    "whyItMatters": "It's a classic pattern to name — and its dual-codebase pain is exactly why Kappa exists.",
+    "commonMistake": "Adopting Lambda by default — maintaining the same logic in batch and streaming code is a real, ongoing tax.",
+    "visual": {
+      "template": "flow",
+      "data": {
+        "steps": [
+          "Data",
+          "Batch + Speed layers",
+          "Serving merge",
+          "Query"
+        ]
+      }
+    },
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.architecture.kappa",
+      "de.architecture.batch-vs-streaming"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "architecture"
+      "architecture",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Most Asked Concepts · Architecture",
-        "sourceType": "primary"
+        "section": "Lambda architecture",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "inferred",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.architecture.data-mesh-principles",
+    "id": "de.architecture.kappa",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "architecture",
-    "term": "data mesh principles",
+    "term": "Kappa architecture",
     "difficulty": "advanced",
-    "priority": 10,
-    "shortType": "concept",
-    "definition": "TODO: define data mesh principles.",
+    "priority": 70,
+    "shortType": "compare",
+    "definition": "A streaming-only design: one processing path over an immutable log; reprocess by replaying it.",
+    "explanation": "Kappa drops Lambda's batch layer — everything is a stream. To recompute history you replay the log through the same streaming code. One codebase, but it demands a durable, replayable log and mature stream tooling.",
+    "interviewLine": "Kappa is streaming-only: one codebase over a replayable log, reprocessing history by replaying it — no separate batch layer to maintain.",
+    "whyItMatters": "Kappa vs Lambda is a favorite compare-and-contrast in streaming system design.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.architecture.lambda",
+      "de.architecture.event-driven"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "architecture"
+      "architecture",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Most Asked Concepts · Architecture",
-        "sourceType": "primary"
+        "section": "Kappa architecture",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "inferred",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.architecture.idempotent-pipeline-design",
+    "id": "de.architecture.medallion",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "architecture",
-    "term": "idempotent pipeline design",
-    "difficulty": "advanced",
-    "priority": 10,
-    "shortType": "concept",
-    "definition": "TODO: define idempotent pipeline design.",
+    "term": "Medallion",
+    "difficulty": "core",
+    "priority": 80,
+    "shortType": "visual",
+    "definition": "Organizing a lakehouse into Bronze (raw), Silver (cleaned/conformed), and Gold (business-ready) layers.",
+    "explanation": "Bronze ingests raw as-is (auditable, replayable). Silver cleans, dedups, and conforms. Gold aggregates into business-facing marts. Each layer has a clear contract, so failures are isolated and reprocessing is scoped.",
+    "interviewLine": "Medallion layers data Bronze (raw) → Silver (cleaned/conformed) → Gold (business-ready), giving each stage a clear contract and scoped reprocessing.",
+    "whyItMatters": "Medallion is the default lakehouse layering pattern — expected vocabulary in modern interviews.",
+    "interviewQuestion": "What belongs in Silver that doesn't belong in Bronze?",
+    "visual": {
+      "template": "flow",
+      "data": {
+        "steps": [
+          "Bronze (raw)",
+          "Silver (clean)",
+          "Gold (marts)"
+        ]
+      }
+    },
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.architecture.lakehouse",
+      "de.architecture.data-lake",
+      "de.architecture.etl-vs-elt"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "architecture"
+      "architecture",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Most Asked Concepts · Architecture",
-        "sourceType": "primary"
+        "section": "Medallion",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "inferred",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.architecture.data-lake",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "architecture",
+    "term": "Data lake",
+    "difficulty": "core",
+    "priority": 76,
+    "shortType": "concept",
+    "definition": "A store for raw data of any type at scale, cheaply, on object storage — schema-on-read.",
+    "explanation": "A lake (S3/GCS/ADLS) holds structured, semi-, and unstructured data as files, with schema applied when you read. Cheap and flexible, but without governance it becomes a 'data swamp' of undocumented files.",
+    "interviewLine": "A data lake stores raw multi-format data cheaply on object storage with schema-on-read — flexible, but a governance vacuum risks a data swamp.",
+    "whyItMatters": "Lakes underpin ML and lakehouses; knowing their swamp risk shows real judgment.",
+    "commonMistake": "Treating a lake as a warehouse — no schema enforcement or catalog turns it into an unqueryable swamp.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.architecture.data-warehouse",
+      "de.architecture.lakehouse",
+      "de.architecture.medallion"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "architecture",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Data lake",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.architecture.data-warehouse",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "architecture",
+    "term": "Data warehouse",
+    "difficulty": "core",
+    "priority": 75,
+    "shortType": "concept",
+    "definition": "A structured, schema-on-write analytics store optimized for fast SQL over modeled data.",
+    "explanation": "A warehouse holds cleaned, modeled, columnar data for BI. Schema-on-write enforces structure up front, giving fast, governed queries — but it's less flexible for raw/unstructured data than a lake.",
+    "interviewLine": "A warehouse is schema-on-write, columnar, and optimized for governed SQL analytics — structured and fast, but less flexible than a lake for raw data.",
+    "whyItMatters": "Lake vs warehouse vs lakehouse is a core architecture comparison — each optimizes a different tradeoff.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.architecture.data-lake",
+      "de.architecture.lakehouse",
+      "de.architecture.etl-vs-elt"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "architecture",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Data warehouse",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.architecture.lakehouse",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "architecture",
+    "term": "Lakehouse",
+    "difficulty": "core",
+    "priority": 78,
+    "shortType": "concept",
+    "definition": "An architecture adding warehouse features — ACID, schema, performance — onto data-lake object storage.",
+    "explanation": "Table formats (Delta, Iceberg, Hudi) bring transactions, schema enforcement, and time travel to files in a lake, so one store serves both BI and ML without copying data into a separate warehouse.",
+    "interviewLine": "A lakehouse adds ACID, schema, and warehouse-grade performance to lake storage via table formats, unifying BI and ML on one copy of data.",
+    "whyItMatters": "The lakehouse is the current convergence trend — knowing what makes it possible is highly relevant.",
+    "interviewQuestion": "What does a table format add to a plain data lake to make it a lakehouse?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.architecture.data-lake",
+      "de.architecture.data-warehouse",
+      "de.architecture.medallion"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "architecture",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Lakehouse",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.architecture.data-mesh",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "architecture",
+    "term": "Data mesh",
+    "difficulty": "advanced",
+    "priority": 68,
+    "shortType": "concept",
+    "definition": "An organizational pattern: domain teams own their data as products on shared self-serve infrastructure.",
+    "explanation": "Data mesh decentralizes a central data team into domain ownership. Four principles: domain ownership, data-as-a-product, self-serve platform, and federated governance. It's org design more than technology.",
+    "interviewLine": "Data mesh decentralizes ownership to domains treating data as a product on a self-serve platform with federated governance — an org pattern, not a tool.",
+    "whyItMatters": "It's the go-to answer for scaling data in large orgs — and knowing it's organizational, not a tool, is the insight.",
+    "commonMistake": "Pitching data mesh as a technology purchase — its four principles are organizational, and it adds overhead small teams don't need.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.architecture.modern-data-stack",
+      "de.architecture.build-vs-buy"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "architecture",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Data mesh",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.architecture.modern-data-stack",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "architecture",
+    "term": "Modern data stack",
+    "difficulty": "core",
+    "priority": 72,
+    "shortType": "concept",
+    "definition": "The cloud ELT toolchain: managed ingestion → cloud warehouse/lakehouse → dbt transforms → BI.",
+    "explanation": "A modular, SaaS-first stack — Fivetran/Airbyte for E+L, Snowflake/BigQuery/Databricks as the store, dbt for T, and a BI/semantic layer on top — connected by ELT and mostly buy-over-build.",
+    "interviewLine": "The modern data stack is modular cloud ELT: managed ingestion, a cloud warehouse/lakehouse, dbt transforms, and a BI/semantic layer.",
+    "whyItMatters": "It's the default architecture new data platforms are built on today.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.architecture.etl-vs-elt",
+      "de.architecture.build-vs-buy"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "architecture",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Modern data stack",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.architecture.event-driven",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "architecture",
+    "term": "Event-driven architecture",
+    "difficulty": "intermediate",
+    "priority": 71,
+    "shortType": "concept",
+    "definition": "Systems that communicate by emitting and reacting to events, decoupling producers from consumers.",
+    "explanation": "Producers publish events to a log/broker; consumers subscribe independently. This decouples services (add consumers without touching producers), enables replay, and underpins streaming and Kappa designs.",
+    "interviewLine": "Event-driven architecture has producers emit events consumers react to independently — decoupling services and enabling replay and scale.",
+    "whyItMatters": "Event-driven decoupling is the pattern behind Kafka-centric platforms and real-time pipelines.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.architecture.kappa",
+      "de.architecture.pipeline-patterns",
+      "de.architecture.idempotency"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "architecture",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Event-driven architecture",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.architecture.idempotency",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "architecture",
+    "term": "Idempotency & reprocessing",
+    "difficulty": "intermediate",
+    "priority": 73,
+    "shortType": "why",
+    "definition": "Designing steps so running them again yields the same result — the key to safe retries and backfills.",
+    "explanation": "Pipelines fail partway and get replayed. Idempotent steps (keyed upserts, overwritable partitions, dedup on id) make reruns and backfills safe, so recovery is 'just run it again' with no duplicates or drift.",
+    "interviewLine": "Idempotency makes a step's rerun produce the same result — via upserts or overwritable partitions — so retries and backfills never duplicate data.",
+    "whyItMatters": "Idempotency is the property that makes distributed pipelines operable — every real system needs it.",
+    "interviewQuestion": "How do you make an append-heavy pipeline safely reprocessable?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.architecture.pipeline-patterns",
+      "de.architecture.event-driven"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "architecture",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Idempotency & reprocessing",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.architecture.pipeline-patterns",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "architecture",
+    "term": "Pipeline design patterns",
+    "difficulty": "intermediate",
+    "priority": 67,
+    "shortType": "concept",
+    "definition": "Reusable dataflow shapes: fan-in (merge sources), fan-out (branch), and staged transform layers.",
+    "explanation": "Fan-out branches one source to many consumers/paths; fan-in merges many sources into one; staging layers (raw→clean→serve) isolate concerns. Recognizing these shapes makes designs modular and failures easier to localize.",
+    "interviewLine": "Pipeline patterns — fan-in, fan-out, staged layers — give reusable dataflow shapes that keep designs modular and failures localizable.",
+    "whyItMatters": "Naming the shape of a dataflow is how you reason about and communicate an architecture on a whiteboard.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.architecture.idempotency",
+      "de.architecture.medallion"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "architecture",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Pipeline design patterns",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.architecture.build-vs-buy",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "architecture",
+    "term": "Build vs buy",
+    "difficulty": "intermediate",
+    "priority": 66,
+    "shortType": "compare",
+    "definition": "Deciding whether to develop a data capability in-house or adopt a managed tool.",
+    "explanation": "Buy for undifferentiated, well-solved problems (connectors, warehousing) to move fast; build where you have unique needs or scale/cost demands it. The real cost of build is ongoing maintenance, not the initial code.",
+    "interviewLine": "Build vs buy weighs speed and maintenance against differentiation: buy the undifferentiated (connectors, warehouse), build only where you're unique.",
+    "whyItMatters": "It's a maturity signal — senior engineers weigh total cost and focus, not just licence price.",
+    "commonMistake": "Judging on sticker price alone — a 'free' in-house build carries perpetual maintenance and on-call cost.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.architecture.modern-data-stack",
+      "de.architecture.data-mesh"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "architecture",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Build vs buy",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   }
 ]

@@ -1,60 +1,568 @@
 [
   {
-    "id": "de.streaming.apache-flink",
+    "id": "de.streaming.what-is-streaming",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "streaming",
+    "term": "What is stream processing",
+    "difficulty": "core",
+    "priority": 88,
+    "shortType": "concept",
+    "definition": "Processing unbounded data continuously as it arrives, instead of in scheduled finite batches.",
+    "explanation": "A stream has no end — events flow in forever. Stream processors (Flink, Kafka Streams) compute results incrementally per event or per window, emitting outputs with sub-second latency rather than waiting for a batch to close.",
+    "interviewLine": "Stream processing handles unbounded data continuously, computing incremental results per event with low latency instead of on a batch schedule.",
+    "whyItMatters": "It powers fraud detection, live dashboards, and alerting where minutes-old data is already too stale.",
+    "interviewQuestion": "What makes a dataset 'unbounded', and why does that change how you process it?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.streaming.batch-vs-streaming",
+      "de.streaming.windowing",
+      "de.streaming.stateful"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "streaming",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "What is stream processing",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.streaming.batch-vs-streaming",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "streaming",
+    "term": "Batch vs streaming",
+    "difficulty": "core",
+    "priority": 86,
+    "shortType": "compare",
+    "definition": "Batch processes a bounded chunk on a schedule; streaming processes unbounded events as they arrive.",
+    "explanation": "Batch: high throughput, high latency, simple reasoning over a complete dataset. Streaming: low latency, incremental state, must handle out-of-order and late data. Many systems now blur the line (micro-batch).",
+    "interviewLine": "Batch trades latency for simplicity over complete data; streaming trades simplicity for latency over unbounded, unordered events.",
+    "whyItMatters": "Choosing batch when latency doesn't matter avoids the real complexity streaming adds.",
+    "commonMistake": "Reaching for streaming when a nightly batch would do — you pay for state, watermarks, and ordering you didn't need.",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "Batch",
+        "b": "Streaming",
+        "rows": [
+          [
+            "bounded",
+            "unbounded"
+          ],
+          [
+            "scheduled",
+            "continuous"
+          ],
+          [
+            "high latency",
+            "low latency"
+          ],
+          [
+            "complete data",
+            "incremental"
+          ]
+        ]
+      }
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.streaming.what-is-streaming",
+      "de.streaming.spark-streaming"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "streaming",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Batch vs streaming",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.streaming.event-vs-processing-time",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "streaming",
+    "term": "Event time vs processing time",
+    "difficulty": "intermediate",
+    "priority": 85,
+    "shortType": "compare",
+    "definition": "Event time is when something happened; processing time is when your system saw it.",
+    "explanation": "A mobile event created at 10:00 may arrive at 10:05 (network, retries). Windowing on event time gives correct, reproducible results despite delays; processing time is simpler but wrong for late/out-of-order data.",
+    "interviewLine": "Event time is when the event occurred; processing time is when it's handled. Correct analytics window on event time, using watermarks for lateness.",
+    "whyItMatters": "Event-time semantics is the single most-tested streaming concept — it's where correctness lives.",
+    "interviewQuestion": "Why can processing-time windows give different results on a replay of the same data?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.streaming.windowing",
+      "de.streaming.watermarks",
+      "de.streaming.late-data"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "streaming",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Event time vs processing time",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.streaming.windowing",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "streaming",
+    "term": "Windowing",
+    "difficulty": "intermediate",
+    "priority": 82,
+    "shortType": "visual",
+    "definition": "Slicing an unbounded stream into finite chunks to aggregate: tumbling, sliding, or session windows.",
+    "explanation": "Tumbling: fixed, non-overlapping (every 5 min). Sliding: fixed size that overlaps (5-min window every 1 min). Session: dynamic, closes after an inactivity gap. The window type defines what 'a result' means.",
+    "interviewLine": "Windows bound an infinite stream for aggregation: tumbling (fixed, non-overlapping), sliding (overlapping), session (gap-based).",
+    "whyItMatters": "You can't aggregate an infinite stream — windows are how streaming produces bounded answers.",
+    "interviewQuestion": "When would a session window beat a tumbling window?",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "Tumbling",
+        "b": "Session",
+        "rows": [
+          [
+            "fixed size",
+            "gap-based"
+          ],
+          [
+            "non-overlap",
+            "per activity"
+          ],
+          [
+            "clock-aligned",
+            "dynamic"
+          ]
+        ]
+      }
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.streaming.watermarks",
+      "de.streaming.event-vs-processing-time",
+      "de.streaming.stateful"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "streaming",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Windowing",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.streaming.watermarks",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "streaming",
+    "term": "Watermarks",
+    "difficulty": "advanced",
+    "priority": 80,
+    "shortType": "why",
+    "definition": "A moving marker asserting 'event time has advanced to T; expect no more events older than T'.",
+    "explanation": "Watermarks let the engine decide when a window is complete enough to emit. A watermark of T-30s means 'fire windows up to T-30s, tolerating 30s of lateness'. It's the tradeoff dial between latency and completeness.",
+    "interviewLine": "A watermark estimates progress in event time so the engine can close windows, trading a lateness allowance against output latency.",
+    "whyItMatters": "Watermarks are how streaming closes event-time windows without waiting forever for stragglers.",
+    "interviewQuestion": "What happens to an event that arrives after the watermark has passed its window?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.streaming.late-data",
+      "de.streaming.windowing",
+      "de.streaming.event-vs-processing-time"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "streaming",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Watermarks",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.streaming.late-data",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "streaming",
+    "term": "Late data handling",
+    "difficulty": "advanced",
+    "priority": 74,
+    "shortType": "concept",
+    "definition": "Deciding what to do with events that arrive after their window's watermark has passed.",
+    "explanation": "Options: drop late events, route them to a side output, or allow lateness so the window updates and re-emits a corrected result. Allowed lateness keeps state around longer — a memory-vs-correctness tradeoff.",
+    "interviewLine": "Late data (past the watermark) can be dropped, side-outputted, or trigger a window update within an allowed-lateness budget.",
+    "whyItMatters": "Real event streams are always late sometimes; how you handle it decides whether totals are right.",
+    "commonMistake": "Silently dropping late data and reporting totals as final — mobile/IoT streams routinely deliver events minutes late.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.streaming.watermarks",
+      "de.streaming.windowing"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "streaming",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Late data handling",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.streaming.exactly-once",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "streaming",
+    "term": "Exactly-once",
+    "difficulty": "advanced",
+    "priority": 81,
+    "shortType": "compare",
+    "definition": "A guarantee that each event affects the result once, even across failures and retries.",
+    "explanation": "At-most-once may lose data; at-least-once may double-count on retry; exactly-once combines checkpointing with transactional/idempotent sinks so a replayed event doesn't change the answer twice.",
+    "interviewLine": "Exactly-once means each record affects state once despite retries, achieved via checkpointed state plus transactional or idempotent sinks.",
+    "whyItMatters": "Exactly-once is what makes streaming safe for money and counters, and a top interview topic.",
+    "interviewQuestion": "Is 'exactly-once processing' the same as 'exactly-once delivery'? Why not?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.streaming.checkpointing",
+      "de.streaming.stateful"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "streaming",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Exactly-once",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.streaming.stateful",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "streaming",
+    "term": "Stateful processing",
+    "difficulty": "advanced",
+    "priority": 76,
+    "shortType": "concept",
+    "definition": "Computations that remember prior events — counts, joins, aggregations — keyed and stored by the engine.",
+    "explanation": "Stateless ops (map, filter) need no memory. Stateful ops (windowed counts, stream joins, dedup) keep keyed state the engine manages, checkpoints, and restores on failure. State size and TTL become real operational concerns.",
+    "interviewLine": "Stateful operators keep keyed state (counts, joins, windows) that the engine checkpoints and restores, unlike stateless map/filter.",
+    "whyItMatters": "Nearly every useful streaming job is stateful; understanding state is understanding streaming.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.streaming.checkpointing",
+      "de.streaming.exactly-once",
+      "de.streaming.windowing"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "streaming",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Stateful processing",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.streaming.checkpointing",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "streaming",
+    "term": "Checkpointing",
+    "difficulty": "advanced",
+    "priority": 75,
+    "shortType": "why",
+    "definition": "Periodically snapshotting stream state and input offsets so a failed job resumes without loss or duplication.",
+    "explanation": "The engine snapshots operator state plus the source positions consumed. On failure it restores the last checkpoint and replays from those offsets — the foundation that makes exactly-once possible in Flink and Spark.",
+    "interviewLine": "Checkpointing snapshots state and source offsets atomically, so a crashed job restores state and replays from the exact position — enabling exactly-once.",
+    "whyItMatters": "Without checkpoints a crash loses in-flight aggregations; with them, recovery is automatic and consistent.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.streaming.exactly-once",
+      "de.streaming.stateful",
+      "de.streaming.backpressure"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "streaming",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Checkpointing",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.streaming.backpressure",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "streaming",
+    "term": "Backpressure",
+    "difficulty": "intermediate",
+    "priority": 70,
+    "shortType": "concept",
+    "definition": "Flow control: when a downstream operator can't keep up, it signals upstream to slow production.",
+    "explanation": "If a sink is slow, buffers fill. Backpressure propagates the slowdown upstream (and to the source) so the system degrades gracefully instead of running out of memory. Watching it is how you spot the bottleneck operator.",
+    "interviewLine": "Backpressure propagates a slow consumer's pace upstream so buffers don't overflow — and pinpoints the bottleneck operator.",
+    "whyItMatters": "Sustained backpressure is the clearest signal of an under-provisioned or skewed streaming job.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.streaming.checkpointing",
+      "de.streaming.flink"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "streaming",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Backpressure",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.streaming.stream-table-duality",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "streaming",
+    "term": "Stream-table duality",
+    "difficulty": "advanced",
+    "priority": 68,
+    "shortType": "concept",
+    "definition": "A stream is a changelog of events; a table is its current-state snapshot — each converts to the other.",
+    "explanation": "Replaying a stream of updates builds a table (materialize); capturing a table's changes emits a stream (CDC). Kafka Streams/ksqlDB build on this: KStream (events) and KTable (aggregated state) interconvert.",
+    "interviewLine": "Stream-table duality: a table is a stream aggregated into current state, and a table's changes are a stream — you can always convert between them.",
+    "whyItMatters": "It unifies messaging and databases and underpins how streaming SQL engines model state.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.streaming.stateful",
+      "de.streaming.kafka-streams"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "streaming",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Stream-table duality",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.streaming.flink",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "streaming",
     "term": "Apache Flink",
-    "difficulty": "advanced",
-    "priority": 20,
+    "difficulty": "intermediate",
+    "priority": 78,
     "shortType": "concept",
-    "definition": "Stateful stream processing, event time semantics, low latency. Rising for real-time analytics.",
+    "definition": "A true event-at-a-time stream processor with rich state, event-time windows, and exactly-once.",
+    "explanation": "Flink processes each event as it arrives (not micro-batch), offering low latency, first-class event-time/watermark support, large managed state, and exactly-once via checkpoints. It also runs batch as a special case of streaming.",
+    "interviewLine": "Flink is a true streaming engine — per-event, event-time aware, large state, exactly-once — treating batch as bounded streaming.",
+    "whyItMatters": "Flink is the reference engine for demanding, low-latency, stateful streaming.",
+    "interviewQuestion": "How does Flink's per-event model differ from Spark's micro-batch?",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.streaming.spark-streaming",
+      "de.streaming.checkpointing",
+      "de.streaming.stateful"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "streaming"
+      "streaming",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Stateful Stream Processing",
-        "sourceType": "primary"
+        "section": "Apache Flink",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.streaming.batch-vs-streaming-trade-offs",
+    "id": "de.streaming.kafka-streams",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "streaming",
-    "term": "batch vs streaming trade-offs",
-    "difficulty": "advanced",
-    "priority": 15,
+    "term": "Kafka Streams",
+    "difficulty": "intermediate",
+    "priority": 66,
     "shortType": "concept",
-    "definition": "TODO: define batch vs streaming trade-offs.",
+    "definition": "A Java library (not a cluster) for stream processing directly on Kafka topics, deployed as your app.",
+    "explanation": "Kafka Streams embeds processing in your service — no separate cluster. It offers KStream/KTable abstractions, local state stores backed by Kafka changelogs, and exactly-once, scaling by running more app instances in a consumer group.",
+    "interviewLine": "Kafka Streams is a library that runs stream processing inside your app against Kafka topics, scaling by adding instances — no cluster to operate.",
+    "whyItMatters": "It's the lightest way to add stream processing when you're already all-in on Kafka.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.streaming.flink",
+      "de.streaming.stream-table-duality"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "streaming"
+      "streaming",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Most Asked Concepts · Architecture",
-        "sourceType": "primary"
+        "section": "Kafka Streams",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "inferred",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.streaming.spark-streaming",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "streaming",
+    "term": "Spark Structured Streaming",
+    "difficulty": "intermediate",
+    "priority": 72,
+    "shortType": "compare",
+    "definition": "Spark's streaming model: treat a stream as an unbounded table processed in small micro-batches.",
+    "explanation": "Structured Streaming reuses the DataFrame API — the same code runs batch or stream. It processes in micro-batches (with a low-latency continuous mode), supports event-time windows, watermarks, and exactly-once to idempotent sinks.",
+    "interviewLine": "Structured Streaming models a stream as an unbounded table in micro-batches, reusing DataFrame code with event-time windows and watermarks.",
+    "whyItMatters": "It lets Spark shops add streaming with familiar SQL/DataFrame code and one engine.",
+    "commonMistake": "Expecting Flink-level per-event latency — micro-batch adds a floor of batch-interval latency.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.streaming.flink",
+      "de.streaming.batch-vs-streaming"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "streaming",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Spark Structured Streaming",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   }
 ]

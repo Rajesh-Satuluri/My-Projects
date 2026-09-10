@@ -1,147 +1,542 @@
 [
   {
-    "id": "de.ingestion.fivetran",
+    "id": "de.ingestion.batch-ingestion",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "ingestion",
-    "term": "Fivetran",
-    "difficulty": "advanced",
-    "priority": 29,
+    "term": "Batch ingestion",
+    "difficulty": "core",
+    "priority": 84,
     "shortType": "concept",
-    "definition": "Modern EL(T) tool. 300+ source connectors, log-based CDC, normalization modes.",
+    "definition": "Loading data in scheduled, finite chunks — hourly/daily jobs that move a bounded set each run.",
+    "explanation": "A batch job extracts a slice (e.g. yesterday's orders) and loads it on a schedule. Simple to reason about and retry, but data is only as fresh as the interval. The default for warehouse/reporting pipelines.",
+    "interviewLine": "Batch ingestion moves bounded data on a schedule — simple and retryable, but only as fresh as its interval.",
+    "whyItMatters": "Most analytics pipelines are batch; knowing when it's enough avoids needless streaming complexity.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.ingestion.streaming-ingestion",
+      "de.ingestion.full-vs-incremental"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "ingestion"
+      "ingestion",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Fivetran",
-        "sourceType": "primary"
+        "section": "Batch ingestion",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.ingestion.airbyte",
+    "id": "de.ingestion.streaming-ingestion",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "ingestion",
-    "term": "Airbyte",
-    "difficulty": "advanced",
-    "priority": 24,
+    "term": "Streaming ingestion",
+    "difficulty": "intermediate",
+    "priority": 78,
     "shortType": "concept",
-    "definition": "Open-source EL(T) alternative. Self-hosted or managed. 300+ connectors, custom connectors.",
+    "definition": "Continuously ingesting events as they occur, via a broker like Kafka, for low-latency freshness.",
+    "explanation": "Instead of scheduled pulls, producers push events to a log and consumers land them continuously. Enables real-time dashboards and alerting, but adds ordering, delivery-semantics, and state concerns batch avoids.",
+    "interviewLine": "Streaming ingestion lands events continuously through a broker for freshness, at the cost of ordering and delivery-semantics complexity.",
+    "whyItMatters": "It's the ingestion side of any real-time use case — the alternative when hourly batches are too stale.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.ingestion.batch-ingestion",
+      "de.ingestion.cdc",
+      "de.ingestion.dead-letter"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "ingestion"
+      "ingestion",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Airbyte",
-        "sourceType": "primary"
+        "section": "Streaming ingestion",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.ingestion.informatica-powercenter",
+    "id": "de.ingestion.full-vs-incremental",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "ingestion",
-    "term": "Informatica PowerCenter",
-    "difficulty": "advanced",
-    "priority": 24,
-    "shortType": "concept",
-    "definition": "Informatica PowerCenter — enterprise ETL tool. Used in banking, insurance, telecom.",
+    "term": "Full vs incremental",
+    "difficulty": "core",
+    "priority": 82,
+    "shortType": "compare",
+    "definition": "Full load re-copies the entire source each run; incremental moves only rows changed since last run.",
+    "explanation": "Full loads are simple and self-healing but expensive and slow at scale. Incremental loads track a high-water mark (updated_at/id) and fetch only newer rows — fast and cheap, but must handle deletes and late updates carefully.",
+    "interviewLine": "Full loads recopy everything (simple, costly); incremental moves only changed rows via a high-water mark (cheap, but must handle deletes/late data).",
+    "whyItMatters": "Picking incremental correctly is what keeps large pipelines affordable without dropping data.",
+    "commonMistake": "Incremental on updated_at while ignoring hard deletes — deleted source rows silently persist in the target.",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "Full",
+        "b": "Incremental",
+        "rows": [
+          [
+            "recopy all",
+            "changed only"
+          ],
+          [
+            "self-healing",
+            "needs marker"
+          ],
+          [
+            "costly",
+            "cheap"
+          ]
+        ]
+      }
+    },
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.ingestion.high-water-mark",
+      "de.ingestion.cdc",
+      "de.ingestion.backfilling"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "ingestion"
+      "ingestion",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Informatica PowerCenter",
-        "sourceType": "primary"
+        "section": "Full vs incremental",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.ingestion.talend",
+    "id": "de.ingestion.cdc",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "ingestion",
-    "term": "Talend",
-    "difficulty": "advanced",
-    "priority": 17,
-    "shortType": "concept",
-    "definition": "Open-source ETL framework with visual designer. Replaced by modern cloud-native ELT.",
+    "term": "Change Data Capture",
+    "difficulty": "intermediate",
+    "priority": 85,
+    "shortType": "why",
+    "definition": "Capturing every insert/update/delete from a source database as a stream of change events.",
+    "explanation": "Instead of polling for changed rows, CDC reads the database's transaction log (WAL/binlog) to emit each change in order — including deletes. It's low-impact on the source and gives near-real-time, complete replication.",
+    "interviewLine": "CDC streams every insert/update/delete by reading the DB transaction log, capturing deletes and order without polling the source.",
+    "whyItMatters": "Log-based CDC is the modern standard for syncing operational databases into the warehouse/lake.",
+    "interviewQuestion": "Why is log-based CDC preferred over query-based (timestamp polling) CDC?",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.ingestion.debezium",
+      "de.ingestion.idempotent-ingestion",
+      "de.ingestion.full-vs-incremental"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "ingestion"
+      "ingestion",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Talend",
-        "sourceType": "primary"
+        "section": "Change Data Capture",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.ingestion.ssis",
+    "id": "de.ingestion.debezium",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "ingestion",
-    "term": "SSIS",
-    "difficulty": "advanced",
-    "priority": 16,
+    "term": "Debezium",
+    "difficulty": "intermediate",
+    "priority": 68,
     "shortType": "concept",
-    "definition": "Legacy Microsoft ETL tool. SQL Server ecosystem. Being replaced by ADF.",
+    "definition": "An open-source, log-based CDC platform that streams database changes into Kafka.",
+    "explanation": "Debezium connectors tail the WAL/binlog of Postgres, MySQL, Mongo, etc., and publish ordered change events to Kafka topics with before/after images. It's the common engine behind real-time DB-to-lake pipelines.",
+    "interviewLine": "Debezium is log-based CDC that tails a database's binlog/WAL and emits ordered before/after change events to Kafka.",
+    "whyItMatters": "It's the reference implementation interviewers expect you to name for log-based CDC.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.ingestion.cdc",
+      "de.ingestion.dead-letter",
+      "de.ingestion.schema-evolution"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "ingestion"
+      "ingestion",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "SSIS",
-        "sourceType": "primary"
+        "section": "Debezium",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.ingestion.high-water-mark",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "ingestion",
+    "term": "High-water marks",
+    "difficulty": "intermediate",
+    "priority": 74,
+    "shortType": "why",
+    "definition": "The stored marker (max timestamp or id) of the last successfully ingested record, used to resume.",
+    "explanation": "Each incremental run reads rows greater than the stored high-water mark, processes them, then advances the mark. It makes loads resumable and avoids reprocessing — but a too-coarse mark can skip rows written out of order.",
+    "interviewLine": "A high-water mark records the last-ingested position (max id/timestamp) so the next run reads only newer rows and can resume after failure.",
+    "whyItMatters": "The high-water mark is the tiny piece of state that makes incremental ingestion correct and restartable.",
+    "commonMistake": "Advancing the mark before the load commits — a mid-load crash then skips the rows you never wrote.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.ingestion.full-vs-incremental",
+      "de.ingestion.idempotent-ingestion"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "ingestion",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "High-water marks",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.ingestion.idempotent-ingestion",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "ingestion",
+    "term": "Idempotent ingestion",
+    "difficulty": "intermediate",
+    "priority": 80,
+    "shortType": "why",
+    "definition": "Designing loads so re-running them produces the same result — safe retries with no duplicates.",
+    "explanation": "Because jobs fail and retry, ingestion must be replay-safe: use upserts on a key, deterministic partitions you can overwrite, or dedup on a unique event id. Then 'run it again' is always safe.",
+    "interviewLine": "Idempotent ingestion makes re-runs safe — via keyed upserts, overwritable partitions, or dedup — so retries never create duplicates.",
+    "whyItMatters": "Idempotency is what lets you retry or backfill without corrupting the target with duplicates.",
+    "interviewQuestion": "How would you make an append-only pipeline idempotent under retries?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.ingestion.dedup-ingest",
+      "de.ingestion.high-water-mark",
+      "de.ingestion.backfilling"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "ingestion",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Idempotent ingestion",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.ingestion.backfilling",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "ingestion",
+    "term": "Backfilling",
+    "difficulty": "intermediate",
+    "priority": 72,
+    "shortType": "concept",
+    "definition": "Loading historical data into a pipeline built for going-forward data — filling the gap before it existed.",
+    "explanation": "When you add a source or fix a bug, you replay past periods to populate history. Backfills must be idempotent and partition-scoped so you can rerun a date range without touching or duplicating other data.",
+    "interviewLine": "Backfilling replays historical partitions into a pipeline; it relies on idempotent, partition-scoped loads so reruns don't duplicate data.",
+    "whyItMatters": "Every real pipeline needs a backfill eventually; doing it without double-counting requires idempotent design.",
+    "commonMistake": "Backfilling into an append-only sink and doubling every row that already loaded.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.ingestion.idempotent-ingestion",
+      "de.ingestion.full-vs-incremental"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "ingestion",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Backfilling",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.ingestion.schema-evolution",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "ingestion",
+    "term": "Schema evolution",
+    "difficulty": "intermediate",
+    "priority": 73,
+    "shortType": "why",
+    "definition": "Handling source schema changes — added, removed, or retyped columns — without breaking the pipeline.",
+    "explanation": "Sources drift: a new column appears, a type changes. Robust ingestion detects drift and applies a policy — add new columns automatically, reject incompatible type changes, and version the schema (often via a registry) so consumers aren't surprised.",
+    "interviewLine": "Schema evolution manages source drift with a policy — auto-add columns, block breaking type changes — often enforced via a schema registry.",
+    "whyItMatters": "Unhandled schema drift is a top cause of overnight pipeline breakages.",
+    "interviewQuestion": "Which schema changes are backward-compatible, and which force a consumer update?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-quality.data-contracts",
+      "de.ingestion.debezium",
+      "de.ingestion.dead-letter"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "ingestion",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Schema evolution",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.ingestion.api-ingestion",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "ingestion",
+    "term": "API ingestion",
+    "difficulty": "intermediate",
+    "priority": 67,
+    "shortType": "concept",
+    "definition": "Pulling data from REST/GraphQL APIs, handling pagination, rate limits, retries, and auth.",
+    "explanation": "API sources cap page size and requests/min. You page through cursors, respect 429/Retry-After with backoff, refresh tokens, and checkpoint progress so a mid-pull failure resumes rather than restarts.",
+    "interviewLine": "API ingestion pages through cursors within rate limits, backing off on 429s and checkpointing progress so partial pulls resume cleanly.",
+    "whyItMatters": "SaaS data (Stripe, Salesforce) mostly arrives via APIs; robust paging and rate handling is the daily grind.",
+    "commonMistake": "Ignoring Retry-After and hammering a rate-limited API until it bans the client.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.ingestion.elt-tools",
+      "de.ingestion.idempotent-ingestion"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "ingestion",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "API ingestion",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.ingestion.file-ingestion",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "ingestion",
+    "term": "File ingestion",
+    "difficulty": "core",
+    "priority": 64,
+    "shortType": "concept",
+    "definition": "Ingesting files dropped into a landing zone (S3/GCS) — CSV, JSON, Parquet — often event-triggered.",
+    "explanation": "Producers land files in a bucket; ingestion lists new files (or reacts to an object-created event), parses them, and loads them, then archives or marks them processed so they aren't picked up twice.",
+    "interviewLine": "File ingestion consumes files from a landing zone, tracking processed files (or reacting to object events) so each loads exactly once.",
+    "whyItMatters": "Landing-zone file drops remain one of the most common integration patterns across enterprises.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.ingestion.batch-ingestion",
+      "de.ingestion.idempotent-ingestion"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "ingestion",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "File ingestion",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.ingestion.elt-tools",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "ingestion",
+    "term": "ELT tools",
+    "difficulty": "intermediate",
+    "priority": 70,
+    "shortType": "concept",
+    "definition": "Managed connectors (Fivetran, Airbyte) that extract from sources and load raw data into the warehouse.",
+    "explanation": "Rather than hand-code every connector, these tools offer prebuilt source integrations, incremental sync, schema-drift handling, and CDC — landing raw data for dbt to transform. Buy-vs-build tilts toward buy for the long tail of SaaS sources.",
+    "interviewLine": "ELT tools like Fivetran/Airbyte provide managed connectors that extract and load raw data incrementally, leaving transformation to dbt.",
+    "whyItMatters": "They're the 'E' and 'L' of the modern ELT stack, freeing teams to focus on the 'T'.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.ingestion.api-ingestion",
+      "de.ingestion.schema-evolution"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "ingestion",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "ELT tools",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.ingestion.dead-letter",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "ingestion",
+    "term": "Dead-letter queues",
+    "difficulty": "intermediate",
+    "priority": 69,
+    "shortType": "why",
+    "definition": "A side channel where records that fail processing are parked instead of blocking or being lost.",
+    "explanation": "When a message can't be parsed or violates a rule, routing it to a dead-letter queue keeps the main pipeline flowing while preserving the bad record for inspection, alerting, and later replay after a fix.",
+    "interviewLine": "A dead-letter queue parks unprocessable records so the pipeline keeps flowing and bad data can be inspected and replayed after a fix.",
+    "whyItMatters": "DLQs are how you avoid the choice between a stuck pipeline and silently dropped data.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.ingestion.idempotent-ingestion",
+      "de.ingestion.schema-evolution",
+      "de.data-quality.quarantine"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "ingestion",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Dead-letter queues",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.ingestion.dedup-ingest",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "ingestion",
+    "term": "Deduplication on ingest",
+    "difficulty": "intermediate",
+    "priority": 71,
+    "shortType": "concept",
+    "definition": "Removing duplicate records at load time — via upserts on a key or filtering on a unique event id.",
+    "explanation": "At-least-once sources and retries deliver duplicates. Dedup uses a MERGE/upsert on a natural or event key, or windowed dedup on an id, so the target holds one row per logical event regardless of redelivery.",
+    "interviewLine": "Ingest dedup collapses redelivered records via keyed upserts or unique-id filtering, so at-least-once sources don't double-count.",
+    "whyItMatters": "Without dedup, at-least-once delivery inflates every count and metric downstream.",
+    "interviewQuestion": "How do you dedup an unbounded stream without unbounded state?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.ingestion.idempotent-ingestion",
+      "de.ingestion.cdc"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "ingestion",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Deduplication on ingest",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   }
 ]

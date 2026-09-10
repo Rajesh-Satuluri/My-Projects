@@ -1,5 +1,140 @@
 [
   {
+    "id": "de.lakehouse.what-is-lakehouse",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "lakehouse",
+    "term": "What is a lakehouse",
+    "difficulty": "core",
+    "priority": 86,
+    "shortType": "concept",
+    "definition": "A lake's cheap object storage plus a warehouse's ACID transactions, schema, and performance — in one.",
+    "explanation": "Open table formats layer a transaction log and metadata over Parquet files in object storage, so one store gives reliable tables, BI-grade queries, and direct ML access without copying data into a separate warehouse.",
+    "interviewLine": "A lakehouse puts ACID tables, schema, and warehouse performance directly on lake storage via open table formats — one store for BI and ML.",
+    "whyItMatters": "It removes the copy-to-warehouse step and the two-system split between BI and ML.",
+    "interviewQuestion": "What problem with the lake-plus-warehouse setup does a lakehouse solve?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.lakehouse.table-vs-file-formats",
+      "de.lakehouse.acid-object-storage",
+      "de.lakehouse.delta-lake"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "lakehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "What is a lakehouse",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.lakehouse.table-vs-file-formats",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "lakehouse",
+    "term": "Table vs file formats",
+    "difficulty": "core",
+    "priority": 80,
+    "shortType": "compare",
+    "definition": "File formats (Parquet) store data; table formats (Iceberg, Delta) add a metadata layer for tables.",
+    "explanation": "Parquet/ORC define how bytes sit in one file. A table format (Iceberg, Delta, Hudi) tracks which files make up a table plus a transaction log — enabling ACID, schema evolution, time travel, and safe concurrent writes over those files.",
+    "interviewLine": "Parquet is a file format (bytes in a file); Iceberg/Delta are table formats adding a metadata log over many files for ACID, evolution, and time travel.",
+    "whyItMatters": "Confusing the two layers is common; the table format is what makes a lake behave like a warehouse.",
+    "commonMistake": "Calling Iceberg a file format — it sits above Parquet, managing which files form the table.",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "Parquet",
+        "b": "Iceberg/Delta",
+        "rows": [
+          [
+            "one file",
+            "many files"
+          ],
+          [
+            "columnar bytes",
+            "table + log"
+          ],
+          [
+            "no ACID",
+            "ACID + time travel"
+          ]
+        ]
+      }
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.lakehouse.what-is-lakehouse",
+      "de.lakehouse.iceberg",
+      "de.lakehouse.delta-lake"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "lakehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Table vs file formats",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.lakehouse.acid-object-storage",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "lakehouse",
+    "term": "ACID on object storage",
+    "difficulty": "advanced",
+    "priority": 82,
+    "shortType": "why",
+    "definition": "Bringing atomic, consistent transactions to append-only object stores that lack them natively.",
+    "explanation": "S3/GCS have no multi-file transactions. Table formats add a transaction log: writers create new files and atomically commit a new metadata version pointing to them. Readers see a consistent snapshot; failed writes leave the table untouched.",
+    "interviewLine": "Table formats bring ACID to object storage via a transaction log: writes stage files and atomically commit a new snapshot, so readers never see partial writes.",
+    "whyItMatters": "ACID over cheap object storage is the core breakthrough that made lakehouses possible.",
+    "interviewQuestion": "How does a transaction log provide atomicity when S3 itself can't?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.lakehouse.delta-lake",
+      "de.lakehouse.iceberg",
+      "de.lakehouse.time-travel"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "lakehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "ACID on object storage",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
     "id": "de.lakehouse.delta-lake",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
@@ -7,112 +142,334 @@
     "domain": "data-engineering",
     "topic": "lakehouse",
     "term": "Delta Lake",
-    "difficulty": "advanced",
-    "priority": 56,
+    "difficulty": "intermediate",
+    "priority": 76,
     "shortType": "concept",
-    "definition": "Open table format supporting ACID on object storage. Delta table, time travel, MERGE.",
+    "definition": "Databricks' table format: a transaction log (_delta_log) of JSON commits over Parquet files.",
+    "explanation": "Delta records every change as an ordered commit in _delta_log, giving ACID, time travel, schema enforcement, and MERGE. Readers reconstruct table state from the log; it's tightly integrated with Spark/Databricks.",
+    "interviewLine": "Delta Lake adds ACID and time travel via an ordered JSON transaction log (_delta_log) over Parquet, with schema enforcement and MERGE.",
+    "whyItMatters": "Delta is one of the big three table formats and the default on Databricks.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.lakehouse.iceberg",
+      "de.lakehouse.hudi",
+      "de.lakehouse.time-travel"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "lakehouse"
+      "lakehouse",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Open Table Format / Lakehouse",
-        "sourceType": "primary"
+        "section": "Delta Lake",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.lakehouse.medallion",
-    "schemaVersion": 1,
-    "contentVersion": "2026.09.1",
-    "type": "concept",
-    "domain": "data-engineering",
-    "topic": "lakehouse",
-    "term": "Medallion",
-    "difficulty": "advanced",
-    "priority": 51,
-    "shortType": "concept",
-    "definition": "TODO: define Medallion.",
-    "prerequisites": [],
-    "relatedConcepts": [],
-    "nextConcepts": [],
-    "quickPaths": [],
-    "tags": [
-      "lakehouse"
-    ],
-    "sourceRefs": [
-      {
-        "source": "de_encyclopedia_2025.html",
-        "section": "Most Asked Concepts · Architecture",
-        "sourceType": "primary"
-      }
-    ],
-    "provenance": "inferred",
-    "authoringStatus": "stub"
-  },
-  {
-    "id": "de.lakehouse.apache-iceberg",
+    "id": "de.lakehouse.iceberg",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "lakehouse",
     "term": "Apache Iceberg",
-    "difficulty": "advanced",
-    "priority": 26,
+    "difficulty": "intermediate",
+    "priority": 78,
     "shortType": "concept",
-    "definition": "Open table format alternative to Delta Lake. Great for multi-engine lakehouse architectures.",
+    "definition": "An open table format with hidden partitioning and engine-neutral metadata, backed by many vendors.",
+    "explanation": "Iceberg tracks table state through metadata/manifest files and offers hidden partitioning — queries don't need to know the partition scheme, and you can evolve partitioning without rewriting data. It's engine-agnostic (Spark, Trino, Flink, Snowflake).",
+    "interviewLine": "Iceberg is an open, engine-neutral table format with hidden partitioning and partition evolution, so queries and layout change without rewrites.",
+    "whyItMatters": "Iceberg is winning as the open, vendor-neutral standard — the hot table-format topic.",
+    "interviewQuestion": "What does Iceberg's 'hidden partitioning' free the query writer from?",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.lakehouse.delta-lake",
+      "de.lakehouse.hudi",
+      "de.lakehouse.catalogs"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "lakehouse"
+      "lakehouse",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Open Table Format",
-        "sourceType": "primary"
+        "section": "Apache Iceberg",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.lakehouse.apache-hudi",
+    "id": "de.lakehouse.hudi",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "lakehouse",
     "term": "Apache Hudi",
-    "difficulty": "advanced",
-    "priority": 15,
+    "difficulty": "intermediate",
+    "priority": 68,
     "shortType": "concept",
-    "definition": "Streaming copy-on-write format with Uber lineage. Less common than Delta/Iceberg.",
+    "definition": "An upsert-first table format built for incremental writes and CDC ingestion.",
+    "explanation": "Hudi optimizes for mutable data: fast upserts/deletes and incremental pulls of only changed records. It offers Copy-on-Write (read-optimized) and Merge-on-Read (write-optimized) table types, popular for streaming/CDC into a lake.",
+    "interviewLine": "Hudi is upsert-first, tuned for CDC and incremental writes, offering Copy-on-Write and Merge-on-Read table types for read vs write optimization.",
+    "whyItMatters": "Hudi is the third major format, chosen when upsert and CDC throughput dominate.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.lakehouse.iceberg",
+      "de.lakehouse.delta-lake",
+      "de.lakehouse.merge-upsert"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "lakehouse"
+      "lakehouse",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
         "section": "Apache Hudi",
-        "sourceType": "primary"
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.lakehouse.time-travel",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "lakehouse",
+    "term": "Time travel",
+    "difficulty": "intermediate",
+    "priority": 79,
+    "shortType": "why",
+    "definition": "Querying a table as it existed at a past snapshot or version, thanks to the transaction log.",
+    "explanation": "Because every commit is versioned and old files are retained, you can read 'AS OF' a timestamp or version — for audits, reproducing an ML training set, or rolling back a bad write instantly.",
+    "interviewLine": "Time travel queries a prior table version via the transaction log, enabling audits, reproducible datasets, and instant rollback of a bad write.",
+    "whyItMatters": "Time travel is the lakehouse's standout feature — audit, reproducibility, and one-command rollback.",
+    "interviewQuestion": "How would you use time travel to recover from a bad batch load?",
+    "example": {
+      "type": "sql",
+      "content": "-- Delta / Spark SQL\nSELECT * FROM sales VERSION AS OF 42;\nSELECT * FROM sales TIMESTAMP AS OF '2026-09-01';\n-- rollback: RESTORE TABLE sales TO VERSION AS OF 42;"
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.lakehouse.acid-object-storage",
+      "de.lakehouse.delta-lake"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "lakehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Time travel",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.lakehouse.schema-enforcement",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "lakehouse",
+    "term": "Schema enforcement & evolution",
+    "difficulty": "intermediate",
+    "priority": 72,
+    "shortType": "compare",
+    "definition": "Enforcement rejects writes that violate the schema; evolution lets the schema change safely over time.",
+    "explanation": "Enforcement blocks a write with wrong types/extra columns, preventing corruption (schema-on-write on the lake). Evolution allows controlled additions/renames tracked in metadata, so the table changes without rewriting history.",
+    "interviewLine": "Enforcement rejects nonconforming writes; evolution permits controlled schema changes in metadata — safety plus adaptability on lake tables.",
+    "whyItMatters": "Together they give a lake warehouse-grade safety while still adapting to change.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.lakehouse.acid-object-storage",
+      "de.lakehouse.iceberg"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "lakehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Schema enforcement & evolution",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.lakehouse.merge-upsert",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "lakehouse",
+    "term": "MERGE / upsert",
+    "difficulty": "intermediate",
+    "priority": 70,
+    "shortType": "concept",
+    "definition": "A single statement that inserts new rows and updates matching ones — the workhorse of lake table writes.",
+    "explanation": "MERGE INTO matches target rows on a key and updates them, inserts unmatched rows, and can delete — enabling CDC application, SCD Type 2, and idempotent loads on lakehouse tables that plain append can't do.",
+    "interviewLine": "MERGE upserts in one statement — update matches, insert new, optionally delete — powering CDC, SCD2, and idempotent loads on lake tables.",
+    "whyItMatters": "MERGE is how CDC and dedup land in a lakehouse; it's the reason table formats added upsert support.",
+    "example": {
+      "type": "sql",
+      "content": "MERGE INTO customers t\nUSING updates s ON t.id = s.id\nWHEN MATCHED THEN UPDATE SET *\nWHEN NOT MATCHED THEN INSERT *;"
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.lakehouse.hudi",
+      "de.lakehouse.time-travel"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "lakehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "MERGE / upsert",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.lakehouse.compaction",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "lakehouse",
+    "term": "Compaction",
+    "difficulty": "advanced",
+    "priority": 66,
+    "shortType": "why",
+    "definition": "Merging many small files into fewer large ones (OPTIMIZE) to restore read performance.",
+    "explanation": "Streaming and frequent writes create tiny files; opening thousands of them wrecks scan speed (the 'small files problem'). Compaction rewrites them into right-sized files, and old files are cleaned up (VACUUM) after retention.",
+    "interviewLine": "Compaction (OPTIMIZE) merges many small files into large ones to fix the small-files problem that cripples scan performance.",
+    "whyItMatters": "Small-file buildup is the top lakehouse performance killer; compaction is the standard remedy.",
+    "commonMistake": "Never compacting a streaming-fed table — read latency degrades as file count explodes.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.lakehouse.z-ordering",
+      "de.lakehouse.merge-upsert"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "lakehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Compaction",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.lakehouse.z-ordering",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "lakehouse",
+    "term": "Z-ordering / clustering",
+    "difficulty": "advanced",
+    "priority": 64,
+    "shortType": "why",
+    "definition": "Co-locating related data in the same files by sorting on high-cardinality columns to skip more data.",
+    "explanation": "Z-ordering multi-dimensionally sorts data so rows filtered together sit in the same files. With per-file min/max stats, queries skip files that can't match — big gains when you filter on the clustered columns.",
+    "interviewLine": "Z-ordering clusters related rows into shared files so, via file min/max stats, queries skip non-matching files — data skipping on the columns you filter.",
+    "whyItMatters": "Z-ordering plus file stats is the lakehouse equivalent of a warehouse's clustering/sort keys.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.lakehouse.compaction",
+      "de.lakehouse.iceberg"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "lakehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Z-ordering / clustering",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.lakehouse.catalogs",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "lakehouse",
+    "term": "Catalogs",
+    "difficulty": "intermediate",
+    "priority": 67,
+    "shortType": "concept",
+    "definition": "The metadata service that tracks tables, schemas, and permissions across engines — Unity, Glue, Nessie.",
+    "explanation": "A catalog maps table names to their current metadata/location and governs access. Unity Catalog (Databricks), AWS Glue, and Nessie (git-like, versioned) let multiple engines share one governed view of lakehouse tables.",
+    "interviewLine": "A catalog (Unity, Glue, Nessie) tracks table metadata, location, and permissions so many engines share one governed, discoverable view of the lakehouse.",
+    "whyItMatters": "The catalog is what makes lakehouse tables discoverable, governed, and shareable across tools.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.lakehouse.iceberg",
+      "de.lakehouse.schema-enforcement"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "lakehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Catalogs",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   }
 ]

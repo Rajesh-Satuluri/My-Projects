@@ -1,61 +1,115 @@
 [
   {
-    "id": "de.data-quality.databricks-unity-catalog",
+    "id": "de.data-quality.why-quality",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "data-quality",
-    "term": "Databricks Unity Catalog",
-    "difficulty": "advanced",
-    "priority": 35,
-    "shortType": "concept",
-    "definition": "Databricks governance layer. Fine-grained RBAC, column masking, data lineage, metastore federation.",
+    "term": "Why data quality",
+    "difficulty": "core",
+    "priority": 84,
+    "shortType": "why",
+    "definition": "Bad data silently corrupts every decision downstream — the cost compounds far past the pipeline.",
+    "explanation": "A wrong join or null spike doesn't error; it ships. Dashboards mislead, ML models train on garbage, and trust erodes. Catching issues at the source is orders of magnitude cheaper than debugging a bad decision later.",
+    "interviewLine": "Data quality matters because bad data fails silently and propagates — the cost of catching it early is far below the cost of a wrong decision.",
+    "whyItMatters": "'Garbage in, garbage out' is why data-quality engineering is now a first-class discipline.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.data-quality.dimensions",
+      "de.data-quality.validation",
+      "de.data-quality.observability"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "data-quality"
+      "data-quality",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Databricks Unity Catalog",
-        "sourceType": "primary"
+        "section": "Why data quality",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.data-quality.grafana-prometheus",
+    "id": "de.data-quality.dimensions",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "data-quality",
-    "term": "Grafana / Prometheus",
-    "difficulty": "advanced",
-    "priority": 30,
+    "term": "Quality dimensions",
+    "difficulty": "core",
+    "priority": 78,
     "shortType": "concept",
-    "definition": "Metrics & alerting visualization. Prometheus+Grafana is standard data platform monitoring.",
+    "definition": "The measurable facets of quality: completeness, accuracy, consistency, timeliness, validity, uniqueness.",
+    "explanation": "Completeness: no missing values. Accuracy: matches reality. Consistency: agrees across systems. Timeliness: fresh enough. Validity: conforms to rules/types. Uniqueness: no unwanted duplicates. Each maps to a concrete check.",
+    "interviewLine": "Quality has dimensions — completeness, accuracy, consistency, timeliness, validity, uniqueness — each becoming a concrete automated check.",
+    "whyItMatters": "Naming dimensions turns vague 'data is bad' into specific, testable assertions.",
+    "interviewQuestion": "Which dimension does a freshness SLA measure?",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.data-quality.validation",
+      "de.data-quality.freshness",
+      "de.data-quality.profiling"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "data-quality"
+      "data-quality",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Grafana / Prometheus",
-        "sourceType": "primary"
+        "section": "Quality dimensions",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-quality.validation",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-quality",
+    "term": "Validation & assertions",
+    "difficulty": "core",
+    "priority": 80,
+    "shortType": "concept",
+    "definition": "Explicit checks that gate data: assert conditions and fail (or quarantine) the run when they break.",
+    "explanation": "Validation encodes expectations as assertions — row counts in range, no nulls in a key, referential integrity — and runs them in the pipeline. A failed assertion blocks promotion so bad data never reaches consumers.",
+    "interviewLine": "Validation asserts expectations (ranges, non-null keys, referential integrity) in-pipeline and blocks promotion when they fail.",
+    "whyItMatters": "Assertions turn quality from a hope into a build gate that stops bad data at the door.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-quality.great-expectations",
+      "de.data-quality.dbt-tests",
+      "de.data-quality.quarantine"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-quality",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Validation & assertions",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
     "id": "de.data-quality.great-expectations",
@@ -65,141 +119,403 @@
     "domain": "data-engineering",
     "topic": "data-quality",
     "term": "Great Expectations",
-    "difficulty": "advanced",
-    "priority": 28,
+    "difficulty": "intermediate",
+    "priority": 68,
     "shortType": "concept",
-    "definition": "Open-source data quality framework. Expectation suites, checkpoints, data docs, Pandas+Spark.",
+    "definition": "A Python framework for declaring, running, and documenting 'expectations' about data.",
+    "explanation": "You build an expectation suite (e.g. expect_column_values_to_not_be_null) and run it against a batch; GE validates, produces data-docs, and can fail the pipeline. It centralizes checks and their results as living documentation.",
+    "interviewLine": "Great Expectations declares reusable 'expectations' about data, validates batches against them, and generates docs plus pass/fail gates.",
+    "whyItMatters": "It's the best-known dedicated data-validation tool — a common interview name-drop.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.data-quality.validation",
+      "de.data-quality.dbt-tests",
+      "de.data-quality.profiling"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "data-quality"
+      "data-quality",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Data Quality Framework",
-        "sourceType": "primary"
+        "section": "Great Expectations",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.data-quality.monte-carlo",
+    "id": "de.data-quality.dbt-tests",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "data-quality",
-    "term": "Monte Carlo",
-    "difficulty": "advanced",
-    "priority": 10,
+    "term": "dbt tests",
+    "difficulty": "core",
+    "priority": 74,
     "shortType": "concept",
-    "definition": "Data observability platform. Table health monitors, lineage, SLA breach alerts.",
+    "definition": "Data-quality checks that run inside the warehouse as part of the dbt build.",
+    "explanation": "dbt's generic tests (unique, not_null, accepted_values, relationships) and singular SQL tests assert quality on transformed models and gate CI. Quality lives next to the transformation code, versioned together.",
+    "interviewLine": "dbt tests assert quality in-warehouse (unique, not_null, relationships, custom SQL) as a build gate, co-located with the models.",
+    "whyItMatters": "For ELT stacks, dbt tests are the lowest-friction place to enforce quality — no extra tool.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.data-quality.validation",
+      "de.data-quality.null-dup-checks",
+      "de.data-quality.great-expectations"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "data-quality"
+      "data-quality",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Monte Carlo",
-        "sourceType": "primary"
+        "section": "dbt tests",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.data-quality.collibra",
+    "id": "de.data-quality.null-dup-checks",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "data-quality",
-    "term": "Collibra",
-    "difficulty": "advanced",
-    "priority": 8,
+    "term": "Null & duplicate checks",
+    "difficulty": "fundamental",
+    "priority": 70,
     "shortType": "concept",
-    "definition": "Enterprise data catalog. Business glossary, data lineage, stewardship, compliance.",
+    "definition": "The two most common quality checks: no unexpected nulls in key columns, and no duplicate keys.",
+    "explanation": "A null in a join key drops rows; a duplicate primary key double-counts. These basic assertions (not_null, unique) catch the majority of real-world breakages and are the first tests to add to any model.",
+    "interviewLine": "Null and duplicate checks guard keys — nulls silently drop join rows and dup keys double-count, so not_null/unique are the first tests to add.",
+    "whyItMatters": "Most production data incidents trace back to an unexpected null or a broken uniqueness assumption.",
+    "commonMistake": "Testing uniqueness on a column that legitimately repeats, or missing that a composite key is what's actually unique.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.data-quality.dbt-tests",
+      "de.data-quality.dimensions"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "data-quality"
+      "data-quality",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Collibra",
-        "sourceType": "primary"
+        "section": "Null & duplicate checks",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.data-quality.openmetadata-atlan",
+    "id": "de.data-quality.freshness",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "data-quality",
-    "term": "OpenMetadata / Atlan",
-    "difficulty": "advanced",
-    "priority": 8,
-    "shortType": "concept",
-    "definition": "Open-source metadata platform. Data discovery, tagging, lineage, ML feature store catalog.",
+    "term": "Freshness checks",
+    "difficulty": "intermediate",
+    "priority": 76,
+    "shortType": "why",
+    "definition": "Verifying data arrived recently enough — alerting when the newest record is older than an SLA.",
+    "explanation": "A pipeline can run 'successfully' yet load nothing if the source stalled. Freshness checks compare max(loaded_at) or max(event_time) against a threshold and alert on staleness, catching silent upstream failures.",
+    "interviewLine": "Freshness checks alert when the newest data exceeds an age SLA, catching silent stalls where the job 'succeeds' but loads nothing new.",
+    "whyItMatters": "Stale-but-present data is the sneakiest failure — no error, just wrong-because-old dashboards.",
+    "interviewQuestion": "Why can a green pipeline run still have stale data?",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.data-quality.observability",
+      "de.data-quality.dimensions"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "data-quality"
+      "data-quality",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "OpenMetadata / Atlan",
-        "sourceType": "primary"
+        "section": "Freshness checks",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.data-quality.openlineage",
+    "id": "de.data-quality.schema-validation",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "data-quality",
-    "term": "OpenLineage",
-    "difficulty": "advanced",
-    "priority": 8,
+    "term": "Schema validation",
+    "difficulty": "intermediate",
+    "priority": 72,
     "shortType": "concept",
-    "definition": "Open standard for data lineage collection & publishing. Integrates with Airflow, dbt, Spark.",
+    "definition": "Enforcing that incoming data matches an expected structure — columns, types, and constraints.",
+    "explanation": "Before loading, validate the payload against a schema (types, required fields, enums). Reject or quarantine records that don't conform, often backed by a schema registry so producers and consumers agree on structure.",
+    "interviewLine": "Schema validation enforces expected columns, types, and constraints at the boundary, rejecting or quarantining nonconforming records.",
+    "whyItMatters": "Structural guarantees stop malformed data from silently poisoning downstream transforms.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.data-quality.data-contracts",
+      "de.ingestion.schema-evolution",
+      "de.data-quality.quarantine"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "data-quality"
+      "data-quality",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "OpenLineage",
-        "sourceType": "primary"
+        "section": "Schema validation",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-quality.data-contracts",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-quality",
+    "term": "Data contracts",
+    "difficulty": "advanced",
+    "priority": 79,
+    "shortType": "why",
+    "definition": "A formal, versioned agreement between a data producer and its consumers on schema, semantics, and SLAs.",
+    "explanation": "A contract pins what a producer guarantees — fields, types, meaning, freshness, and how changes are versioned — enforced in CI so a breaking change is caught before it ships. It shifts quality left, to the source.",
+    "interviewLine": "A data contract is a versioned producer-consumer agreement on schema, semantics, and SLAs, enforced in CI so breaking changes fail before shipping.",
+    "whyItMatters": "Contracts are the hot fix for the root cause of most quality issues: unannounced producer changes.",
+    "interviewQuestion": "How does a data contract shift quality enforcement 'left'?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-quality.schema-validation",
+      "de.data-quality.observability",
+      "de.data-quality.dimensions"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-quality",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Data contracts",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-quality.observability",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-quality",
+    "term": "Data observability",
+    "difficulty": "advanced",
+    "priority": 77,
+    "shortType": "concept",
+    "definition": "Monitoring pipeline health across five pillars: freshness, volume, schema, distribution, and lineage.",
+    "explanation": "Borrowed from software observability: track whether data is on time (freshness), the right amount (volume), the right shape (schema), within normal ranges (distribution), and how it flows (lineage) — to detect incidents automatically.",
+    "interviewLine": "Data observability monitors five pillars — freshness, volume, schema, distribution, lineage — to auto-detect incidents beyond explicit tests.",
+    "whyItMatters": "Observability tools (Monte Carlo, etc.) catch unknown-unknowns that hand-written tests miss.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-quality.anomaly-detection",
+      "de.data-quality.freshness",
+      "de.data-quality.data-contracts"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-quality",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Data observability",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-quality.anomaly-detection",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-quality",
+    "term": "Anomaly detection",
+    "difficulty": "advanced",
+    "priority": 66,
+    "shortType": "concept",
+    "definition": "Statistically learning a metric's normal range and alerting when new data drifts outside it.",
+    "explanation": "Instead of fixed thresholds, fit the historical pattern (mean/stddev, seasonality) of row counts, null rates, or value distributions and flag deviations. Catches issues you didn't know to write a rule for.",
+    "interviewLine": "Anomaly detection models a metric's normal range (with seasonality) and alerts on drift, catching issues no fixed rule anticipated.",
+    "whyItMatters": "It scales quality to metrics no one thought to assert on — the unknown-unknowns.",
+    "commonMistake": "Alerting on raw thresholds that ignore seasonality — Monday traffic looks like an 'anomaly' every week.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-quality.observability",
+      "de.data-quality.profiling"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-quality",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Anomaly detection",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-quality.reconciliation",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-quality",
+    "term": "Reconciliation",
+    "difficulty": "intermediate",
+    "priority": 65,
+    "shortType": "concept",
+    "definition": "Comparing source and target to prove no rows or values were lost or altered in transit.",
+    "explanation": "After a load, reconcile: row counts, key sets, and control totals (sums of amounts) between source and target must match. Mismatches reveal dropped rows, dupes, or transform bugs before anyone trusts the numbers.",
+    "interviewLine": "Reconciliation compares source vs target on counts, keys, and control totals to prove the load lost or changed nothing.",
+    "whyItMatters": "Reconciliation is the audit that turns 'the job ran' into 'the data is provably complete'.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-quality.null-dup-checks",
+      "de.data-quality.validation"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-quality",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Reconciliation",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-quality.quarantine",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-quality",
+    "term": "Quarantine patterns",
+    "difficulty": "intermediate",
+    "priority": 64,
+    "shortType": "concept",
+    "definition": "Isolating failing records into a separate area so good data flows while bad data is held for review.",
+    "explanation": "Rather than failing the whole batch, route invalid rows to a quarantine table/topic with the reason. Clean data proceeds; quarantined rows are inspected, fixed, and replayed — balancing throughput against strictness.",
+    "interviewLine": "Quarantine isolates invalid rows (with a failure reason) so clean data flows while bad records wait to be fixed and replayed.",
+    "whyItMatters": "Quarantine avoids the false choice between blocking the pipeline and shipping bad rows.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.ingestion.dead-letter",
+      "de.data-quality.validation",
+      "de.data-quality.schema-validation"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-quality",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Quarantine patterns",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-quality.profiling",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-quality",
+    "term": "Data profiling",
+    "difficulty": "intermediate",
+    "priority": 62,
+    "shortType": "why",
+    "definition": "Scanning a dataset to summarize its shape — value ranges, null rates, cardinality, distributions.",
+    "explanation": "Before writing checks you must know the data: profiling computes per-column stats (min/max, distinct count, null %, top values) so you can set realistic expectations and spot obvious problems immediately.",
+    "interviewLine": "Profiling summarizes a dataset's columns — ranges, null rates, cardinality, distributions — to ground realistic quality expectations.",
+    "whyItMatters": "Profiling is the first step of any quality effort — you can't assert on data you don't understand.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-quality.dimensions",
+      "de.data-quality.anomaly-detection",
+      "de.data-quality.great-expectations"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-quality",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Data profiling",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   }
 ]
