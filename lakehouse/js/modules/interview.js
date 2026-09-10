@@ -648,6 +648,75 @@ Transforms: identity, bucket(N), truncate(W), year/month/day/hour.`,
 <span class="hi-kw">WHERE</span> event_ts &gt;= <span class="hi-str">'2026-08-01'</span> <span class="hi-kw">AND</span> event_ts &lt; <span class="hi-str">'2026-08-02'</span>;</span>`,
       shopkart: '<strong>ShopKart:</strong> the old Hive table needed a <code>dt=YYYY-MM-DD</code> column; analysts who filtered on the raw timestamp scanned everything. Hidden partitioning removed that footgun entirely.',
     },
+    {
+      q: 'You have a 10 TB Hive/Parquet table. How would you migrate it to Iceberg with minimal risk and no long downtime?',
+      tags: ['advanced', 'senior'],
+      answer: `The key realisation: migration generates <strong>metadata only</strong> — the existing Parquet files are reused in place, so a 10 TB table converts in minutes, not hours. There are three procedures:
+
+<strong>1. snapshot</strong> — creates an independent Iceberg table that shares the source's data files. The source stays a Hive table. Use this first to test queries/engines against Iceberg with zero risk (it's throwaway).
+<strong>2. migrate</strong> — in-place conversion. Keeps the table name, reuses the files, and leaves the original as <code>&lt;table&gt;__BACKUP_</code> so rollback is just re-pointing the name.
+<strong>3. add_files</strong> — imports existing Parquet files into an already-created Iceberg table (handy when you want a custom schema/spec first). <code>register_table</code> instead attaches an orphaned metadata.json.
+
+Playbook: snapshot → validate row counts & sample queries → migrate → re-validate → keep the backup for a cooldown window → drop it.`,
+      code: `<span class="hi-cm">-- 1. Test safely (source untouched)</span>
+<span class="hi-kw">CALL</span> catalog.system.snapshot(
+  <span class="hi-str">'hive_db.orders'</span>, <span class="hi-str">'ice_db.orders_test'</span>);
+
+<span class="hi-cm">-- 2. Convert in place (keeps the name)</span>
+<span class="hi-kw">CALL</span> catalog.system.migrate(<span class="hi-str">'hive_db.orders'</span>);
+<span class="hi-cm">-- original preserved as orders__BACKUP_</span>
+
+<span class="hi-cm">-- 3. Import files into an existing Iceberg table</span>
+<span class="hi-kw">CALL</span> catalog.system.add_files(
+  table => <span class="hi-str">'ice_db.orders'</span>,
+  source_table => <span class="hi-str">'hive_db.orders'</span>);`,
+      shopkart: '<strong>ShopKart:</strong> migrated the 21.5B-row orders table from Hive using snapshot → migrate. Total data rewritten: 0 bytes. The cutover was a single atomic catalog pointer swap; the backup was kept for 14 days before being dropped.',
+    },
+    {
+      q: 'What exactly happens to the data files during snapshot/migrate — are they copied or rewritten?',
+      tags: ['intermediate'],
+      answer: `Neither. Migration only <strong>reads Parquet footers</strong> (row counts, column min/max/null stats) to build Iceberg manifest files that <em>point at</em> the existing files. The row data is never read or copied.
+
+Consequences to state in an interview:
+<strong>Fast & cheap:</strong> cost is proportional to file <em>count</em> (metadata), not data <em>size</em>.
+<strong>Files stay put:</strong> the Parquet files keep their original S3 paths; Iceberg just references them.
+<strong>Layout is inherited:</strong> if the old table had millions of tiny files, the new Iceberg table has them too — schedule a <code>rewrite_data_files</code> compaction after migrating.
+<strong>Don't delete the source files:</strong> after <code>add_files</code> the Iceberg table references the original files, so removing them (or the Hive table's storage) breaks the Iceberg table.`,
+      shopkart: '<strong>ShopKart:</strong> right after migrating, planning was still slow because the Hive table had 4M tiny files. A one-off <code>rewrite_data_files</code> to 512 MB targets fixed it — the migration itself touched no data.',
+    },
+    {
+      q: 'You need to feed only the CHANGES from an Iceberg table to a downstream mart every 5 minutes. How do you read changes out (not write them)?',
+      tags: ['advanced', 'senior'],
+      answer: `Two mechanisms, depending on what "changes" means:
+
+<strong>1. Incremental append scan</strong> — read only files appended between two snapshots by setting <code>start-snapshot-id</code> and <code>end-snapshot-id</code> (or start/end timestamps). Cheap and simple, but it surfaces <em>appended files only</em> — it does NOT see row-level updates or deletes on existing rows.
+<strong>2. Changelog view</strong> — <code>create_changelog_view</code> emits one row per change with <code>_change_type</code> (INSERT / UPDATE_BEFORE / UPDATE_AFTER / DELETE), plus <code>_commit_snapshot_id</code> and <code>_change_ordinal</code>. This captures updates and deletes, i.e. true row-level CDC.
+
+Resumable pattern: persist the last consumed snapshot id; next run uses it as the new <code>start</code>. Tie that to your engine's checkpoint for exactly-once, resumable sync.`,
+      code: `<span class="hi-cm">-- Incremental append scan (Spark)</span>
+spark.read.format(<span class="hi-str">"iceberg"</span>)
+  .option(<span class="hi-str">"start-snapshot-id"</span>, lastId)
+  .option(<span class="hi-str">"end-snapshot-id"</span>,   currentId)
+  .load(<span class="hi-str">"prod.orders"</span>);
+
+<span class="hi-cm">-- Row-level CDC out (updates + deletes)</span>
+<span class="hi-kw">CALL</span> catalog.system.create_changelog_view(
+  table => <span class="hi-str">'prod.orders'</span>,
+  options => map(<span class="hi-str">'start-snapshot-id'</span>,<span class="hi-str">'S1'</span>,
+                 <span class="hi-str">'end-snapshot-id'</span>,<span class="hi-str">'S4'</span>));
+<span class="hi-kw">SELECT</span> _change_type, order_id, amount <span class="hi-kw">FROM</span> orders_changes;`,
+      shopkart: '<strong>ShopKart:</strong> the curated orders mart syncs every 5 min via an incremental append scan for new orders, and a nightly changelog run to apply status updates and GDPR deletes — the last snapshot id is checkpointed so a restart never double-applies.',
+    },
+    {
+      q: 'What are the gotchas of incremental reads in Iceberg?',
+      tags: ['senior'],
+      answer: `Three that senior interviewers look for:
+
+<strong>1. Append scan is append-only.</strong> It reads files added between snapshots. Merge-on-Read deletes, overwrites, and row updates are invisible to it — use the <strong>changelog view</strong> when you need those.
+<strong>2. The start snapshot must still exist.</strong> <code>expire_snapshots</code> can remove the snapshot your cursor points at, breaking the incremental bound. Keep retention longer than your worst-case downstream lag (and tag critical snapshots).
+<strong>3. Requirements & ordering.</strong> Changelog needs format-version 2 and the snapshots in the range retained. Use <code>_change_ordinal</code> / <code>_commit_snapshot_id</code> to apply changes in the right order downstream; an UPDATE arrives as a matched BEFORE/AFTER pair.`,
+      shopkart: '<strong>ShopKart:</strong> an incremental job broke after retention was cut to 3 days while a downstream consumer lagged 4 days — the start snapshot had been expired. Fix: 14-day retention floor, plus alerting when consumer lag approaches the retention window.',
+    },
   ];
 
   /* ── Render ──────────────────────────────────────────────── */

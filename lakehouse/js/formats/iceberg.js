@@ -33,10 +33,11 @@
     {
       id: 'read-ops', label: 'Read & Query',
       items: [
-        { id: 'read-path',     label: 'Read Path',     icon: 'search',   available: true },
-        { id: 'write-path',    label: 'Write Path',    icon: 'edit',     available: true },
-        { id: 'query-planner', label: 'Query Planner', icon: 'cpu',      available: true },
-        { id: 'time-travel',   label: 'Time Travel',   icon: 'clock',    available: true },
+        { id: 'read-path',         label: 'Read Path',            icon: 'search',   available: true },
+        { id: 'write-path',        label: 'Write Path',           icon: 'edit',     available: true },
+        { id: 'query-planner',     label: 'Query Planner',        icon: 'cpu',      available: true },
+        { id: 'incremental-reads', label: 'Incremental & CDC Reads', icon: 'activity', available: true },
+        { id: 'time-travel',       label: 'Time Travel',          icon: 'clock',    available: true },
       ],
     },
     {
@@ -54,6 +55,7 @@
       id: 'advanced', label: 'Advanced Topics',
       items: [
         { id: 'concurrency',         label: 'Concurrency',          icon: 'users',    available: true },
+        { id: 'migrate-to-iceberg',  label: 'Migrate to Iceberg',   icon: 'upload',   available: true },
         { id: 'maintenance',         label: 'Maintenance Ops',      icon: 'tool',     available: true },
         { id: 'performance',         label: 'Performance Sim',      icon: 'zap',      available: true },
         { id: 'engine-integrations', label: 'Engine Integrations',  icon: 'link',     available: true },

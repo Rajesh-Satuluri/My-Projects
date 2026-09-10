@@ -373,6 +373,50 @@
       correct: 1,
       explanation: 'Dynamic overwrite replaces only the partitions produced by the query (e.g. today\'s date), leaving history intact. Static overwrite replaces everything matching the overwrite filter.',
     },
+    {
+      q: 'ShopKart migrates a 10 TB Hive table to Iceberg with CALL system.migrate(...). How much data is rewritten?',
+      options: [
+        'All 10 TB — every Parquet file is converted to Iceberg format',
+        'Zero bytes — only metadata (manifests + metadata.json) is generated; existing files are reused',
+        'Half — only the partitioned files are rewritten',
+        'It depends on the target file size property',
+      ],
+      correct: 1,
+      explanation: 'Migration reads Parquet footers (stats) and writes manifests that point at the existing files. No row data is copied or rewritten — that\'s why a 10 TB table migrates in minutes. Iceberg is a table format over the same files.',
+    },
+    {
+      q: 'Which procedure lets ShopKart test Iceberg against a Hive table WITHOUT changing the original table?',
+      options: [
+        'system.migrate — converts in place',
+        'system.snapshot — creates an independent Iceberg copy sharing the data files; source stays Hive',
+        'system.add_files — imports files and deletes the source',
+        'system.register_table — renames the Hive table',
+      ],
+      correct: 1,
+      explanation: 'snapshot creates a throwaway Iceberg table that shares the source\'s data files while leaving the source as a Hive table — ideal for risk-free testing. migrate is the in-place conversion (and leaves a __BACKUP_ table).',
+    },
+    {
+      q: 'A downstream mart must sync only rows appended to orders since its last run. Which read is the cheap, correct choice?',
+      options: [
+        'SELECT * FROM orders (full scan each time)',
+        'An incremental append scan with start-snapshot-id and end-snapshot-id',
+        'TIMESTAMP AS OF the last run',
+        'expire_snapshots then re-read',
+      ],
+      correct: 1,
+      explanation: 'An incremental append scan reads only the files appended between the two snapshots — a fraction of the table. A full scan re-reads everything; TIMESTAMP AS OF gives a whole historical state, not the delta.',
+    },
+    {
+      q: 'ShopKart needs row-level INSERT/UPDATE/DELETE changes (not just appends) out of Iceberg for CDC. What do they use?',
+      options: [
+        'An incremental append scan — it includes updates and deletes',
+        'The changelog view (create_changelog_view), which emits _change_type per row',
+        'Time travel between two snapshots and diff manually',
+        'remove_orphan_files with dry_run',
+      ],
+      correct: 1,
+      explanation: 'The changelog view emits per-row changes with _change_type = INSERT / UPDATE_BEFORE / UPDATE_AFTER / DELETE. An append scan only surfaces appended files — it misses row-level updates and Merge-on-Read deletes.',
+    },
   ];
 
   /* ── Render ──────────────────────────────────────────────── */

@@ -7,6 +7,79 @@
 window.IcebergViz = window.IcebergViz || {};
 
 window.IcebergViz.QuestionBank = {
+  'migrate-to-iceberg': [
+    {
+      q: 'How much data is rewritten when you migrate a Hive/Parquet table to Iceberg?',
+      options: [
+        'The whole table is converted to a new format',
+        'Zero — only metadata is generated; the existing Parquet files are reused in place',
+        'Only the partition columns are rewritten',
+        'It rewrites files that are smaller than the target size',
+      ],
+      correct: 1,
+      explanation: 'Migration reads Parquet footers for stats and writes manifests that point at the existing files. No row data is copied, so even a 10 TB table converts in minutes. Cost is proportional to file count, not data size.',
+      difficulty: 'basic',
+    },
+    {
+      q: 'Which procedure converts a Hive table to Iceberg in place while keeping the table name?',
+      options: ['snapshot', 'migrate', 'add_files', 'register_table'],
+      correct: 1,
+      explanation: 'migrate does an in-place conversion, keeps the name, and leaves the original as <table>__BACKUP_ for rollback. snapshot makes a throwaway copy (source stays Hive); add_files imports files into an already-created Iceberg table.',
+      difficulty: 'intermediate',
+    },
+    {
+      q: 'After add_files imports existing Parquet files into an Iceberg table, why must you NOT delete the source files?',
+      options: [
+        'The catalog caches them',
+        'The Iceberg table references those exact files — deleting them corrupts the table',
+        'They are needed for schema inference only',
+        'You can delete them; Iceberg copied them',
+      ],
+      correct: 1,
+      explanation: 'add_files does not copy data; the Iceberg manifests point at the original file paths. Removing the source files (or the Hive table\'s storage) breaks the Iceberg table. Use snapshot/migrate semantics carefully around cleanup.',
+      difficulty: 'advanced',
+    },
+  ],
+
+  'incremental-reads': [
+    {
+      q: 'What does an incremental append scan (start-snapshot-id / end-snapshot-id) return?',
+      options: [
+        'The entire current table',
+        'Only the files appended between the two snapshots',
+        'A row-level diff including updates and deletes',
+        'The metadata.json history',
+      ],
+      correct: 1,
+      explanation: 'An incremental append scan reads only files added between the start and end snapshots — a cheap way to pull new data. It surfaces appends only; it does not include row-level updates or deletes.',
+      difficulty: 'basic',
+    },
+    {
+      q: 'You need INSERT/UPDATE/DELETE row-level changes out of Iceberg for CDC. Which feature emits them?',
+      options: [
+        'An incremental append scan',
+        'The changelog view (create_changelog_view) with _change_type per row',
+        'TIMESTAMP AS OF',
+        'rewrite_manifests',
+      ],
+      correct: 1,
+      explanation: 'The changelog view emits per-row changes with _change_type = INSERT / UPDATE_BEFORE / UPDATE_AFTER / DELETE, plus _commit_snapshot_id and _change_ordinal — capturing updates and deletes, not just appends.',
+      difficulty: 'intermediate',
+    },
+    {
+      q: 'Why can an incremental read job break if snapshot retention is too short?',
+      options: [
+        'Manifests get compacted',
+        'expire_snapshots can remove the start snapshot the cursor points at, invalidating the bound',
+        'The schema evolves',
+        'Bloom filters expire',
+      ],
+      correct: 1,
+      explanation: 'Incremental reads reference a start snapshot id. If expire_snapshots removes it (retention shorter than downstream lag), the bound is gone and the job fails. Keep retention longer than worst-case consumer lag and tag critical snapshots.',
+      difficulty: 'advanced',
+    },
+  ],
+
   'why-iceberg': [
     {
       q: 'What core problem does Apache Iceberg solve that plain Parquet-on-S3 does not?',
