@@ -1,10 +1,9 @@
-/* DE Shorts — card renderer (spec §5/§7) with Phase 3 interactions:
-   - swipe physics (framer-motion): drag right = Good, left = Again
-   - four FSRS rating buttons (swipe-first, not swipe-only — spec §35)
-   - persisted status chip + next-review feedback
-   Layout still enforced by the 360x800 grid + render gate. */
+/* DE Shorts — card renderer (spec §5/§7).
+   Presentational + controlled: the Feed pager owns ALL gestures (swipe to page,
+   flick, swipe-left/right to expand/collapse). The card exposes `expanded` and
+   `onToggle` (tap) and renders accordingly. Rating buttons drive FSRS scheduling.
+   Layout stays enforced by the 360x800 grid + render gate. */
 import { useState } from "react";
-import { motion, useMotionValue, useTransform, type PanInfo } from "framer-motion";
 import type { Concept } from "../content/loadContent";
 import { conceptById } from "../content/loadContent";
 import { go } from "../router";
@@ -46,19 +45,23 @@ function Section({ label, children, variant }: { label: string; children: React.
   );
 }
 
-export function Card({ concept, onAdvance }: { concept: Concept; onAdvance?: () => void }) {
-  const [expanded, setExpanded] = useState(false);
+export function Card({
+  concept,
+  expanded = false,
+  onToggle,
+  onAdvance,
+}: {
+  concept: Concept;
+  expanded?: boolean;
+  onToggle?: () => void;
+  onAdvance?: () => void;
+}) {
   const c = concept;
   const isStub = c.authoringStatus === "stub";
   const rate = useProgress((s) => s.rate);
   const status = useProgress((s) => s.byId[c.id]?.status ?? "unseen");
   const dueMs = useProgress((s) => s.byId[c.id]?.due);
   const [flash, setFlash] = useState<string | null>(null);
-
-  const x = useMotionValue(0);
-  // drag left = reveal more (elaborate), drag right = collapse (back)
-  const moreGlow = useTransform(x, [-140, 0], [0.45, 0]);
-  const backGlow = useTransform(x, [0, 140], [0, 0.45]);
 
   const jumps = [...(c.prerequisites ?? []), ...(c.relatedConcepts ?? []), ...(c.nextConcepts ?? [])];
 
@@ -68,11 +71,12 @@ export function Card({ concept, onAdvance }: { concept: Concept; onAdvance?: () 
     setTimeout(() => { setFlash(null); onAdvance?.(); }, 650);
   }
 
-  function onDragEnd(_e: unknown, info: PanInfo) {
+  // Tap toggles expand. Ignore taps on interactive children (buttons/links);
+  // swipes never reach here because the pager preventDefaults them (no click).
+  function onCardClick(e: React.MouseEvent) {
     if (isStub) return;
-    // swipe left -> more elaboration, swipe right -> back to summary
-    if (info.offset.x < -80) setExpanded(true);
-    else if (info.offset.x > 80) setExpanded(false);
+    if ((e.target as HTMLElement).closest("button, a")) return;
+    onToggle?.();
   }
 
   const statusLabel: Record<string, string> = {
@@ -80,21 +84,12 @@ export function Card({ concept, onAdvance }: { concept: Concept; onAdvance?: () 
   };
 
   return (
-    <motion.article
+    <article
       className={"card" + (isStub ? " card--stub" : "") + (expanded ? " card--expanded" : "")}
       data-topic={c.topic}
       data-card-id={c.id}
-      onClick={() => !isStub && setExpanded((v) => !v)}
-      style={{ x }}
-      drag={isStub ? false : "x"}
-      dragSnapToOrigin
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.5}
-      onDragEnd={onDragEnd}
+      onClick={onCardClick}
     >
-      <motion.div className="swipe-glow swipe-glow--more" style={{ opacity: moreGlow }} />
-      <motion.div className="swipe-glow swipe-glow--back" style={{ opacity: backGlow }} />
-
       <div className="card__meta">
         <span className="card__topic-dot" />
         <span>{c.topic}</span>
@@ -158,7 +153,7 @@ export function Card({ concept, onAdvance }: { concept: Concept; onAdvance?: () 
           <span className="flash">{flash}</span>
         ) : !expanded ? (
           <span className="expand-hint">
-            {dueMs !== undefined ? `Next review ${humanIn(dueMs)} · ` : ""}‹ swipe left for more · swipe ↑ next
+            {dueMs !== undefined ? `Next review ${humanIn(dueMs)} · ` : ""}Tap to expand · swipe ↑ next
           </span>
         ) : (
           <div className="rate-row">
@@ -169,6 +164,6 @@ export function Card({ concept, onAdvance }: { concept: Concept; onAdvance?: () 
           </div>
         )}
       </div>
-    </motion.article>
+    </article>
   );
 }

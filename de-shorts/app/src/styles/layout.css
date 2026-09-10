@@ -195,18 +195,24 @@ body {
 .topbar__title { font-size: var(--fs-sm); font-weight: 600; text-transform: capitalize; color: var(--text-2); }
 .feed--withbar .card { height: calc(100dvh - 56px - var(--safe-top)); }
 
-/* ---- one-card-per-swipe pager (Inshorts / Reels): exactly one card per swipe ---- */
+/* ---- premium one-card-per-swipe pager (Inshorts / Reels feel) ---- */
 .screen { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
-.pager { flex: 1; min-height: 0; position: relative; overflow: hidden; }
-.pager__track {
-  height: 100%;
-  transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1);
-  will-change: transform;
+.pager {
+  flex: 1; min-height: 0; position: relative; overflow: hidden;
+  touch-action: pan-y;            /* we take over the vertical drag via preventDefault */
+  overscroll-behavior: contain;   /* no pull-to-refresh / scroll chaining */
 }
-.pager__slot { height: 100%; }
-.pager .card { height: 100%; } /* fill the slot exactly so one 100% step = one card */
+.pager__track { height: 100%; will-change: transform; } /* framer-motion drives translateY */
+.pager__slot {
+  height: 100%;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+  transform-origin: center;
+}
+.pager__slot[data-active="false"] { opacity: 0.5; transform: scale(0.965); } /* depth on the card behind */
+.pager__slot[data-active="true"] { opacity: 1; transform: none; }
+.pager .card { height: 100%; } /* fill the slot exactly so one step = one card */
 @media (prefers-reduced-motion: reduce) {
-  .pager__track { transition: none; }
+  .pager__slot { transition: none; }
 }
 
 /* stub / placeholder card */
