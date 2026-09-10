@@ -70,8 +70,16 @@ body {
   flex-direction: column;
   gap: var(--s-4);
   min-height: 0; /* allow the visual to shrink instead of overflowing */
-  overflow: hidden;
+  overflow-y: auto; /* expanded content scrolls here; buttons stay pinned below */
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain; /* don't chain to the vertical feed while reading */
 }
+.card__body::-webkit-scrollbar { display: none; }
+/* When expanded, give the reader the whole screen: visual scrolls away with the text. */
+.card--expanded .card__visual { flex: 0 0 auto; }
+.card--expanded .card__body { padding-bottom: var(--s-4); }
 
 .card__visual {
   flex: 0 0 auto;
@@ -85,8 +93,7 @@ body {
 }
 .card__visual svg { max-width: 100%; height: auto; }
 
-.card__expand { min-height: 0; overflow-y: auto; scrollbar-width: none; }
-.card__expand::-webkit-scrollbar { display: none; }
+.card__expand { min-height: 0; } /* parent .card__body owns the scroll now */
 
 .section { margin-bottom: var(--s-4); }
 .section__label {
@@ -217,8 +224,9 @@ body {
 .swipe-glow {
   position: absolute; inset: 0; pointer-events: none; z-index: 0;
 }
-.swipe-glow--good { background: radial-gradient(120% 60% at 100% 50%, rgba(52,199,89,0.35), transparent 60%); }
-.swipe-glow--again { background: radial-gradient(120% 60% at 0% 50%, rgba(255,69,58,0.35), transparent 60%); }
+/* drag left = "more" (accent glow on the left edge), drag right = "back" (neutral) */
+.swipe-glow--more { background: radial-gradient(120% 60% at 0% 50%, color-mix(in srgb, var(--accent) 40%, transparent), transparent 60%); }
+.swipe-glow--back { background: radial-gradient(120% 60% at 100% 50%, rgba(255,255,255,0.14), transparent 60%); }
 .card > *:not(.swipe-glow) { position: relative; z-index: 1; }
 
 /* status chip */

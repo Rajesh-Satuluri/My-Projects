@@ -56,8 +56,9 @@ export function Card({ concept, onAdvance }: { concept: Concept; onAdvance?: () 
   const [flash, setFlash] = useState<string | null>(null);
 
   const x = useMotionValue(0);
-  const leftGlow = useTransform(x, [-140, 0], [0.5, 0]);
-  const rightGlow = useTransform(x, [0, 140], [0, 0.5]);
+  // drag left = reveal more (elaborate), drag right = collapse (back)
+  const moreGlow = useTransform(x, [-140, 0], [0.45, 0]);
+  const backGlow = useTransform(x, [0, 140], [0, 0.45]);
 
   const jumps = [...(c.prerequisites ?? []), ...(c.relatedConcepts ?? []), ...(c.nextConcepts ?? [])];
 
@@ -69,8 +70,9 @@ export function Card({ concept, onAdvance }: { concept: Concept; onAdvance?: () 
 
   function onDragEnd(_e: unknown, info: PanInfo) {
     if (isStub) return;
-    if (info.offset.x > 110) doRate("good");
-    else if (info.offset.x < -110) doRate("again");
+    // swipe left -> more elaboration, swipe right -> back to summary
+    if (info.offset.x < -80) setExpanded(true);
+    else if (info.offset.x > 80) setExpanded(false);
   }
 
   const statusLabel: Record<string, string> = {
@@ -79,7 +81,7 @@ export function Card({ concept, onAdvance }: { concept: Concept; onAdvance?: () 
 
   return (
     <motion.article
-      className={"card" + (isStub ? " card--stub" : "")}
+      className={"card" + (isStub ? " card--stub" : "") + (expanded ? " card--expanded" : "")}
       data-topic={c.topic}
       data-card-id={c.id}
       onClick={() => !isStub && setExpanded((v) => !v)}
@@ -90,8 +92,8 @@ export function Card({ concept, onAdvance }: { concept: Concept; onAdvance?: () 
       dragElastic={0.5}
       onDragEnd={onDragEnd}
     >
-      <motion.div className="swipe-glow swipe-glow--again" style={{ opacity: leftGlow }} />
-      <motion.div className="swipe-glow swipe-glow--good" style={{ opacity: rightGlow }} />
+      <motion.div className="swipe-glow swipe-glow--more" style={{ opacity: moreGlow }} />
+      <motion.div className="swipe-glow swipe-glow--back" style={{ opacity: backGlow }} />
 
       <div className="card__meta">
         <span className="card__topic-dot" />
@@ -156,7 +158,7 @@ export function Card({ concept, onAdvance }: { concept: Concept; onAdvance?: () 
           <span className="flash">{flash}</span>
         ) : !expanded ? (
           <span className="expand-hint">
-            {dueMs !== undefined ? `Next review ${humanIn(dueMs)} · ` : ""}Tap to expand · swipe ↑ next
+            {dueMs !== undefined ? `Next review ${humanIn(dueMs)} · ` : ""}‹ swipe left for more · swipe ↑ next
           </span>
         ) : (
           <div className="rate-row">
