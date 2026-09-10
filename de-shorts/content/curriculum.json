@@ -1,0 +1,530 @@
+{
+  "$comment": "DE Shorts — canonical curriculum roadmap. Single source of truth for the module/card plan. Diff this file when adding modules or cards; keep it in sync with content/data/ as modules get authored. status: done|planned. priority: P0|P1|P2. 'stubs' = shallow seed cards in data today; 'cards' = the planned interview-depth shorts (term + angle). Each card becomes one concept card id {domain}.{topic}.{slug}.",
+  "meta": {
+    "version": 1,
+    "updatedAt": "2026-09-10",
+    "totals": {
+      "topicModules": 25,
+      "authoredModules": 2,
+      "plannedCards": 336,
+      "liveCards": 40,
+      "grandTotalCards": 376
+    },
+    "priorityLegend": {
+      "P0": "core interview / highest demand — build first",
+      "P1": "strong value",
+      "P2": "breadth / legacy"
+    }
+  },
+  "modules": [
+    {
+      "domain": "de", "topic": "kafka", "idPrefix": "de.kafka", "status": "done",
+      "priority": "P0", "accent": "#f2a900", "stubs": 1, "liveCards": 20,
+      "note": "Authored & live. See content/data/concepts/kafka.json + questions/kafka.json (12 MCQ)."
+    },
+    {
+      "domain": "de", "topic": "orchestration", "idPrefix": "de.orchestration", "status": "done",
+      "priority": "P0", "accent": "#f783ac", "stubs": 0, "liveCards": 20,
+      "note": "Authored & live (Airflow-centric). content/data/concepts/orchestration.json + questions (12 MCQ)."
+    },
+
+    {
+      "domain": "de", "topic": "sql", "idPrefix": "de.sql", "status": "planned",
+      "priority": "P0", "accent": "#4dabf7", "stubs": 9,
+      "desc": "Every DE interview has a live SQL round. Pattern fluency, not syntax recall.",
+      "cards": [
+        {"slug": "joins", "term": "JOIN types", "angle": "inner / left / right / full"},
+        {"slug": "group-by", "term": "GROUP BY & aggregates", "angle": "rollups"},
+        {"slug": "where-vs-having", "term": "WHERE vs HAVING", "angle": "filter order"},
+        {"slug": "window-functions", "term": "Window functions", "angle": "the DE power tool"},
+        {"slug": "ranking", "term": "ROW_NUMBER · RANK · DENSE_RANK", "angle": "ranking"},
+        {"slug": "lag-lead", "term": "LAG / LEAD", "angle": "row-to-row"},
+        {"slug": "cte", "term": "CTEs", "angle": "readable WITH blocks"},
+        {"slug": "recursive-cte", "term": "Recursive CTEs", "angle": "hierarchies"},
+        {"slug": "subqueries", "term": "Subqueries", "angle": "correlated vs not"},
+        {"slug": "set-ops", "term": "Set operations", "angle": "UNION / INTERSECT / EXCEPT"},
+        {"slug": "case", "term": "CASE expressions", "angle": "branching logic"},
+        {"slug": "null-handling", "term": "NULL handling", "angle": "three-valued logic"},
+        {"slug": "dedup", "term": "Dedup patterns", "angle": "QUALIFY / distinct-on"},
+        {"slug": "gaps-islands", "term": "Gaps & islands", "angle": "classic interview Q"},
+        {"slug": "running-totals", "term": "Running totals", "angle": "frame clauses"},
+        {"slug": "pivot", "term": "Pivot / unpivot", "angle": "reshaping"},
+        {"slug": "datetime", "term": "Date/time functions", "angle": "time-series slicing"},
+        {"slug": "explain", "term": "EXPLAIN & optimization", "angle": "reading the plan"}
+      ]
+    },
+    {
+      "domain": "de", "topic": "spark", "idPrefix": "de.spark", "status": "planned",
+      "priority": "P0", "accent": "#e8590c", "stubs": 15,
+      "desc": "Distributed-compute workhorse. Interviewers probe execution model + tuning, not API surface.",
+      "cards": [
+        {"slug": "what-is-spark", "term": "What is Spark", "angle": "unified in-memory engine"},
+        {"slug": "rdd", "term": "RDD", "angle": "resilient distributed dataset"},
+        {"slug": "dataframe-dataset", "term": "DataFrame & Dataset", "angle": "structured APIs"},
+        {"slug": "catalyst", "term": "Catalyst optimizer", "angle": "how Spark SQL plans"},
+        {"slug": "transformations-actions", "term": "Transformations vs Actions", "angle": "lazy evaluation"},
+        {"slug": "narrow-wide", "term": "Narrow vs Wide", "angle": "dependency types"},
+        {"slug": "shuffle", "term": "Shuffle", "angle": "the cost center"},
+        {"slug": "partitions", "term": "Partitions", "angle": "the unit of parallelism"},
+        {"slug": "jobs-stages-tasks", "term": "Jobs · Stages · Tasks", "angle": "the DAG"},
+        {"slug": "driver-executors", "term": "Driver & Executors", "angle": "cluster roles"},
+        {"slug": "cluster-managers", "term": "Cluster managers", "angle": "YARN / K8s / Standalone"},
+        {"slug": "deploy-modes", "term": "Deploy modes", "angle": "client vs cluster"},
+        {"slug": "caching", "term": "Caching & persistence", "angle": "storage levels"},
+        {"slug": "broadcast-join", "term": "Broadcast joins", "angle": "avoid the shuffle"},
+        {"slug": "accumulators", "term": "Accumulators & broadcast vars", "angle": "shared state"},
+        {"slug": "aqe", "term": "Adaptive Query Execution", "angle": "runtime re-planning"},
+        {"slug": "pushdown", "term": "Predicate & partition pushdown", "angle": "read less"},
+        {"slug": "skew", "term": "Data skew & salting", "angle": "the classic bottleneck"},
+        {"slug": "repartition-coalesce", "term": "repartition vs coalesce", "angle": "reshaping partitions"},
+        {"slug": "structured-streaming", "term": "Structured Streaming", "angle": "micro-batch model"},
+        {"slug": "watermarking", "term": "Watermarking & windows", "angle": "streaming state"},
+        {"slug": "tungsten", "term": "Tungsten", "angle": "memory & codegen"},
+        {"slug": "udf", "term": "UDFs", "angle": "and why to avoid them"},
+        {"slug": "oom-tuning", "term": "OOM & spill tuning", "angle": "reading the failure"},
+        {"slug": "pyspark-vs-scala", "term": "PySpark vs Scala", "angle": "when it matters"},
+        {"slug": "spark-table-formats", "term": "Spark on Delta/Iceberg", "angle": "table formats"}
+      ]
+    },
+    {
+      "domain": "de", "topic": "data-modeling", "idPrefix": "de.data-modeling", "status": "planned",
+      "priority": "P0", "accent": "#f783ac", "stubs": 6,
+      "desc": "How raw data becomes queryable. SCDs and grain come up in almost every senior interview.",
+      "cards": [
+        {"slug": "dimensional", "term": "Dimensional modeling", "angle": "the Kimball lens"},
+        {"slug": "star-schema", "term": "Star schema", "angle": "facts + dimensions"},
+        {"slug": "snowflake-schema", "term": "Snowflake schema", "angle": "normalized dims"},
+        {"slug": "fact-tables", "term": "Fact tables", "angle": "measures & grain"},
+        {"slug": "dimension-tables", "term": "Dimension tables", "angle": "context"},
+        {"slug": "grain", "term": "Grain", "angle": "the most important decision"},
+        {"slug": "scd", "term": "Slowly Changing Dimensions", "angle": "SCD 0-6"},
+        {"slug": "surrogate-keys", "term": "Surrogate keys", "angle": "why not natural keys"},
+        {"slug": "conformed-dims", "term": "Conformed dimensions", "angle": "shared across facts"},
+        {"slug": "degenerate-dims", "term": "Degenerate dimensions", "angle": "keys in the fact"},
+        {"slug": "bridge-tables", "term": "Bridge tables", "angle": "many-to-many"},
+        {"slug": "kimball-inmon", "term": "Kimball vs Inmon", "angle": "two philosophies"},
+        {"slug": "data-vault", "term": "Data Vault", "angle": "hubs / links / satellites"},
+        {"slug": "obt", "term": "One Big Table", "angle": "the OBT tradeoff"},
+        {"slug": "semantic-layer", "term": "Semantic / metrics layer", "angle": "one definition"},
+        {"slug": "normalization-vs-dimensional", "term": "Normalization vs dimensional", "angle": "when each wins"}
+      ]
+    },
+    {
+      "domain": "de", "topic": "warehouse", "idPrefix": "de.warehouse", "status": "planned",
+      "priority": "P0", "accent": "#9775fa", "stubs": 4,
+      "desc": "Where analytics runs. Interviews test why columnar + MPP make warehouses fast.",
+      "cards": [
+        {"slug": "what-is-warehouse", "term": "What is a warehouse", "angle": "OLAP store"},
+        {"slug": "columnar", "term": "Columnar storage", "angle": "the core idea"},
+        {"slug": "mpp", "term": "MPP", "angle": "massively parallel processing"},
+        {"slug": "storage-compute-separation", "term": "Separation of storage & compute", "angle": "the cloud shift"},
+        {"slug": "snowflake-arch", "term": "Snowflake architecture", "angle": "virtual warehouses"},
+        {"slug": "bigquery-arch", "term": "BigQuery architecture", "angle": "Dremel / slots"},
+        {"slug": "redshift-arch", "term": "Redshift architecture", "angle": "nodes & slices"},
+        {"slug": "distribution-keys", "term": "Distribution keys", "angle": "co-locating joins"},
+        {"slug": "sort-keys", "term": "Sort / cluster keys", "angle": "pruning"},
+        {"slug": "micro-partitions", "term": "Micro-partitions", "angle": "automatic pruning"},
+        {"slug": "materialized-views", "term": "Materialized views", "angle": "precomputed results"},
+        {"slug": "compression", "term": "Compression & encoding", "angle": "columnar wins"},
+        {"slug": "partitioning", "term": "Partitioning", "angle": "physical layout"},
+        {"slug": "cost-credits", "term": "Cost & credits", "angle": "the FinOps angle"}
+      ]
+    },
+    {
+      "domain": "de", "topic": "dbt", "idPrefix": "de.dbt", "status": "planned",
+      "priority": "P0", "accent": "#ff8787", "stubs": 2,
+      "desc": "The transformation-layer standard. A full workflow, not two stubs.",
+      "cards": [
+        {"slug": "what-is-dbt", "term": "What is dbt", "angle": "SQL + software engineering"},
+        {"slug": "models", "term": "Models", "angle": "SELECTs as build steps"},
+        {"slug": "sources", "term": "Sources", "angle": "declaring raw tables"},
+        {"slug": "ref-lineage", "term": "ref() & lineage", "angle": "the DAG"},
+        {"slug": "materializations", "term": "Materializations", "angle": "view / table / incr / ephemeral"},
+        {"slug": "incremental", "term": "Incremental models", "angle": "only new rows"},
+        {"slug": "tests", "term": "Tests", "angle": "generic & singular"},
+        {"slug": "snapshots", "term": "Snapshots", "angle": "SCD2 for free"},
+        {"slug": "seeds", "term": "Seeds", "angle": "versioned CSVs"},
+        {"slug": "macros-jinja", "term": "Macros & Jinja", "angle": "templated SQL"},
+        {"slug": "packages", "term": "Packages", "angle": "reusable code"},
+        {"slug": "docs-lineage", "term": "Docs & lineage graph", "angle": "auto-generated"},
+        {"slug": "exposures", "term": "Exposures", "angle": "downstream tracking"},
+        {"slug": "dbt-vs-airflow", "term": "dbt vs Airflow", "angle": "transform vs orchestrate"}
+      ]
+    },
+    {
+      "domain": "de", "topic": "databases", "idPrefix": "de.databases", "status": "planned",
+      "priority": "P1", "accent": "#63e6be", "stubs": 9,
+      "desc": "Foundations everything assumes. ACID, isolation, indexing recur constantly.",
+      "cards": [
+        {"slug": "oltp-olap", "term": "OLTP vs OLAP", "angle": "two workloads"},
+        {"slug": "acid", "term": "ACID", "angle": "the transaction guarantee"},
+        {"slug": "cap", "term": "CAP theorem", "angle": "the tradeoff"},
+        {"slug": "indexing", "term": "Indexing", "angle": "B-trees & lookups"},
+        {"slug": "normalization", "term": "Normalization", "angle": "1NF to 3NF"},
+        {"slug": "denormalization", "term": "Denormalization", "angle": "read speed"},
+        {"slug": "isolation-levels", "term": "Isolation levels", "angle": "read committed to serializable"},
+        {"slug": "locking-mvcc", "term": "Locking & MVCC", "angle": "concurrency"},
+        {"slug": "replication", "term": "Replication", "angle": "primary / replica"},
+        {"slug": "sharding", "term": "Sharding", "angle": "horizontal scale"},
+        {"slug": "partitioning", "term": "Partitioning", "angle": "splitting tables"},
+        {"slug": "sql-vs-nosql", "term": "SQL vs NoSQL", "angle": "when each"},
+        {"slug": "key-value", "term": "Key-value stores", "angle": "Redis / Dynamo"},
+        {"slug": "document-stores", "term": "Document stores", "angle": "Mongo"},
+        {"slug": "wide-column", "term": "Wide-column stores", "angle": "Cassandra"},
+        {"slug": "explain-plans", "term": "EXPLAIN plans", "angle": "reading query cost"},
+        {"slug": "connection-pooling", "term": "Connection pooling", "angle": "reusing connections"}
+      ]
+    },
+    {
+      "domain": "de", "topic": "cloud", "idPrefix": "de.cloud", "status": "planned",
+      "priority": "P1", "accent": "#74c0fc", "stubs": 7,
+      "desc": "Where modern pipelines live. Vendor-neutral with AWS/GCP/Azure equivalents per card.",
+      "cards": [
+        {"slug": "cloud-vs-onprem", "term": "Cloud vs on-prem", "angle": "the shift"},
+        {"slug": "service-models", "term": "IaaS / PaaS / SaaS", "angle": "service models"},
+        {"slug": "object-storage", "term": "Object storage", "angle": "S3 / GCS / ADLS"},
+        {"slug": "storage-classes", "term": "Storage classes", "angle": "hot to cold tiering"},
+        {"slug": "serverless", "term": "Serverless compute", "angle": "Lambda / Functions"},
+        {"slug": "managed-warehouses", "term": "Managed warehouses", "angle": "Redshift / BigQuery / Snowflake"},
+        {"slug": "managed-spark", "term": "Managed Spark", "angle": "EMR / Dataproc / Databricks"},
+        {"slug": "managed-orchestration", "term": "Managed orchestration", "angle": "MWAA / Composer"},
+        {"slug": "managed-streaming", "term": "Managed streaming", "angle": "Kinesis / PubSub"},
+        {"slug": "iam", "term": "IAM & roles", "angle": "least privilege"},
+        {"slug": "vpc", "term": "VPC & networking", "angle": "basics for DE"},
+        {"slug": "catalogs", "term": "Data catalogs", "angle": "Glue / Data Catalog"},
+        {"slug": "egress", "term": "Egress & transfer costs", "angle": "the silent bill"},
+        {"slug": "cost-optimization", "term": "Cost optimization", "angle": "spot / autoscale"},
+        {"slug": "regions-az", "term": "Regions & AZs", "angle": "availability"},
+        {"slug": "multi-cloud", "term": "Multi-cloud reality", "angle": "lock-in tradeoffs"}
+      ]
+    },
+    {
+      "domain": "de", "topic": "streaming", "idPrefix": "de.streaming", "status": "planned",
+      "priority": "P1", "accent": "#ffd43b", "stubs": 2,
+      "desc": "Real-time processing beyond Kafka the log. Event-time semantics are the tested part.",
+      "cards": [
+        {"slug": "what-is-streaming", "term": "What is stream processing", "angle": "unbounded data"},
+        {"slug": "batch-vs-streaming", "term": "Batch vs streaming", "angle": "the mental model"},
+        {"slug": "event-vs-processing-time", "term": "Event time vs processing time", "angle": "the key distinction"},
+        {"slug": "windowing", "term": "Windowing", "angle": "tumbling / sliding / session"},
+        {"slug": "watermarks", "term": "Watermarks", "angle": "handling late data"},
+        {"slug": "late-data", "term": "Late data handling", "angle": "allowed lateness"},
+        {"slug": "exactly-once", "term": "Exactly-once", "angle": "vs at-least-once"},
+        {"slug": "stateful", "term": "Stateful processing", "angle": "keyed state"},
+        {"slug": "checkpointing", "term": "Checkpointing", "angle": "fault tolerance"},
+        {"slug": "backpressure", "term": "Backpressure", "angle": "flow control"},
+        {"slug": "stream-table-duality", "term": "Stream-table duality", "angle": "two views of one thing"},
+        {"slug": "flink", "term": "Apache Flink", "angle": "true streaming"},
+        {"slug": "kafka-streams", "term": "Kafka Streams", "angle": "library approach"},
+        {"slug": "spark-streaming", "term": "Spark Structured Streaming", "angle": "micro-batch"}
+      ]
+    },
+    {
+      "domain": "de", "topic": "ingestion", "idPrefix": "de.ingestion", "status": "planned",
+      "priority": "P1", "accent": "#a9e34b", "stubs": 5,
+      "desc": "Getting data in — the messy first mile. CDC and idempotency are the interview meat.",
+      "cards": [
+        {"slug": "batch-ingestion", "term": "Batch ingestion", "angle": "scheduled loads"},
+        {"slug": "streaming-ingestion", "term": "Streaming ingestion", "angle": "continuous"},
+        {"slug": "full-vs-incremental", "term": "Full vs incremental", "angle": "load strategies"},
+        {"slug": "cdc", "term": "Change Data Capture", "angle": "CDC basics"},
+        {"slug": "debezium", "term": "Debezium", "angle": "log-based CDC"},
+        {"slug": "high-water-mark", "term": "Watermarks / high-water marks", "angle": "tracking progress"},
+        {"slug": "idempotent-ingestion", "term": "Idempotent ingestion", "angle": "safe re-runs"},
+        {"slug": "backfilling", "term": "Backfilling", "angle": "loading history"},
+        {"slug": "schema-evolution", "term": "Schema evolution", "angle": "handling drift"},
+        {"slug": "api-ingestion", "term": "API ingestion", "angle": "pagination & rate limits"},
+        {"slug": "file-ingestion", "term": "File ingestion", "angle": "landing zones"},
+        {"slug": "elt-tools", "term": "ELT tools", "angle": "Fivetran / Airbyte"},
+        {"slug": "dead-letter", "term": "Dead-letter queues", "angle": "bad records"},
+        {"slug": "dedup-ingest", "term": "Deduplication on ingest", "angle": "upserts"}
+      ]
+    },
+    {
+      "domain": "de", "topic": "data-quality", "idPrefix": "de.data-quality", "status": "planned",
+      "priority": "P1", "accent": "#38d9a9", "stubs": 7,
+      "desc": "Trust in the pipeline. Contracts and observability are the current hot topics.",
+      "cards": [
+        {"slug": "why-quality", "term": "Why data quality", "angle": "cost of bad data"},
+        {"slug": "dimensions", "term": "Quality dimensions", "angle": "completeness / accuracy / ..."},
+        {"slug": "validation", "term": "Validation & assertions", "angle": "gates"},
+        {"slug": "great-expectations", "term": "Great Expectations", "angle": "expectation suites"},
+        {"slug": "dbt-tests", "term": "dbt tests", "angle": "in-warehouse checks"},
+        {"slug": "null-dup-checks", "term": "Null & duplicate checks", "angle": "the basics"},
+        {"slug": "freshness", "term": "Freshness checks", "angle": "is it late?"},
+        {"slug": "schema-validation", "term": "Schema validation", "angle": "structure guarantees"},
+        {"slug": "data-contracts", "term": "Data contracts", "angle": "producer/consumer pact"},
+        {"slug": "observability", "term": "Data observability", "angle": "the five pillars"},
+        {"slug": "anomaly-detection", "term": "Anomaly detection", "angle": "statistical drift"},
+        {"slug": "reconciliation", "term": "Reconciliation", "angle": "source vs target"},
+        {"slug": "quarantine", "term": "Quarantine patterns", "angle": "isolate bad rows"},
+        {"slug": "profiling", "term": "Data profiling", "angle": "knowing your data"}
+      ]
+    },
+    {
+      "domain": "de", "topic": "architecture", "idPrefix": "de.architecture", "status": "planned",
+      "priority": "P1", "accent": "#da77f2", "stubs": 5,
+      "desc": "The system-design round. Whiteboard patterns to name and compare.",
+      "cards": [
+        {"slug": "batch-vs-streaming", "term": "Batch vs streaming", "angle": "the first fork"},
+        {"slug": "etl-vs-elt", "term": "ETL vs ELT", "angle": "and why ELT won"},
+        {"slug": "lambda", "term": "Lambda architecture", "angle": "batch + speed layer"},
+        {"slug": "kappa", "term": "Kappa architecture", "angle": "streaming only"},
+        {"slug": "medallion", "term": "Medallion", "angle": "bronze / silver / gold"},
+        {"slug": "data-lake", "term": "Data lake", "angle": "raw at scale"},
+        {"slug": "data-warehouse", "term": "Data warehouse", "angle": "structured analytics"},
+        {"slug": "lakehouse", "term": "Lakehouse", "angle": "the convergence"},
+        {"slug": "data-mesh", "term": "Data mesh", "angle": "domain ownership"},
+        {"slug": "modern-data-stack", "term": "Modern data stack", "angle": "the ELT toolchain"},
+        {"slug": "event-driven", "term": "Event-driven architecture", "angle": "decoupling"},
+        {"slug": "idempotency", "term": "Idempotency & reprocessing", "angle": "safe reruns"},
+        {"slug": "pipeline-patterns", "term": "Pipeline design patterns", "angle": "fan-in / fan-out"},
+        {"slug": "build-vs-buy", "term": "Build vs buy", "angle": "the tradeoff"}
+      ]
+    },
+    {
+      "domain": "de", "topic": "python", "idPrefix": "de.python", "status": "planned",
+      "priority": "P1", "accent": "#4c6ef5", "stubs": 6,
+      "desc": "Python as the DE glue language — data-heavy idioms, not general programming.",
+      "cards": [
+        {"slug": "python-for-de", "term": "Python for DE", "angle": "why it's the glue"},
+        {"slug": "generators", "term": "Generators & iterators", "angle": "memory-safe streams"},
+        {"slug": "comprehensions", "term": "Comprehensions", "angle": "concise transforms"},
+        {"slug": "context-managers", "term": "Context managers", "angle": "with-blocks & cleanup"},
+        {"slug": "decorators", "term": "Decorators", "angle": "retries & timing"},
+        {"slug": "type-hints", "term": "Type hints", "angle": "and why they matter"},
+        {"slug": "error-handling", "term": "Error handling & retries", "angle": "resilient jobs"},
+        {"slug": "json-csv", "term": "JSON & CSV", "angle": "the daily formats"},
+        {"slug": "pandas", "term": "Pandas basics", "angle": "in-memory frames"},
+        {"slug": "pandas-vs-spark", "term": "Pandas vs Spark", "angle": "when to scale out"},
+        {"slug": "concurrency", "term": "Concurrency", "angle": "threads / async / multiprocessing"},
+        {"slug": "venv-packaging", "term": "Virtual envs & packaging", "angle": "reproducible runs"},
+        {"slug": "pydantic", "term": "Pydantic / dataclasses", "angle": "validated models"},
+        {"slug": "pytest", "term": "Testing with pytest", "angle": "fixtures & mocks"}
+      ]
+    },
+    {
+      "domain": "de", "topic": "lakehouse", "idPrefix": "de.lakehouse", "status": "planned",
+      "priority": "P2", "accent": "#3bc9db", "stubs": 4,
+      "desc": "ACID on object storage — the table formats reshaping the stack. Time travel is the wow-feature.",
+      "cards": [
+        {"slug": "what-is-lakehouse", "term": "What is a lakehouse", "angle": "lake + warehouse"},
+        {"slug": "table-vs-file-formats", "term": "Table vs file formats", "angle": "Iceberg vs Parquet"},
+        {"slug": "acid-object-storage", "term": "ACID on object storage", "angle": "the breakthrough"},
+        {"slug": "delta-lake", "term": "Delta Lake", "angle": "the transaction log"},
+        {"slug": "iceberg", "term": "Apache Iceberg", "angle": "hidden partitioning"},
+        {"slug": "hudi", "term": "Apache Hudi", "angle": "upsert-first"},
+        {"slug": "time-travel", "term": "Time travel", "angle": "query old snapshots"},
+        {"slug": "schema-enforcement", "term": "Schema enforcement & evolution", "angle": "safe change"},
+        {"slug": "merge-upsert", "term": "MERGE / upsert", "angle": "MERGE INTO"},
+        {"slug": "compaction", "term": "Compaction", "angle": "OPTIMIZE small files"},
+        {"slug": "z-ordering", "term": "Z-ordering / clustering", "angle": "data skipping"},
+        {"slug": "catalogs", "term": "Catalogs", "angle": "Unity / Glue / Nessie"}
+      ]
+    },
+    {
+      "domain": "de", "topic": "bi", "idPrefix": "de.bi", "status": "planned",
+      "priority": "P2", "accent": "#ffa94d", "stubs": 5,
+      "desc": "The last mile to the business. DE owns the models BI sits on, so the handoff matters.",
+      "cards": [
+        {"slug": "what-is-bi", "term": "What is BI", "angle": "decisions from data"},
+        {"slug": "dashboards-vs-reports", "term": "Dashboards vs reports", "angle": "push vs pull"},
+        {"slug": "metrics-kpis", "term": "Metrics & KPIs", "angle": "defining measures"},
+        {"slug": "semantic-layer", "term": "Semantic layer", "angle": "one source of truth"},
+        {"slug": "bi-tools", "term": "The BI tools", "angle": "Tableau / Power BI / Looker"},
+        {"slug": "self-service", "term": "Self-service BI", "angle": "governed exploration"},
+        {"slug": "olap-cubes", "term": "OLAP cubes", "angle": "pre-aggregation"},
+        {"slug": "aggregation-tables", "term": "Aggregation tables", "angle": "speeding dashboards"},
+        {"slug": "row-level-security", "term": "Row-level security", "angle": "who sees what"},
+        {"slug": "metric-definitions", "term": "Metric definitions", "angle": "avoiding drift"},
+        {"slug": "storytelling", "term": "Data storytelling", "angle": "charts that land"},
+        {"slug": "embedded-analytics", "term": "Embedded analytics", "angle": "BI in products"}
+      ]
+    },
+    {
+      "domain": "de", "topic": "devops", "idPrefix": "de.devops", "status": "planned",
+      "priority": "P2", "accent": "#b197fc", "stubs": 13,
+      "desc": "Shipping and running pipelines reliably — DataOps, reframed around data workloads.",
+      "cards": [
+        {"slug": "cicd", "term": "CI/CD for pipelines", "angle": "test before deploy"},
+        {"slug": "docker", "term": "Docker", "angle": "containerizing jobs"},
+        {"slug": "kubernetes", "term": "Kubernetes basics", "angle": "orchestrating containers"},
+        {"slug": "iac", "term": "Infrastructure as Code", "angle": "Terraform"},
+        {"slug": "environments", "term": "Environments", "angle": "dev / stage / prod"},
+        {"slug": "git-strategy", "term": "Git strategy", "angle": "branching for data"},
+        {"slug": "secrets", "term": "Secrets management", "angle": "no creds in code"},
+        {"slug": "config", "term": "Config management", "angle": "env-driven"},
+        {"slug": "monitoring", "term": "Monitoring & observability", "angle": "is it healthy?"},
+        {"slug": "logging", "term": "Structured logging", "angle": "searchable logs"},
+        {"slug": "alerting", "term": "Alerting & on-call", "angle": "who gets paged"},
+        {"slug": "sla-slo-sli", "term": "SLA / SLO / SLI", "angle": "reliability targets"},
+        {"slug": "pipeline-testing", "term": "Pipeline testing in CI", "angle": "unit + integration"},
+        {"slug": "rollback", "term": "Rollback & recovery", "angle": "undoing a bad deploy"},
+        {"slug": "cost-monitoring", "term": "Cost monitoring", "angle": "FinOps for data"},
+        {"slug": "deploy-strategies", "term": "Deploy strategies", "angle": "blue-green / canary"},
+        {"slug": "disaster-recovery", "term": "Disaster recovery", "angle": "backups & RTO/RPO"},
+        {"slug": "artifact-registries", "term": "Artifact registries", "angle": "packaging jobs"}
+      ]
+    },
+    {
+      "domain": "de", "topic": "hadoop", "idPrefix": "de.hadoop", "status": "planned",
+      "priority": "P2", "accent": "#adb5bd", "stubs": 3,
+      "desc": "Legacy but still asked — explains why Spark and the cloud exist. Kept lean and honest.",
+      "cards": [
+        {"slug": "what-is-hadoop", "term": "What is Hadoop", "angle": "the original big-data stack"},
+        {"slug": "hdfs", "term": "HDFS", "angle": "distributed file system"},
+        {"slug": "hdfs-blocks", "term": "HDFS blocks & replication", "angle": "fault tolerance"},
+        {"slug": "mapreduce", "term": "MapReduce", "angle": "the compute model"},
+        {"slug": "yarn", "term": "YARN", "angle": "resource management"},
+        {"slug": "hive", "term": "Hive", "angle": "SQL on Hadoop"},
+        {"slug": "ecosystem", "term": "The ecosystem", "angle": "Pig / HBase / Oozie"},
+        {"slug": "why-declined", "term": "Why Hadoop declined", "angle": "cloud & Spark took over"}
+      ]
+    },
+
+    {
+      "domain": "ai", "topic": "foundations", "idPrefix": "ai.foundations", "status": "planned",
+      "priority": "P0", "accent": "#20c997", "stubs": 0,
+      "desc": "AI/ML mental model. Basic layer of the new AI domain.",
+      "cards": [
+        {"slug": "ai-ml-dl", "term": "AI vs ML vs Deep Learning", "angle": "the nested circles"},
+        {"slug": "learning-types", "term": "Supervised / Unsupervised / RL", "angle": "three paradigms"},
+        {"slug": "features-labels", "term": "Features & labels", "angle": "the training pair"},
+        {"slug": "training-inference", "term": "Training vs inference", "angle": "two phases"},
+        {"slug": "model-vs-algorithm", "term": "Model vs algorithm", "angle": "the distinction"},
+        {"slug": "train-val-test", "term": "Train / validation / test split", "angle": "honest evaluation"},
+        {"slug": "overfitting", "term": "Overfitting vs underfitting", "angle": "the core failure modes"},
+        {"slug": "bias-variance", "term": "Bias-variance tradeoff", "angle": "the balancing act"},
+        {"slug": "metrics", "term": "Evaluation metrics", "angle": "accuracy / precision / recall / F1"},
+        {"slug": "confusion-matrix", "term": "Confusion matrix", "angle": "TP / FP / FN / TN"},
+        {"slug": "roc-auc", "term": "ROC / AUC", "angle": "threshold-free evaluation"},
+        {"slug": "loss-function", "term": "Loss function", "angle": "what training minimizes"},
+        {"slug": "gradient-descent", "term": "Gradient descent", "angle": "how models learn"},
+        {"slug": "more-data", "term": "Why more data isn't always better", "angle": "quality over quantity"}
+      ]
+    },
+    {
+      "domain": "ai", "topic": "classical-ml", "idPrefix": "ai.classical-ml", "status": "planned",
+      "priority": "P1", "accent": "#12b886", "stubs": 0,
+      "desc": "The workhorse algorithms still asked in interviews.",
+      "cards": [
+        {"slug": "linear-regression", "term": "Linear regression", "angle": "the baseline"},
+        {"slug": "logistic-regression", "term": "Logistic regression", "angle": "classification baseline"},
+        {"slug": "decision-trees", "term": "Decision trees", "angle": "if/else learned"},
+        {"slug": "random-forest", "term": "Random forest", "angle": "bagging trees"},
+        {"slug": "gradient-boosting", "term": "Gradient boosting", "angle": "XGBoost / LightGBM"},
+        {"slug": "svm", "term": "SVM", "angle": "max-margin"},
+        {"slug": "knn", "term": "k-Nearest Neighbors", "angle": "lazy learner"},
+        {"slug": "naive-bayes", "term": "Naive Bayes", "angle": "probabilistic classifier"},
+        {"slug": "kmeans", "term": "k-means clustering", "angle": "unsupervised grouping"},
+        {"slug": "pca", "term": "PCA / dimensionality reduction", "angle": "compressing features"},
+        {"slug": "feature-engineering", "term": "Feature engineering", "angle": "where the wins are"},
+        {"slug": "scaling-encoding", "term": "Feature scaling & encoding", "angle": "prep for models"},
+        {"slug": "cross-validation", "term": "Cross-validation", "angle": "robust evaluation"},
+        {"slug": "hyperparameter-tuning", "term": "Hyperparameter tuning", "angle": "grid / random / Bayesian"}
+      ]
+    },
+    {
+      "domain": "ai", "topic": "deep-learning", "idPrefix": "ai.deep-learning", "status": "planned",
+      "priority": "P1", "accent": "#0ca678", "stubs": 0,
+      "desc": "How neural nets actually work.",
+      "cards": [
+        {"slug": "perceptron", "term": "Neuron & the perceptron", "angle": "the building block"},
+        {"slug": "layers", "term": "Neural network layers", "angle": "input / hidden / output"},
+        {"slug": "activation-functions", "term": "Activation functions", "angle": "ReLU / sigmoid / softmax"},
+        {"slug": "forward-pass", "term": "Forward pass", "angle": "making a prediction"},
+        {"slug": "backpropagation", "term": "Backpropagation", "angle": "how nets learn"},
+        {"slug": "optimizers", "term": "Gradient descent variants", "angle": "SGD / Adam"},
+        {"slug": "loss-functions", "term": "Loss functions", "angle": "MSE / cross-entropy"},
+        {"slug": "regularization", "term": "Regularization & dropout", "angle": "fighting overfitting"},
+        {"slug": "batch-norm", "term": "Batch normalization", "angle": "stable training"},
+        {"slug": "learning-rate", "term": "Learning rate", "angle": "the key knob"},
+        {"slug": "cnn", "term": "CNNs", "angle": "vision"},
+        {"slug": "rnn-lstm", "term": "RNNs & LSTMs", "angle": "sequences"},
+        {"slug": "embeddings", "term": "Embeddings", "angle": "meaning as vectors"},
+        {"slug": "transfer-learning", "term": "Transfer learning", "angle": "reuse pretrained"}
+      ]
+    },
+    {
+      "domain": "ai", "topic": "nlp", "idPrefix": "ai.nlp", "status": "planned",
+      "priority": "P2", "accent": "#099268", "stubs": 0,
+      "desc": "Language processing — the pre-LLM foundations that explain Transformers.",
+      "cards": [
+        {"slug": "tokenization", "term": "Tokenization", "angle": "text to tokens"},
+        {"slug": "bow-tfidf", "term": "Bag of words / TF-IDF", "angle": "classic features"},
+        {"slug": "word-embeddings", "term": "Word embeddings", "angle": "Word2Vec / GloVe"},
+        {"slug": "seq-models", "term": "Sequence models", "angle": "RNN to seq2seq"},
+        {"slug": "attention", "term": "Attention mechanism", "angle": "focus on what matters"},
+        {"slug": "transformer", "term": "The Transformer", "angle": "attention is all you need"},
+        {"slug": "self-attention", "term": "Self-attention", "angle": "tokens attending to tokens"},
+        {"slug": "positional-encoding", "term": "Positional encoding", "angle": "order without recurrence"},
+        {"slug": "nlp-tasks", "term": "Classic NLP tasks", "angle": "NER / classification / sentiment"},
+        {"slug": "why-transformers", "term": "Why Transformers replaced RNNs", "angle": "parallelism"}
+      ]
+    },
+    {
+      "domain": "ai", "topic": "llms-genai", "idPrefix": "ai.llms-genai", "status": "planned",
+      "priority": "P0", "accent": "#37b24d", "stubs": 0,
+      "desc": "The current frontier — the highest-demand AI interview content.",
+      "cards": [
+        {"slug": "what-is-llm", "term": "What is an LLM", "angle": "next-token predictor"},
+        {"slug": "transformer-recap", "term": "Transformer architecture recap", "angle": "the engine"},
+        {"slug": "pretraining-finetuning", "term": "Pretraining vs fine-tuning", "angle": "two stages"},
+        {"slug": "tokens-context", "term": "Tokens & context window", "angle": "the memory limit"},
+        {"slug": "temperature-sampling", "term": "Temperature & sampling", "angle": "controlling randomness"},
+        {"slug": "prompt-engineering", "term": "Prompt engineering", "angle": "steering the model"},
+        {"slug": "few-shot", "term": "Few-shot / zero-shot", "angle": "in-context learning"},
+        {"slug": "system-prompts", "term": "System vs user prompts", "angle": "roles"},
+        {"slug": "embeddings-vectordb", "term": "Embeddings & vector databases", "angle": "semantic search"},
+        {"slug": "rag", "term": "Retrieval-Augmented Generation", "angle": "grounding in your data"},
+        {"slug": "chunking", "term": "Chunking & retrieval", "angle": "RAG mechanics"},
+        {"slug": "hallucination", "term": "Hallucination", "angle": "why & how to mitigate"},
+        {"slug": "finetune-vs-rag", "term": "Fine-tuning vs RAG", "angle": "when each"},
+        {"slug": "lora-peft", "term": "LoRA / PEFT", "angle": "cheap fine-tuning"},
+        {"slug": "function-calling", "term": "Function calling / tool use", "angle": "LLMs that act"},
+        {"slug": "agents", "term": "AI agents", "angle": "plan-act-observe loops"},
+        {"slug": "multi-agent", "term": "Multi-agent systems", "angle": "collaborating models"},
+        {"slug": "llm-evals", "term": "Evaluating LLM output", "angle": "evals & benchmarks"}
+      ]
+    },
+    {
+      "domain": "ai", "topic": "mlops", "idPrefix": "ai.mlops", "status": "planned",
+      "priority": "P1", "accent": "#2f9e44", "stubs": 0,
+      "desc": "Shipping & running models — closest AI submodule to data engineering.",
+      "cards": [
+        {"slug": "model-lifecycle", "term": "Model lifecycle", "angle": "end to end"},
+        {"slug": "experiment-tracking", "term": "Experiment tracking", "angle": "MLflow / W&B"},
+        {"slug": "model-registry", "term": "Model registry", "angle": "versioned models"},
+        {"slug": "deployment-patterns", "term": "Deployment patterns", "angle": "batch / online / streaming"},
+        {"slug": "model-serving", "term": "Model serving", "angle": "APIs & latency"},
+        {"slug": "feature-store", "term": "Feature store", "angle": "shared features"},
+        {"slug": "training-serving-skew", "term": "Training-serving skew", "angle": "the silent bug"},
+        {"slug": "model-monitoring", "term": "Model monitoring", "angle": "is it still good?"},
+        {"slug": "drift", "term": "Data drift & concept drift", "angle": "the world changed"},
+        {"slug": "model-versioning", "term": "Model versioning", "angle": "reproducibility"},
+        {"slug": "ab-testing-models", "term": "A/B testing models", "angle": "proving lift"},
+        {"slug": "cicd-ml", "term": "CI/CD for ML", "angle": "automated retraining"},
+        {"slug": "retraining-triggers", "term": "Model retraining triggers", "angle": "when to refresh"}
+      ]
+    },
+    {
+      "domain": "ai", "topic": "data-for-ai", "idPrefix": "ai.data-for-ai", "status": "planned",
+      "priority": "P0", "accent": "#40c057", "stubs": 0,
+      "desc": "The DE-to-AI intersection — where a data engineer adds the most value.",
+      "cards": [
+        {"slug": "training-data-pipelines", "term": "Training data pipelines", "angle": "feeding the model"},
+        {"slug": "feature-pipelines", "term": "Feature pipelines", "angle": "batch vs streaming"},
+        {"slug": "data-labeling", "term": "Data labeling & annotation", "angle": "making ground truth"},
+        {"slug": "data-centric-ai", "term": "Data-centric AI", "angle": "fix data, not model"},
+        {"slug": "vector-databases", "term": "Vector databases", "angle": "the deep dive"},
+        {"slug": "embedding-pipelines", "term": "Embedding pipelines", "angle": "text to vectors at scale"},
+        {"slug": "data-quality-ml", "term": "Data quality for ML", "angle": "garbage in, garbage out"},
+        {"slug": "feedback-loops", "term": "Ground truth & feedback loops", "angle": "closing the loop"},
+        {"slug": "data-versioning", "term": "Reproducibility & data versioning", "angle": "DVC"},
+        {"slug": "gpu-cpu", "term": "GPU vs CPU workloads", "angle": "where compute goes"},
+        {"slug": "data-lakes-ml", "term": "Data lakes for ML", "angle": "raw features at scale"},
+        {"slug": "rag-pipelines", "term": "RAG data pipelines", "angle": "the DE side of GenAI"}
+      ]
+    }
+  ]
+}
