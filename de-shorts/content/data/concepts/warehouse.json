@@ -1,118 +1,549 @@
 [
   {
-    "id": "de.warehouse.snowflake",
+    "id": "de.warehouse.what-is-warehouse",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "warehouse",
-    "term": "Snowflake",
+    "term": "What is a warehouse",
+    "difficulty": "fundamental",
+    "priority": 88,
+    "shortType": "concept",
+    "definition": "A columnar, analytics-optimized store for querying large volumes of integrated historical data.",
+    "explanation": "A data warehouse (Snowflake, BigQuery, Redshift) is built for OLAP: scan billions of rows, aggregate, and join for reporting. It separates analytics from the transactional apps that feed it.",
+    "interviewLine": "A warehouse is a columnar OLAP store optimized to scan and aggregate large historical datasets, kept separate from OLTP systems.",
+    "whyItMatters": "It's the destination of most data pipelines and where BI actually runs.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.warehouse.columnar",
+      "de.warehouse.mpp",
+      "de.warehouse.storage-compute-separation"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "warehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "What is a warehouse",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.warehouse.columnar",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "warehouse",
+    "term": "Columnar storage",
+    "difficulty": "core",
+    "priority": 90,
+    "shortType": "why",
+    "definition": "Storing data column-by-column instead of row-by-row, so analytic scans read only needed columns.",
+    "explanation": "A query touching 3 of 200 columns reads only those 3. Same-type values stored together compress far better and vectorize on CPU. The tradeoff: single-row inserts/updates are expensive — hence OLAP not OLTP.",
+    "interviewLine": "Columnar storage reads only the columns a query needs and compresses same-type data hard, making big aggregations fast.",
+    "whyItMatters": "Columnar layout is THE reason warehouses scan huge tables fast — the top warehouse interview point.",
+    "interviewQuestion": "Why is columnar great for analytics but bad for OLTP updates?",
+    "visual": {
+      "template": "before-after",
+      "data": {
+        "before": {
+          "title": "Row store",
+          "items": [
+            "reads whole row",
+            "OLTP"
+          ]
+        },
+        "after": {
+          "title": "Column store",
+          "items": [
+            "reads needed cols",
+            "OLAP"
+          ]
+        }
+      }
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.warehouse.compression",
+      "de.warehouse.mpp"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "warehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Columnar storage",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.warehouse.mpp",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "warehouse",
+    "term": "MPP",
+    "difficulty": "core",
+    "priority": 84,
+    "shortType": "concept",
+    "definition": "Massively Parallel Processing: split a query across many nodes that each work on a data slice, then combine.",
+    "explanation": "A warehouse shards data across nodes; a query runs in parallel on all of them and a coordinator merges results. Doubling nodes roughly halves scan time — scale-out, not a bigger single box.",
+    "interviewLine": "MPP runs one query across many nodes in parallel, each on a data slice, then merges — scale-out throughput for big scans.",
+    "whyItMatters": "MPP is how warehouses stay fast as data grows into the terabytes.",
+    "commonMistake": "Assuming more nodes always helps — skewed data or heavy shuffles leave one node the bottleneck.",
+    "visual": {
+      "template": "tree",
+      "data": {
+        "root": "Coordinator",
+        "children": [
+          "Node 1",
+          "Node 2",
+          "Node 3",
+          "Node 4"
+        ]
+      }
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.warehouse.distribution-keys",
+      "de.warehouse.what-is-warehouse"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "warehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "MPP",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.warehouse.storage-compute-separation",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "warehouse",
+    "term": "Separation of storage & compute",
+    "difficulty": "core",
+    "priority": 86,
+    "shortType": "why",
+    "definition": "The cloud-warehouse shift: data lives in cheap object storage; compute clusters spin up independently on top.",
+    "explanation": "Classic warehouses tied storage to compute nodes. Snowflake/BigQuery decouple them — store once in S3/GCS, run many independent compute clusters that scale up/down and pause, each reading the same data.",
+    "interviewLine": "Separating storage from compute lets you scale or pause query clusters independently of the data, sizing each to its workload.",
+    "whyItMatters": "It's why you can scale a heavy query without resizing storage, and pay only for compute you use.",
+    "interviewQuestion": "How does decoupling storage and compute change how you handle a concurrency spike?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.warehouse.snowflake-arch",
+      "de.warehouse.cost-credits"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "warehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Separation of storage & compute",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.warehouse.snowflake-arch",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "warehouse",
+    "term": "Snowflake architecture",
+    "difficulty": "intermediate",
+    "priority": 78,
+    "shortType": "concept",
+    "definition": "Three layers: cloud storage, independent 'virtual warehouses' (compute), and a cloud services brain.",
+    "explanation": "Data sits in object storage as micro-partitions. Virtual warehouses are compute clusters you size (XS–6XL) per workload, isolated from each other. The services layer handles metadata, optimization, and security.",
+    "interviewLine": "Snowflake splits storage, per-workload virtual warehouses, and a services layer, so teams get isolated compute over one copy of data.",
+    "whyItMatters": "Virtual warehouses give each team isolated compute over shared data — no more noisy-neighbor contention.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.warehouse.storage-compute-separation",
+      "de.warehouse.micro-partitions",
+      "de.warehouse.cost-credits"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "warehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Snowflake architecture",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.warehouse.bigquery-arch",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "warehouse",
+    "term": "BigQuery architecture",
+    "difficulty": "intermediate",
+    "priority": 74,
+    "shortType": "concept",
+    "definition": "Serverless: Dremel executes queries on ephemeral 'slots', reading from Colossus storage over the Jupiter network.",
+    "explanation": "No clusters to manage. BigQuery allocates slots (units of compute) on demand, Dremel builds a tree of workers, and the fast Jupiter network lets compute read Colossus storage as if local. You pay per bytes scanned or per slot.",
+    "interviewLine": "BigQuery is serverless: Dremel runs queries on on-demand slots reading Colossus storage, so cost tracks bytes scanned, not clusters.",
+    "whyItMatters": "Fully serverless means no sizing — but 'bytes scanned' billing makes partitioning and column selection matter a lot.",
+    "commonMistake": "SELECT * on a huge table — you're billed for every byte scanned, not the rows returned.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.warehouse.storage-compute-separation",
+      "de.warehouse.partitioning"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "warehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "BigQuery architecture",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.warehouse.redshift-arch",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "warehouse",
+    "term": "Redshift architecture",
     "difficulty": "intermediate",
     "priority": 70,
     "shortType": "concept",
-    "definition": "Cloud-native data warehouse with separation of storage/compute. Time Travel, Snowpipe, Shares.",
+    "definition": "A leader node plans queries; compute nodes split into slices that each process a data partition in parallel.",
+    "explanation": "Redshift is classic MPP: the leader node compiles a plan and distributes it; compute nodes (and their slices) scan their share. Classic Redshift ties storage to nodes; RA3 adds managed storage to decouple them.",
+    "interviewLine": "Redshift's leader node plans and compute-node slices execute in parallel; performance hinges on distribution and sort keys.",
+    "whyItMatters": "Its node/slice model is why distribution and sort keys make or break Redshift performance.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.warehouse.distribution-keys",
+      "de.warehouse.sort-keys",
+      "de.warehouse.mpp"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "warehouse"
+      "warehouse",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Cloud Data Warehouse",
-        "sourceType": "primary"
+        "section": "Redshift architecture",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.warehouse.star-vs-snowflake-schema",
+    "id": "de.warehouse.distribution-keys",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "warehouse",
-    "term": "Star vs snowflake schema",
-    "difficulty": "intermediate",
-    "priority": 65,
-    "shortType": "concept",
-    "definition": "TODO: define Star vs snowflake schema.",
+    "term": "Distribution keys",
+    "difficulty": "advanced",
+    "priority": 72,
+    "shortType": "why",
+    "definition": "How rows are spread across nodes; a good key co-locates joined rows so the join needs no data shuffle.",
+    "explanation": "Distribute two large tables on their join key and matching rows land on the same node — the join runs locally. Wrong key forces a broadcast/shuffle across the network, the top cause of slow MPP joins.",
+    "interviewLine": "Distribution keys place rows on nodes; matching the join key co-locates rows so joins avoid a network shuffle.",
+    "whyItMatters": "Co-locating joins by distribution key is the highest-leverage Redshift tuning move.",
+    "interviewQuestion": "Why can the wrong distribution key make a two-table join collapse to one node?",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.warehouse.sort-keys",
+      "de.warehouse.mpp"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "warehouse"
+      "warehouse",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Most Asked Concepts · Data Modeling",
-        "sourceType": "primary"
+        "section": "Distribution keys",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "inferred",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.warehouse.data-lakehouse-vs-data-warehouse",
+    "id": "de.warehouse.sort-keys",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "warehouse",
-    "term": "data lakehouse vs data warehouse",
-    "difficulty": "intermediate",
-    "priority": 65,
-    "shortType": "concept",
-    "definition": "TODO: define data lakehouse vs data warehouse.",
+    "term": "Sort / cluster keys",
+    "difficulty": "advanced",
+    "priority": 70,
+    "shortType": "why",
+    "definition": "Physically ordering data by a column so the engine skips blocks that can't match a filter (pruning).",
+    "explanation": "Sort/cluster on the column you filter most (often a date). The engine keeps min/max per block and reads only blocks in range — turning a full scan into a targeted one. Snowflake auto-clusters; Redshift uses sort keys.",
+    "interviewLine": "Sort/cluster keys order data so the engine prunes blocks outside a filter's range, scanning far less.",
+    "whyItMatters": "Sorting by your filter column is the difference between scanning a day and scanning a year.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.warehouse.micro-partitions",
+      "de.warehouse.partitioning",
+      "de.warehouse.distribution-keys"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "warehouse"
+      "warehouse",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Most Asked Concepts · Architecture",
-        "sourceType": "primary"
+        "section": "Sort / cluster keys",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "inferred",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.warehouse.aws-s3-glue-redshift-patterns",
+    "id": "de.warehouse.micro-partitions",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "warehouse",
-    "term": "AWS S3 + Glue + Redshift patterns",
-    "difficulty": "intermediate",
-    "priority": 65,
+    "term": "Micro-partitions",
+    "difficulty": "advanced",
+    "priority": 68,
     "shortType": "concept",
-    "definition": "TODO: define AWS S3 + Glue + Redshift patterns.",
+    "definition": "Snowflake's automatic small storage units, each with min/max metadata that enables pruning without manual partitioning.",
+    "explanation": "Snowflake auto-splits tables into ~compressed micro-partitions and records each one's column ranges. A filtered query reads only micro-partitions whose range overlaps — pruning you get for free, tunable via clustering.",
+    "interviewLine": "Micro-partitions are Snowflake's auto storage units with min/max metadata, so queries prune irrelevant partitions with no manual setup.",
+    "whyItMatters": "It's why Snowflake needs no manual partition scheme yet still prunes big scans.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.warehouse.sort-keys",
+      "de.warehouse.snowflake-arch"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "warehouse"
+      "warehouse",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Most Asked Concepts · Cloud",
-        "sourceType": "primary"
+        "section": "Micro-partitions",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "inferred",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.warehouse.materialized-views",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "warehouse",
+    "term": "Materialized views",
+    "difficulty": "intermediate",
+    "priority": 66,
+    "shortType": "why",
+    "definition": "A view whose results are precomputed and stored, refreshed on change, so repeat queries are instant.",
+    "explanation": "A regular view re-runs its SQL every time; a materialized view stores the answer and incrementally refreshes as base data changes. Great for expensive aggregations hit by many dashboards.",
+    "interviewLine": "A materialized view stores precomputed results and auto-refreshes, so repeated expensive aggregations return instantly.",
+    "whyItMatters": "It trades storage and refresh cost for near-instant reads of expensive rollups.",
+    "commonMistake": "Materializing a query over rapidly-changing data — constant refresh can cost more than it saves.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.warehouse.compression",
+      "de.warehouse.cost-credits"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "warehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Materialized views",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.warehouse.compression",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "warehouse",
+    "term": "Compression & encoding",
+    "difficulty": "intermediate",
+    "priority": 64,
+    "shortType": "why",
+    "definition": "Columnar data compresses hard because each column holds one data type with repeating values.",
+    "explanation": "Encodings like run-length, dictionary, and delta shrink columns dramatically — a low-cardinality column can compress 10x+. Less data on disk means less I/O, which is the main cost of a scan.",
+    "interviewLine": "Columnar compression (dictionary, run-length, delta) shrinks storage and, more importantly, the I/O a scan must read.",
+    "whyItMatters": "Compression cuts both storage bill and scan time — the two things warehouses charge for.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.warehouse.columnar",
+      "de.warehouse.cost-credits"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "warehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Compression & encoding",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.warehouse.partitioning",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "warehouse",
+    "term": "Partitioning",
+    "difficulty": "intermediate",
+    "priority": 67,
+    "shortType": "concept",
+    "definition": "Physically splitting a table by a column (usually date) so queries scan only relevant partitions.",
+    "explanation": "Partition a big events table by day; a query for last week reads 7 partitions, not the whole table. In BigQuery this directly cuts bytes scanned (and cost); it also makes dropping old data a partition drop.",
+    "interviewLine": "Partitioning splits a table by a key like date so queries prune to a few partitions, cutting scan time and (in BigQuery) cost.",
+    "whyItMatters": "Partition + cluster on the right columns is the main lever on both speed and BigQuery cost.",
+    "interviewQuestion": "How do partitioning and clustering combine to reduce bytes scanned?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.warehouse.sort-keys",
+      "de.warehouse.bigquery-arch"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "warehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Partitioning",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.warehouse.cost-credits",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "warehouse",
+    "term": "Cost & credits",
+    "difficulty": "intermediate",
+    "priority": 65,
+    "shortType": "why",
+    "definition": "Cloud warehouses bill for compute time (Snowflake credits) or bytes scanned (BigQuery) — the FinOps angle.",
+    "explanation": "Snowflake charges per-second while a virtual warehouse runs, so auto-suspend and right-sizing matter. BigQuery on-demand charges per byte scanned, so partitioning, clustering, and avoiding SELECT * are the cost levers.",
+    "interviewLine": "Snowflake bills compute-seconds (auto-suspend, right-size); BigQuery bills bytes scanned (partition, cluster, no SELECT *).",
+    "whyItMatters": "Warehouse bills spiral without these habits; cost-awareness is an increasingly asked skill.",
+    "commonMistake": "Leaving a large virtual warehouse running idle, or scanning full tables when a filter would prune them.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.warehouse.storage-compute-separation",
+      "de.warehouse.partitioning"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "warehouse",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Cost & credits",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   }
 ]

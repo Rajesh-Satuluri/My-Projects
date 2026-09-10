@@ -1,60 +1,583 @@
 [
   {
-    "id": "de.dbt.dbt",
+    "id": "de.dbt.what-is-dbt",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "dbt",
-    "term": "dbt (SQL transforms)",
-    "difficulty": "intermediate",
-    "priority": 62,
-    "shortType": "concept",
-    "definition": "SQL-based transformation framework — models, tests, lineage, CI/CD for data",
+    "term": "What is dbt",
+    "difficulty": "core",
+    "priority": 88,
+    "shortType": "why",
+    "definition": "A tool that runs your SQL SELECTs as version-controlled, tested, documented transformation steps (the T in ELT).",
+    "explanation": "dbt brings software engineering to SQL: each model is a SELECT dbt materializes as a view/table, with dependencies, tests, docs, and CI. It handles the transform layer inside the warehouse, not ingestion or orchestration.",
+    "interviewLine": "dbt runs SQL SELECTs as tested, version-controlled models inside the warehouse — the T of ELT with engineering rigor.",
+    "whyItMatters": "dbt is the de-facto standard for the transformation layer of the modern data stack.",
+    "interviewQuestion": "Why did dbt push the industry from ETL toward ELT?",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.dbt.models",
+      "de.dbt.ref-lineage",
+      "de.dbt.materializations"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "dbt"
+      "dbt",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "dbt (SQL transforms)",
-        "sourceType": "primary"
+        "section": "What is dbt",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.dbt.dbt-core-dbt-cloud",
+    "id": "de.dbt.models",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "dbt",
-    "term": "dbt Core / dbt Cloud",
-    "difficulty": "intermediate",
-    "priority": 62,
+    "term": "Models",
+    "difficulty": "core",
+    "priority": 86,
     "shortType": "concept",
-    "definition": "Analytics engineering framework. Staging → intermediate → mart models, tests, lineage.",
+    "definition": "A model is a single .sql file containing one SELECT; dbt turns it into a table or view in the warehouse.",
+    "explanation": "You write business logic as a SELECT and dbt wraps it in the right DDL. Models are layered by convention: staging (clean sources) → intermediate (reusable logic) → marts (business-facing facts/dims).",
+    "interviewLine": "A dbt model is one SELECT dbt materializes; teams layer them staging → intermediate → marts for clarity and reuse.",
+    "whyItMatters": "Modeling in layers keeps transformations readable, testable, and reusable across a team.",
+    "example": {
+      "type": "sql",
+      "content": "-- models/marts/orders.sql\nselect\n  o.order_id,\n  o.customer_id,\n  sum(oi.amount) as order_total\nfrom {{ ref('stg_orders') }} o\njoin {{ ref('stg_order_items') }} oi using (order_id)\ngroup by 1, 2"
+    },
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.dbt.sources",
+      "de.dbt.ref-lineage",
+      "de.dbt.materializations"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "dbt"
+      "dbt",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "dbt Core / dbt Cloud",
-        "sourceType": "primary"
+        "section": "Models",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.dbt.sources",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "dbt",
+    "term": "Sources",
+    "difficulty": "core",
+    "priority": 78,
+    "shortType": "concept",
+    "definition": "A declared reference to a raw table loaded into the warehouse, used via source() and freshness-checked.",
+    "explanation": "You define sources in YAML (schema + table), then read them with {{ source('jaffle','orders') }}. This documents raw inputs, lets dbt test their freshness, and draws the lineage back to where data landed.",
+    "interviewLine": "Sources declare raw loaded tables so dbt can reference them, test freshness, and root lineage at the ingestion boundary.",
+    "whyItMatters": "Sources make the boundary between 'raw loaded data' and 'dbt-owned models' explicit and testable.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.dbt.models",
+      "de.dbt.ref-lineage",
+      "de.dbt.tests"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "dbt",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Sources",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.dbt.ref-lineage",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "dbt",
+    "term": "ref() & lineage",
+    "difficulty": "core",
+    "priority": 84,
+    "shortType": "why",
+    "definition": "ref() links one model to another; dbt reads those links to build a DAG and run models in dependency order.",
+    "explanation": "Never hard-code table names — use {{ ref('stg_orders') }}. dbt parses every ref() into a dependency graph, then runs models in topological order, parallelizing independent branches. That graph is also your lineage.",
+    "interviewLine": "ref() declares model dependencies; dbt compiles them into a DAG to order and parallelize runs and to render lineage.",
+    "whyItMatters": "ref() is what makes dbt a build system: correct ordering, parallelism, and free lineage.",
+    "commonMistake": "Hard-coding a table name instead of ref() — dbt then can't order the build or track lineage.",
+    "visual": {
+      "template": "flow",
+      "data": {
+        "steps": [
+          "stg_orders",
+          "int_orders",
+          "fct_orders",
+          "BI"
+        ]
+      }
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.dbt.models",
+      "de.dbt.materializations",
+      "de.dbt.docs-lineage"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "dbt",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "ref() & lineage",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.dbt.materializations",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "dbt",
+    "term": "Materializations",
+    "difficulty": "core",
+    "priority": 82,
+    "shortType": "compare",
+    "definition": "How dbt persists a model: view, table, incremental, or ephemeral — a per-model performance/cost choice.",
+    "explanation": "view: no storage, always fresh, recomputed on read. table: rebuilt fully each run, fast reads. incremental: only process new rows. ephemeral: inlined as a CTE, no object. You pick per model by size and freshness needs.",
+    "interviewLine": "Materializations decide how a model is stored — view, table, incremental, ephemeral — trading build cost against read speed.",
+    "whyItMatters": "Choosing materializations is the main way you tune dbt build time and warehouse cost.",
+    "interviewQuestion": "When would you switch a model from table to incremental?",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "table",
+        "b": "incremental",
+        "rows": [
+          [
+            "rebuild all",
+            "only new rows"
+          ],
+          [
+            "simple",
+            "needs unique key"
+          ],
+          [
+            "slow on big",
+            "fast on big"
+          ]
+        ]
+      }
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.dbt.incremental",
+      "de.dbt.models"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "dbt",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Materializations",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.dbt.incremental",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "dbt",
+    "term": "Incremental models",
+    "difficulty": "intermediate",
+    "priority": 76,
+    "shortType": "why",
+    "definition": "A materialization that processes only new/changed rows each run instead of rebuilding the whole table.",
+    "explanation": "You add an is_incremental() filter (e.g. where updated_at > max in the table) and a unique_key for upserts. dbt builds the table once, then appends/merges deltas — essential for billion-row event tables.",
+    "interviewLine": "Incremental models filter to new rows via is_incremental() and a unique_key, so big tables update in minutes, not full rebuilds.",
+    "whyItMatters": "Incremental is how dbt stays affordable on huge, ever-growing tables.",
+    "commonMistake": "Forgetting late-arriving data — a naive max(updated_at) filter silently drops rows that arrive out of order.",
+    "example": {
+      "type": "sql",
+      "content": "{{ config(materialized='incremental', unique_key='order_id') }}\nselect * from {{ ref('stg_orders') }}\n{% if is_incremental() %}\nwhere updated_at > (select max(updated_at) from {{ this }})\n{% endif %}"
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.dbt.materializations",
+      "de.dbt.snapshots"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "dbt",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Incremental models",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.dbt.tests",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "dbt",
+    "term": "Tests",
+    "difficulty": "core",
+    "priority": 80,
+    "shortType": "concept",
+    "definition": "Assertions on your data: generic tests (unique, not_null, accepted_values, relationships) and custom singular tests.",
+    "explanation": "Generic tests are declared in YAML on a column (unique, not_null, foreign-key relationships). Singular tests are a SQL query that should return zero rows. dbt test runs them; CI blocks a merge if data fails.",
+    "interviewLine": "dbt tests assert data quality — generic ones (unique, not_null, relationships) plus singular SQL tests — and gate the build in CI.",
+    "whyItMatters": "Tests turn silent data corruption into a failing build before bad data reaches dashboards.",
+    "interviewQuestion": "How do dbt tests fit into a CI pipeline on a pull request?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.dbt.snapshots",
+      "de.dbt.docs-lineage",
+      "de.dbt.sources"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "dbt",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Tests",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.dbt.snapshots",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "dbt",
+    "term": "Snapshots",
+    "difficulty": "intermediate",
+    "priority": 72,
+    "shortType": "concept",
+    "definition": "dbt's built-in way to capture SCD Type 2 history of a mutable source table over time.",
+    "explanation": "Point a snapshot at a source with a unique key and a strategy (timestamp or check columns). On each run dbt detects changes and writes new versioned rows with dbt_valid_from/to — SCD Type 2 without hand-writing it.",
+    "interviewLine": "Snapshots record SCD Type 2 history: dbt versions changed rows with valid-from/to columns using a timestamp or check strategy.",
+    "whyItMatters": "It gives you dimension history for free — a task teams otherwise build by hand and get wrong.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.dbt.incremental",
+      "de.dbt.tests"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "dbt",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Snapshots",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.dbt.seeds",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "dbt",
+    "term": "Seeds",
+    "difficulty": "intermediate",
+    "priority": 62,
+    "shortType": "concept",
+    "definition": "Small static CSV files, version-controlled in the repo, that dbt loads into the warehouse as tables.",
+    "explanation": "dbt seed loads a CSV (country codes, mappings, thresholds) into a table you can ref() like any model. Best for small, rarely-changing lookup data that belongs in version control — not for bulk data loading.",
+    "interviewLine": "Seeds are version-controlled CSVs dbt loads as tables — ideal for small lookup data, not for bulk ingestion.",
+    "whyItMatters": "Seeds keep reference data reviewed and versioned alongside the models that use it.",
+    "commonMistake": "Using seeds to load large or frequently-changing data — that's an ingestion tool's job, not dbt's.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.dbt.sources",
+      "de.dbt.macros-jinja"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "dbt",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Seeds",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.dbt.macros-jinja",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "dbt",
+    "term": "Macros & Jinja",
+    "difficulty": "intermediate",
+    "priority": 70,
+    "shortType": "concept",
+    "definition": "dbt compiles SQL through Jinja templating; macros are reusable functions that generate SQL.",
+    "explanation": "Jinja gives you variables, loops, and conditionals inside SQL (that's how ref() and is_incremental() work). A macro packages repeated logic — e.g. cents_to_dollars() or a loop that pivots columns — into one callable function.",
+    "interviewLine": "dbt templates SQL with Jinja; macros are reusable functions that generate SQL, keeping repeated logic DRY.",
+    "whyItMatters": "Macros are how teams keep transformation logic DRY instead of copy-pasting SQL.",
+    "example": {
+      "type": "sql",
+      "content": "{% macro cents_to_dollars(col) %}\n  ({{ col }} / 100.0)::numeric(16,2)\n{% endmacro %}\n\n-- usage in a model:\nselect {{ cents_to_dollars('amount_cents') }} as amount from ..."
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.dbt.packages",
+      "de.dbt.models"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "dbt",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Macros & Jinja",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.dbt.packages",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "dbt",
+    "term": "Packages",
+    "difficulty": "intermediate",
+    "priority": 60,
+    "shortType": "concept",
+    "definition": "Shareable bundles of dbt models, macros, and tests you import into your project via packages.yml.",
+    "explanation": "Packages like dbt_utils, dbt_expectations, and codegen give you battle-tested macros and generic tests. You add them to packages.yml and dbt deps installs them — reuse instead of reinventing common utilities.",
+    "interviewLine": "Packages import shared models/macros/tests (like dbt_utils) via packages.yml, so teams reuse proven utilities.",
+    "whyItMatters": "Packages save teams from re-writing surrogate-key, pivot, and test-suite logic everyone needs.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.dbt.macros-jinja",
+      "de.dbt.tests"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "dbt",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Packages",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.dbt.docs-lineage",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "dbt",
+    "term": "Docs & lineage graph",
+    "difficulty": "intermediate",
+    "priority": 68,
+    "shortType": "why",
+    "definition": "dbt generates a browsable docs site with model descriptions, column info, and an interactive DAG.",
+    "explanation": "dbt docs generate builds a site from your YAML descriptions and the ref() graph, including a clickable lineage diagram showing how each model flows from sources to marts. It's living documentation that can't drift.",
+    "interviewLine": "dbt auto-generates docs and an interactive lineage DAG from ref() and YAML, so documentation stays in sync with the code.",
+    "whyItMatters": "Auto-generated lineage answers 'what breaks if I change this?' without tribal knowledge.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.dbt.ref-lineage",
+      "de.dbt.exposures"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "dbt",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Docs & lineage graph",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.dbt.exposures",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "dbt",
+    "term": "Exposures",
+    "difficulty": "advanced",
+    "priority": 56,
+    "shortType": "concept",
+    "definition": "A declared downstream consumer of your models (a dashboard, app, or ML pipeline) tracked in the lineage graph.",
+    "explanation": "An exposure names a real consumer in YAML and lists the models it depends on. Now lineage extends past the warehouse — you can see which dashboards a model feeds and run/test only what a given exposure needs.",
+    "interviewLine": "Exposures declare downstream consumers (dashboards, apps) in the DAG, extending lineage to real-world impact of a change.",
+    "whyItMatters": "Exposures close the lineage loop, showing the real-world impact of a model change.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.dbt.docs-lineage",
+      "de.dbt.dbt-vs-airflow"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "dbt",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Exposures",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.dbt.dbt-vs-airflow",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "dbt",
+    "term": "dbt vs Airflow",
+    "difficulty": "core",
+    "priority": 74,
+    "shortType": "compare",
+    "definition": "dbt transforms data inside the warehouse; Airflow orchestrates when and in what order jobs (including dbt) run.",
+    "explanation": "They're complementary, not rivals. dbt owns the SQL transformation DAG and tests. Airflow (or Dagster) schedules pipelines: ingest → run dbt → trigger downstream. A common pattern is Airflow invoking dbt as one task.",
+    "interviewLine": "dbt is the in-warehouse transform layer; Airflow is the orchestrator that schedules it alongside ingestion and downstream jobs.",
+    "whyItMatters": "Confusing the two is a common junior mistake; naming the split signals real stack understanding.",
+    "commonMistake": "Treating dbt as a scheduler — dbt builds models; something else must decide when to run it.",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "dbt",
+        "b": "Airflow",
+        "rows": [
+          [
+            "transforms SQL",
+            "schedules jobs"
+          ],
+          [
+            "in warehouse",
+            "across systems"
+          ],
+          [
+            "model DAG",
+            "task DAG"
+          ]
+        ]
+      }
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.dbt.ref-lineage",
+      "de.dbt.what-is-dbt"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "dbt",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "dbt vs Airflow",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   }
 ]

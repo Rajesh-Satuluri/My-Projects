@@ -1,263 +1,727 @@
 [
   {
-    "id": "de.databases.postgresql",
+    "id": "de.databases.oltp-olap",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "databases",
-    "term": "PostgreSQL",
-    "difficulty": "advanced",
-    "priority": 47,
-    "shortType": "concept",
-    "definition": "Reliable open-source RDBMS. Window functions, partitioning, JSON support, PgBouncer.",
+    "term": "OLTP vs OLAP",
+    "difficulty": "fundamental",
+    "priority": 92,
+    "shortType": "compare",
+    "definition": "OLTP handles many small read/write transactions; OLAP scans huge datasets for analytics.",
+    "explanation": "OLTP (Postgres, MySQL) powers apps: row-oriented, indexed for point lookups, tuned for concurrency and low latency. OLAP (Snowflake, BigQuery) powers reporting: columnar, scans millions of rows, tuned for throughput.",
+    "interviewLine": "OLTP is optimized for many concurrent short transactions; OLAP for scanning large volumes to aggregate. Different storage, different tuning.",
+    "whyItMatters": "Picking the wrong engine is the classic mistake — running analytics on your OLTP primary will lock rows and starve the app.",
+    "interviewQuestion": "Why not just run analytics queries directly on the production Postgres?",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "OLTP",
+        "b": "OLAP",
+        "rows": [
+          [
+            "short txns",
+            "big scans"
+          ],
+          [
+            "row store",
+            "column store"
+          ],
+          [
+            "low latency",
+            "high throughput"
+          ],
+          [
+            "app backend",
+            "reporting"
+          ]
+        ]
+      }
+    },
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.databases.acid",
+      "de.databases.indexing"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "databases"
+      "databases",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "PostgreSQL",
-        "sourceType": "primary"
+        "section": "OLTP vs OLAP",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.databases.mysql",
+    "id": "de.databases.acid",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "databases",
-    "term": "MySQL",
-    "difficulty": "advanced",
-    "priority": 40,
+    "term": "ACID",
+    "difficulty": "fundamental",
+    "priority": 90,
     "shortType": "concept",
-    "definition": "Widely deployed RDBMS. Strong in e-commerce, fintech, legacy systems.",
+    "definition": "The four guarantees of a reliable transaction: Atomicity, Consistency, Isolation, Durability.",
+    "explanation": "Atomicity: all-or-nothing. Consistency: constraints hold before and after. Isolation: concurrent txns don't corrupt each other. Durability: once committed, it survives a crash.",
+    "interviewLine": "ACID = Atomicity, Consistency, Isolation, Durability — the contract that makes a transaction safe under concurrency and failure.",
+    "whyItMatters": "ACID is why a bank transfer never loses money mid-way. Losing it means partial writes and lost updates under load.",
+    "interviewQuestion": "Which ACID property does an isolation level actually relax, and why is that a tradeoff?",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.databases.isolation-levels",
+      "de.databases.locking-mvcc"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "databases"
+      "databases",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "MySQL",
-        "sourceType": "primary"
+        "section": "ACID",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.databases.mongodb",
+    "id": "de.databases.cap",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "databases",
-    "term": "MongoDB",
-    "difficulty": "advanced",
-    "priority": 28,
+    "term": "CAP theorem",
+    "difficulty": "core",
+    "priority": 84,
     "shortType": "concept",
-    "definition": "Document database. JSON-native, flexible schema, aggregation pipeline for analytics.",
+    "definition": "In a network partition a distributed store can keep Consistency or Availability, not both.",
+    "explanation": "When nodes can't talk (Partition), you choose: refuse requests to stay Consistent (CP), or answer with possibly-stale data to stay Available (AP). With no partition you get both — CAP only bites during failures.",
+    "interviewLine": "CAP says under a partition you trade consistency for availability. It's a failure-mode tradeoff, not a steady-state one.",
+    "whyItMatters": "It frames every distributed-DB choice: Postgres/Mongo lean CP, Dynamo/Cassandra lean AP.",
+    "commonMistake": "Saying a system is 'CA'. Partitions are unavoidable on a network — you only really choose between CP and AP.",
+    "interviewQuestion": "Is Cassandra CP or AP, and how does tunable consistency change the answer?",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.databases.replication",
+      "de.databases.sql-vs-nosql"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "databases"
+      "databases",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "MongoDB",
-        "sourceType": "primary"
+        "section": "CAP theorem",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.databases.dynamodb",
+    "id": "de.databases.indexing",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "databases",
-    "term": "DynamoDB",
-    "difficulty": "advanced",
-    "priority": 22,
-    "shortType": "concept",
-    "definition": "AWS managed NoSQL key-value store. Low-latency, auto-scaling, DynamoDB Streams for CDC.",
+    "term": "Indexing",
+    "difficulty": "core",
+    "priority": 86,
+    "shortType": "why",
+    "definition": "A secondary data structure (usually a B-tree) that turns a full scan into a fast lookup.",
+    "explanation": "Without an index the DB scans every row (O(n)). A B-tree index keeps keys sorted so lookups and ranges are O(log n). The cost: extra storage and slower writes, since every insert updates the index too.",
+    "interviewLine": "An index trades write cost and storage for read speed by keeping keys in a sorted B-tree, turning scans into log-time lookups.",
+    "whyItMatters": "The single biggest lever on query speed. A missing index on a WHERE/JOIN column is the most common cause of a slow query.",
+    "commonMistake": "Indexing everything. Each index slows writes; unused indexes are pure overhead.",
+    "interviewQuestion": "Why might the planner ignore your index and choose a full scan anyway?",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "No index",
+        "b": "B-tree index",
+        "rows": [
+          [
+            "scan all rows",
+            "seek sorted keys"
+          ],
+          [
+            "O(n)",
+            "O(log n)"
+          ],
+          [
+            "fast writes",
+            "slower writes"
+          ]
+        ]
+      }
+    },
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.databases.explain-plans",
+      "de.databases.denormalization"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "databases"
+      "databases",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "DynamoDB",
-        "sourceType": "primary"
+        "section": "Indexing",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.databases.redis",
+    "id": "de.databases.normalization",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "databases",
-    "term": "Redis",
-    "difficulty": "advanced",
-    "priority": 19,
+    "term": "Normalization",
+    "difficulty": "core",
+    "priority": 80,
     "shortType": "concept",
-    "definition": "In-memory data structure store — caching, session management, pub/sub.",
+    "definition": "Organizing tables to remove redundancy: 1NF atomic values, 2NF/3NF remove partial & transitive deps.",
+    "explanation": "1NF: no repeating groups, atomic cells. 2NF: no non-key column depends on part of a composite key. 3NF: no non-key column depends on another non-key column. Each step removes a class of update anomaly.",
+    "interviewLine": "Normalization removes redundancy so updates touch one row; 3NF eliminates transitive dependencies between non-key columns.",
+    "whyItMatters": "Normalized OLTP schemas prevent inconsistent data — one fact lives in exactly one place.",
+    "interviewQuestion": "Give an update anomaly that 3NF prevents but 2NF does not.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.databases.denormalization",
+      "de.databases.oltp-olap"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "databases"
+      "databases",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Redis",
-        "sourceType": "primary"
+        "section": "Normalization",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.databases.cassandra",
+    "id": "de.databases.denormalization",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "databases",
-    "term": "Cassandra",
-    "difficulty": "advanced",
-    "priority": 17,
-    "shortType": "concept",
-    "definition": "Wide-column store. High-write workloads, time-series, IoT. CQL syntax.",
+    "term": "Denormalization",
+    "difficulty": "core",
+    "priority": 78,
+    "shortType": "why",
+    "definition": "Deliberately duplicating data to avoid joins and speed up reads.",
+    "explanation": "Normalized schemas need joins to answer questions; joins cost time. Denormalization pre-joins or duplicates columns so a read hits one table. You trade write complexity and redundancy for read latency.",
+    "interviewLine": "Denormalization duplicates data to trade write/consistency cost for read speed — you maintain the copies to avoid joins.",
+    "whyItMatters": "It's the core move behind fast dashboards, wide tables, and most NoSQL data models.",
+    "commonMistake": "Denormalizing an OLTP write path — you then have to keep every copy in sync on every update.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.databases.normalization",
+      "de.databases.indexing"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "databases"
+      "databases",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Cassandra",
-        "sourceType": "primary"
+        "section": "Denormalization",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.databases.elasticsearch",
+    "id": "de.databases.isolation-levels",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "databases",
-    "term": "Elasticsearch",
-    "difficulty": "advanced",
-    "priority": 15,
-    "shortType": "concept",
-    "definition": "Search and analytics engine. Log analytics, full-text search, Kibana dashboards.",
+    "term": "Isolation levels",
+    "difficulty": "intermediate",
+    "priority": 76,
+    "shortType": "compare",
+    "definition": "The knob controlling which concurrency anomalies a transaction can see, from Read Committed to Serializable.",
+    "explanation": "Read Uncommitted: dirty reads. Read Committed: no dirty reads. Repeatable Read: no non-repeatable reads. Serializable: as if txns ran one at a time. Higher isolation = fewer anomalies but more contention.",
+    "interviewLine": "Isolation levels trade concurrency for correctness: each level forbids a class of anomaly — dirty, non-repeatable, phantom reads.",
+    "whyItMatters": "The default is rarely Serializable, so subtle bugs (lost updates, phantom rows) hide in 'correct-looking' code.",
+    "interviewQuestion": "What anomaly can still occur at Repeatable Read that Serializable prevents?",
+    "visual": {
+      "template": "flow",
+      "data": {
+        "steps": [
+          "Read Committed",
+          "Repeatable Read",
+          "Snapshot",
+          "Serializable"
+        ]
+      }
+    },
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.databases.acid",
+      "de.databases.locking-mvcc"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "databases"
+      "databases",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Elasticsearch",
-        "sourceType": "primary"
+        "section": "Isolation levels",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.databases.clickhouse",
+    "id": "de.databases.locking-mvcc",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "databases",
-    "term": "ClickHouse",
-    "difficulty": "advanced",
-    "priority": 11,
-    "shortType": "concept",
-    "definition": "Column-oriented OLAP DB. Extremely fast analytics queries. Rising in real-time analytics.",
+    "term": "Locking & MVCC",
+    "difficulty": "intermediate",
+    "priority": 74,
+    "shortType": "compare",
+    "definition": "Two ways to isolate concurrent txns: locks block conflicting access; MVCC serves each a versioned snapshot.",
+    "explanation": "Lock-based systems make writers block readers. MVCC (Postgres, Oracle) keeps multiple row versions so readers see a consistent snapshot without blocking writers — at the cost of version cleanup (vacuum).",
+    "interviewLine": "MVCC gives each transaction a snapshot via row versions, so reads don't block writes — unlike pure two-phase locking.",
+    "whyItMatters": "MVCC is why 'readers don't block writers' in Postgres, and why bloat/vacuum tuning matters.",
+    "interviewQuestion": "What does Postgres VACUUM clean up, and what happens if it falls behind?",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.databases.isolation-levels",
+      "de.databases.acid"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "databases"
+      "databases",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "ClickHouse",
-        "sourceType": "primary"
+        "section": "Locking & MVCC",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.databases.teradata",
+    "id": "de.databases.replication",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "databases",
-    "term": "Teradata",
-    "difficulty": "advanced",
-    "priority": 11,
+    "term": "Replication",
+    "difficulty": "intermediate",
+    "priority": 75,
     "shortType": "concept",
-    "definition": "Legacy enterprise data warehouse. Being replaced by cloud-native alternatives.",
+    "definition": "Copying data from a primary to one or more replicas for read scaling and failover.",
+    "explanation": "Synchronous replication waits for a replica to confirm (safe, slower); asynchronous doesn't (fast, risks lost writes on failover). Read replicas offload SELECTs; a promoted replica provides HA.",
+    "interviewLine": "Replication copies the primary to replicas; sync trades latency for durability, async trades a small data-loss window for speed.",
+    "whyItMatters": "It's how you scale reads and survive a node loss — but async replicas serve stale data.",
+    "commonMistake": "Reading your own just-written data from an async replica and getting a stale result.",
+    "visual": {
+      "template": "tree",
+      "data": {
+        "root": "Primary",
+        "children": [
+          "Replica 1",
+          "Replica 2",
+          "Failover"
+        ]
+      }
+    },
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.databases.sharding",
+      "de.databases.cap"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "databases"
+      "databases",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Teradata",
-        "sourceType": "primary"
+        "section": "Replication",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "source-derived",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.databases.sharding",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "Sharding",
+    "difficulty": "advanced",
+    "priority": 73,
+    "shortType": "concept",
+    "definition": "Splitting one dataset across many nodes by a shard key so each holds a subset.",
+    "explanation": "Sharding scales writes and storage beyond one machine. A hash or range shard key routes each row to a node. Bad keys cause hotspots or force cross-shard joins, which are slow and complex.",
+    "interviewLine": "Sharding partitions data across nodes by a shard key to scale writes; the hard part is choosing a key that avoids hotspots and cross-shard queries.",
+    "whyItMatters": "It's horizontal scale for write-heavy systems, but it pushes join and transaction complexity into the app.",
+    "interviewQuestion": "What breaks when a query needs to join across two shards?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.databases.partitioning",
+      "de.databases.replication"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Sharding",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.databases.partitioning",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "Partitioning",
+    "difficulty": "intermediate",
+    "priority": 72,
+    "shortType": "concept",
+    "definition": "Splitting one table into segments (by range, list, or hash) within a single database.",
+    "explanation": "Unlike sharding (across nodes), partitioning divides a table inside one DB — e.g. one partition per month. The planner prunes irrelevant partitions, and you can drop old data by dropping a partition.",
+    "interviewLine": "Partitioning splits a table by a key so the planner scans only relevant partitions and you can drop old data cheaply.",
+    "whyItMatters": "Partition pruning makes time-series queries fast and makes retention (drop last year) instant.",
+    "commonMistake": "Confusing partitioning (one DB, many segments) with sharding (many nodes).",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.databases.sharding",
+      "de.databases.indexing"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Partitioning",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.databases.sql-vs-nosql",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "SQL vs NoSQL",
+    "difficulty": "core",
+    "priority": 82,
+    "shortType": "compare",
+    "definition": "SQL: relational, schema-on-write, strong consistency. NoSQL: flexible schema, scale-out, tunable consistency.",
+    "explanation": "SQL shines with relationships, joins, and transactions. NoSQL families (key-value, document, wide-column, graph) drop some of that for horizontal scale, flexible schemas, and specific access patterns.",
+    "interviewLine": "Pick SQL for relationships and transactions; NoSQL when the access pattern is known and you need scale-out or a flexible schema.",
+    "whyItMatters": "Choosing by hype instead of access pattern is a top design mistake in system-design rounds.",
+    "interviewQuestion": "You need 100k writes/sec of append-only events — which family and why?",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "SQL",
+        "b": "NoSQL",
+        "rows": [
+          [
+            "schema-on-write",
+            "flexible schema"
+          ],
+          [
+            "joins + txns",
+            "scale-out"
+          ],
+          [
+            "vertical",
+            "horizontal"
+          ]
+        ]
+      }
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.databases.key-value",
+      "de.databases.document-stores",
+      "de.databases.wide-column"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "SQL vs NoSQL",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.databases.key-value",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "Key-value stores",
+    "difficulty": "intermediate",
+    "priority": 68,
+    "shortType": "concept",
+    "definition": "The simplest NoSQL model: a key maps to an opaque value, with O(1) get/put.",
+    "explanation": "Redis (in-memory) and DynamoDB expose get/put/delete by key. No joins, no ad-hoc queries — you design around the key. Ideal for caches, sessions, rate limits, and feature flags.",
+    "interviewLine": "Key-value stores give O(1) access by key with no query language — you model the key to fit the access pattern.",
+    "whyItMatters": "It's the fastest possible lookup and the backbone of caching layers everywhere.",
+    "interviewQuestion": "How would you model a shopping cart in a pure key-value store?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.databases.sql-vs-nosql",
+      "de.databases.document-stores"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Key-value stores",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.databases.document-stores",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "Document stores",
+    "difficulty": "intermediate",
+    "priority": 66,
+    "shortType": "concept",
+    "definition": "NoSQL that stores self-contained JSON/BSON documents, queryable by fields inside them.",
+    "explanation": "MongoDB keeps related data in one nested document, so a read fetches the whole aggregate without joins. Schema is flexible per-document. Great when data is hierarchical and read together.",
+    "interviewLine": "Document stores keep an aggregate in one nested document, trading joins for embedding — you denormalize by design.",
+    "whyItMatters": "Document models map cleanly to app objects and avoid multi-table joins for aggregates.",
+    "commonMistake": "Embedding unbounded arrays (e.g. all comments) in one document until it hits the size limit.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.databases.key-value",
+      "de.databases.wide-column"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Document stores",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.databases.wide-column",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "Wide-column stores",
+    "difficulty": "advanced",
+    "priority": 64,
+    "shortType": "concept",
+    "definition": "NoSQL (Cassandra, HBase) modeling rows of sparse columns, partitioned by key for massive write throughput.",
+    "explanation": "Data is grouped by partition key and sorted by clustering columns. You design tables per query — even duplicating data across tables — because there are no joins and writes are cheap and distributed.",
+    "interviewLine": "Wide-column stores model one table per query, partitioned for write scale; you denormalize because joins don't exist.",
+    "whyItMatters": "It powers write-heavy, time-series, and always-on workloads at petabyte scale (AP by default).",
+    "interviewQuestion": "Why does Cassandra ask you to model tables around queries rather than entities?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.databases.sql-vs-nosql",
+      "de.databases.cap"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Wide-column stores",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.databases.explain-plans",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "EXPLAIN plans",
+    "difficulty": "intermediate",
+    "priority": 70,
+    "shortType": "why",
+    "definition": "The query planner's chosen execution strategy — scans, joins, and estimated cost — shown before or after running.",
+    "explanation": "EXPLAIN reveals whether the DB uses an index or a seq scan, the join algorithm (nested loop / hash / merge), and row estimates. EXPLAIN ANALYZE runs it and shows real timings vs estimates.",
+    "interviewLine": "EXPLAIN shows the planner's strategy — scan type, join method, cost estimates — so you find why a query is slow.",
+    "whyItMatters": "Reading a plan is how you actually diagnose a slow query instead of guessing.",
+    "interviewQuestion": "Estimated rows say 10 but actual is 10M — what does that mismatch tell you?",
+    "example": {
+      "type": "sql",
+      "content": "EXPLAIN ANALYZE\nSELECT * FROM orders o\nJOIN users u ON u.id = o.user_id\nWHERE o.created_at > now() - interval '7 days';\n-- look for: Seq Scan vs Index Scan, Hash Join, rows est vs actual"
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.databases.indexing",
+      "de.databases.denormalization"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "EXPLAIN plans",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.databases.connection-pooling",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "databases",
+    "term": "Connection pooling",
+    "difficulty": "intermediate",
+    "priority": 67,
+    "shortType": "why",
+    "definition": "Reusing a fixed set of open DB connections across requests instead of opening one per request.",
+    "explanation": "Each Postgres connection is a process and costs memory + handshake time. A pool (PgBouncer, HikariCP) keeps warm connections and hands them out, capping total load on the DB.",
+    "interviewLine": "A connection pool caps and reuses expensive DB connections, protecting the server from connection storms under load.",
+    "whyItMatters": "Without pooling, a traffic spike opens thousands of connections and topples the database.",
+    "commonMistake": "Setting the pool larger than the DB's max_connections — you just move the failure, not fix it.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.databases.replication",
+      "de.databases.oltp-olap"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "databases",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Connection pooling",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   }
 ]

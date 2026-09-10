@@ -1,176 +1,653 @@
 [
   {
-    "id": "de.data-modeling.slowly-changing-dimensions",
+    "id": "de.data-modeling.dimensional",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "data-modeling",
-    "term": "slowly changing dimensions",
-    "difficulty": "intermediate",
-    "priority": 65,
+    "term": "Dimensional modeling",
+    "difficulty": "core",
+    "priority": 90,
     "shortType": "concept",
-    "definition": "TODO: define slowly changing dimensions.",
+    "definition": "Kimball's approach: model the business as facts (events/measures) surrounded by dimensions (context).",
+    "explanation": "Instead of normalizing for writes, you model for analytic reads: a central fact table of measurable events joined to dimension tables that answer who/what/when/where. Optimized for slicing and aggregation.",
+    "interviewLine": "Dimensional modeling structures data as facts and dimensions so business users can slice measures by context with simple joins.",
+    "whyItMatters": "It's the vocabulary of nearly every analytics interview and the default warehouse design.",
+    "interviewQuestion": "Why model dimensionally instead of in 3NF for a reporting warehouse?",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.data-modeling.star-schema",
+      "de.data-modeling.fact-tables",
+      "de.data-modeling.dimension-tables"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "data-modeling"
+      "data-modeling",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Most Asked Concepts · SQL",
-        "sourceType": "primary"
+        "section": "Dimensional modeling",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "inferred",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.data-modeling.fact-dimension-table-design",
+    "id": "de.data-modeling.star-schema",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "data-modeling",
-    "term": "fact/dimension table design",
-    "difficulty": "intermediate",
-    "priority": 65,
-    "shortType": "concept",
-    "definition": "TODO: define fact/dimension table design.",
+    "term": "Star schema",
+    "difficulty": "core",
+    "priority": 88,
+    "shortType": "visual",
+    "definition": "One central fact table joined directly to denormalized dimension tables — the shape looks like a star.",
+    "explanation": "Each dimension is a single flat table joined to the fact by a key. Fewer joins than a normalized model means faster, simpler queries — the default for BI tools.",
+    "interviewLine": "A star schema puts a fact table at the center with denormalized dimensions one join away — few joins, fast aggregation.",
+    "whyItMatters": "It's the most common warehouse layout and what BI tools expect to see.",
+    "visual": {
+      "template": "tree",
+      "data": {
+        "root": "Fact: Sales",
+        "children": [
+          "Date",
+          "Product",
+          "Store",
+          "Customer"
+        ]
+      }
+    },
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.data-modeling.snowflake-schema",
+      "de.data-modeling.fact-tables",
+      "de.data-modeling.grain"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "data-modeling"
+      "data-modeling",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Most Asked Concepts · Data Modeling",
-        "sourceType": "primary"
+        "section": "Star schema",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "inferred",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.data-modeling.data-vault-2-0-concepts",
+    "id": "de.data-modeling.snowflake-schema",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "data-modeling",
-    "term": "data vault 2.0 concepts",
+    "term": "Snowflake schema",
     "difficulty": "intermediate",
-    "priority": 65,
-    "shortType": "concept",
-    "definition": "TODO: define data vault 2.0 concepts.",
+    "priority": 76,
+    "shortType": "compare",
+    "definition": "A star whose dimensions are normalized into sub-dimensions — saving space at the cost of more joins.",
+    "explanation": "Instead of one flat Product dimension, you split into Product → Category → Department tables. Less redundancy, but queries need extra joins and BI tools get more complex.",
+    "interviewLine": "A snowflake normalizes dimensions into sub-tables, saving storage but adding joins — usually not worth it over a flat star.",
+    "whyItMatters": "Knowing when NOT to snowflake (usually: keep dims flat) is the real interview signal.",
+    "commonMistake": "Snowflaking by reflex. Storage is cheap; the extra joins slow every query and confuse BI users.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.data-modeling.star-schema",
+      "de.data-modeling.normalization-vs-dimensional"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "data-modeling"
+      "data-modeling",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Most Asked Concepts · Data Modeling",
-        "sourceType": "primary"
+        "section": "Snowflake schema",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "inferred",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.data-modeling.grain-definition",
+    "id": "de.data-modeling.fact-tables",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "data-modeling",
-    "term": "grain definition",
-    "difficulty": "intermediate",
-    "priority": 65,
+    "term": "Fact tables",
+    "difficulty": "core",
+    "priority": 86,
     "shortType": "concept",
-    "definition": "TODO: define grain definition.",
+    "definition": "The center of a star: rows of measurable business events, holding numeric measures and dimension keys.",
+    "explanation": "Fact types: transaction (one row per event), periodic snapshot (one row per period), accumulating snapshot (one row per process, updated as it progresses). Facts are mostly foreign keys plus additive measures.",
+    "interviewLine": "A fact table stores business events as measures plus dimension keys; its type (transaction, snapshot) follows the question being asked.",
+    "whyItMatters": "Getting fact type and additivity right determines whether your metrics sum correctly.",
+    "interviewQuestion": "What's the difference between a transaction fact and an accumulating-snapshot fact?",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.data-modeling.grain",
+      "de.data-modeling.dimension-tables",
+      "de.data-modeling.degenerate-dims"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "data-modeling"
+      "data-modeling",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Most Asked Concepts · Data Modeling",
-        "sourceType": "primary"
+        "section": "Fact tables",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "inferred",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.data-modeling.surrogate-vs-natural-keys",
+    "id": "de.data-modeling.dimension-tables",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "data-modeling",
-    "term": "surrogate vs natural keys",
-    "difficulty": "intermediate",
-    "priority": 65,
+    "term": "Dimension tables",
+    "difficulty": "core",
+    "priority": 84,
     "shortType": "concept",
-    "definition": "TODO: define surrogate vs natural keys.",
+    "definition": "The descriptive context of a fact: wide, denormalized tables of attributes you filter and group by.",
+    "explanation": "A dimension (Customer, Product, Date) holds the textual/categorical attributes used in WHERE and GROUP BY. They're wide and denormalized on purpose, and change over time — which is why SCDs exist.",
+    "interviewLine": "Dimensions hold the descriptive attributes you slice by; they're wide, denormalized, and versioned via SCDs as they change.",
+    "whyItMatters": "Rich dimensions are what make a warehouse answer real business questions.",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.data-modeling.scd",
+      "de.data-modeling.surrogate-keys",
+      "de.data-modeling.conformed-dims"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "data-modeling"
+      "data-modeling",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Most Asked Concepts · Data Modeling",
-        "sourceType": "primary"
+        "section": "Dimension tables",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "inferred",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   },
   {
-    "id": "de.data-modeling.normalized-vs-denormalized-tradeoffs",
+    "id": "de.data-modeling.grain",
     "schemaVersion": 1,
     "contentVersion": "2026.09.1",
     "type": "concept",
     "domain": "data-engineering",
     "topic": "data-modeling",
-    "term": "normalized vs denormalized tradeoffs",
-    "difficulty": "intermediate",
-    "priority": 65,
-    "shortType": "concept",
-    "definition": "TODO: define normalized vs denormalized tradeoffs.",
+    "term": "Grain",
+    "difficulty": "core",
+    "priority": 89,
+    "shortType": "why",
+    "definition": "The exact meaning of one row in a fact table — the single most important modeling decision.",
+    "explanation": "Declare grain first: 'one row per order line per day'. Everything (which dimensions attach, which measures are additive) follows from it. Mixed grain is the root of double-counted, wrong metrics.",
+    "interviewLine": "Grain is what one fact row represents. Declare it before anything else — dimensions and additivity all follow from the grain.",
+    "whyItMatters": "Ninety percent of warehouse bugs trace back to an unclear or mixed grain.",
+    "commonMistake": "Mixing grains in one fact table (order-level and line-level rows) so measures double-count on aggregation.",
+    "interviewQuestion": "How do you decide the grain of a new fact table?",
     "prerequisites": [],
-    "relatedConcepts": [],
+    "relatedConcepts": [
+      "de.data-modeling.fact-tables",
+      "de.data-modeling.dimensional"
+    ],
     "nextConcepts": [],
     "quickPaths": [],
     "tags": [
-      "data-modeling"
+      "data-modeling",
+      "interview"
     ],
     "sourceRefs": [
       {
         "source": "de_encyclopedia_2025.html",
-        "section": "Most Asked Concepts · Data Modeling",
-        "sourceType": "primary"
+        "section": "Grain",
+        "sourceType": "secondary"
       }
     ],
-    "provenance": "inferred",
-    "authoringStatus": "stub"
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-modeling.scd",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "Slowly Changing Dimensions",
+    "difficulty": "intermediate",
+    "priority": 85,
+    "shortType": "compare",
+    "definition": "Techniques for tracking how dimension attributes change over time — Types 0 through 6.",
+    "explanation": "Type 1 overwrites (no history). Type 2 adds a new row per change with valid-from/to and a current flag (full history). Type 3 keeps a 'previous' column. Type 2 is the workhorse of real warehouses.",
+    "interviewLine": "SCDs track dimension change: Type 1 overwrites, Type 2 versions rows with effective dates, Type 3 keeps a prior-value column.",
+    "whyItMatters": "SCD Type 2 is the single most-asked data-modeling interview question.",
+    "interviewQuestion": "Walk through how you'd implement SCD Type 2 for a customer address change.",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "Type 1",
+        "b": "Type 2",
+        "rows": [
+          [
+            "overwrite",
+            "new row"
+          ],
+          [
+            "no history",
+            "full history"
+          ],
+          [
+            "1 row/key",
+            "N rows/key"
+          ],
+          [
+            "current flag: n/a",
+            "valid_from/to"
+          ]
+        ]
+      }
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-modeling.surrogate-keys",
+      "de.data-modeling.dimension-tables"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Slowly Changing Dimensions",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-modeling.surrogate-keys",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "Surrogate keys",
+    "difficulty": "intermediate",
+    "priority": 80,
+    "shortType": "why",
+    "definition": "A meaningless, warehouse-generated integer key for a dimension row, instead of the business's natural key.",
+    "explanation": "Surrogate keys decouple the warehouse from source systems, enable SCD Type 2 (each version gets its own key), survive source-system key reuse, and make fact-dimension joins fast integer joins.",
+    "interviewLine": "Surrogate keys are warehouse-generated integers that decouple from source keys and let SCD Type 2 give each version its own row.",
+    "whyItMatters": "Without surrogate keys, SCD Type 2 history is impossible — the natural key can't distinguish versions.",
+    "commonMistake": "Joining facts to dimensions on the natural key — it breaks the moment you need history.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-modeling.scd",
+      "de.data-modeling.conformed-dims"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Surrogate keys",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-modeling.conformed-dims",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "Conformed dimensions",
+    "difficulty": "intermediate",
+    "priority": 78,
+    "shortType": "concept",
+    "definition": "A dimension defined once and shared consistently across multiple fact tables (and data marts).",
+    "explanation": "A conformed Date or Customer dimension means Sales and Support facts use the exact same keys and attributes, so you can compare metrics across processes. It's the backbone of an integrated warehouse (the 'bus').",
+    "interviewLine": "A conformed dimension is shared identically across facts, so metrics from different processes can be compared on the same keys.",
+    "whyItMatters": "Conformed dimensions are what let you say 'revenue vs tickets by customer' across teams reliably.",
+    "interviewQuestion": "Why are conformed dimensions central to Kimball's bus architecture?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-modeling.dimension-tables",
+      "de.data-modeling.kimball-inmon"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Conformed dimensions",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-modeling.degenerate-dims",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "Degenerate dimensions",
+    "difficulty": "advanced",
+    "priority": 66,
+    "shortType": "concept",
+    "definition": "A dimension attribute (like an order number) that lives in the fact table with no separate dimension.",
+    "explanation": "An order/invoice number identifies a transaction but has no attributes of its own — so it stays in the fact as a degenerate dimension, used for grouping line items without a pointless one-column dimension table.",
+    "interviewLine": "A degenerate dimension is an identifier kept in the fact (like an order ID) that has no attributes worth a separate table.",
+    "whyItMatters": "It's a classic 'do you really understand dimensions?' interview probe.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-modeling.fact-tables",
+      "de.data-modeling.grain"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Degenerate dimensions",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-modeling.bridge-tables",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "Bridge tables",
+    "difficulty": "advanced",
+    "priority": 64,
+    "shortType": "concept",
+    "definition": "An intermediate table that resolves a many-to-many relationship between a fact and a dimension.",
+    "explanation": "When one account has many customers (or a product has many categories), a bridge table holds the pairs, often with a weighting factor so allocated measures don't double-count.",
+    "interviewLine": "A bridge table resolves many-to-many between fact and dimension, often with allocation weights to avoid double-counting.",
+    "whyItMatters": "Many-to-many is where naive star schemas break; the bridge is the standard fix.",
+    "commonMistake": "Joining through a many-to-many without weights, so a measure is counted once per group member.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-modeling.dimension-tables",
+      "de.data-modeling.fact-tables"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Bridge tables",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-modeling.kimball-inmon",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "Kimball vs Inmon",
+    "difficulty": "intermediate",
+    "priority": 74,
+    "shortType": "compare",
+    "definition": "Two warehouse philosophies: Kimball builds dimensional marts bottom-up; Inmon builds a 3NF core top-down.",
+    "explanation": "Inmon: an enterprise 3NF warehouse first, marts derived from it — integrated but slower to deliver. Kimball: conformed dimensional marts joined by a bus — faster, business-friendly. Most modern stacks lean Kimball.",
+    "interviewLine": "Inmon centralizes a 3NF warehouse then derives marts; Kimball builds conformed dimensional marts bottom-up for faster delivery.",
+    "whyItMatters": "Naming the tradeoff (time-to-value vs enterprise integration) is a senior-level signal.",
+    "visual": {
+      "template": "comparison",
+      "data": {
+        "a": "Kimball",
+        "b": "Inmon",
+        "rows": [
+          [
+            "bottom-up",
+            "top-down"
+          ],
+          [
+            "dimensional",
+            "3NF core"
+          ],
+          [
+            "fast marts",
+            "integrated first"
+          ]
+        ]
+      }
+    },
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-modeling.dimensional",
+      "de.data-modeling.conformed-dims",
+      "de.data-modeling.data-vault"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Kimball vs Inmon",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-modeling.data-vault",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "Data Vault",
+    "difficulty": "advanced",
+    "priority": 60,
+    "shortType": "concept",
+    "definition": "An agile modeling pattern of Hubs (business keys), Links (relationships), and Satellites (context/history).",
+    "explanation": "Data Vault separates stable business keys (hubs) from relationships (links) and descriptive, historized attributes (satellites). It's auditable and easy to extend, then usually served through a Kimball mart on top.",
+    "interviewLine": "Data Vault splits data into Hubs (keys), Links (relationships), and Satellites (history), prioritizing auditability and easy change.",
+    "whyItMatters": "It shows up in regulated, high-change enterprises; knowing the three components is enough for most rounds.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-modeling.kimball-inmon",
+      "de.data-modeling.scd"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Data Vault",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-modeling.obt",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "One Big Table",
+    "difficulty": "intermediate",
+    "priority": 68,
+    "shortType": "compare",
+    "definition": "Flattening facts and all dimensions into a single wide, denormalized table (OBT).",
+    "explanation": "Columnar warehouses make wide tables cheap and joins relatively costly, so OBT pre-joins everything into one table BI can query with no joins — at the cost of duplication and harder history/maintenance.",
+    "interviewLine": "OBT pre-joins everything into one wide table so BI needs no joins; you trade storage and maintainability for query simplicity.",
+    "whyItMatters": "OBT vs star is a live modern debate — interviewers want the tradeoffs, not dogma.",
+    "commonMistake": "Treating OBT as always-better — it duplicates data and makes SCD history and reuse harder than a star.",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-modeling.star-schema",
+      "de.data-modeling.normalization-vs-dimensional"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "One Big Table",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-modeling.semantic-layer",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "Semantic / metrics layer",
+    "difficulty": "intermediate",
+    "priority": 72,
+    "shortType": "why",
+    "definition": "A central place where metrics (revenue, active users) are defined once and reused by every tool.",
+    "explanation": "Instead of each dashboard re-deriving 'active user', a semantic/metrics layer (dbt Semantic Layer, LookML, Cube) defines it once with its joins and filters, so every consumer gets one consistent number.",
+    "interviewLine": "A semantic layer defines metrics once — their joins, grain, and filters — so every BI tool returns the same number.",
+    "whyItMatters": "It kills the 'three dashboards, three revenue numbers' problem that plagues real companies.",
+    "interviewQuestion": "How does a metrics layer prevent conflicting definitions of the same KPI?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-modeling.obt",
+      "de.data-modeling.dimensional"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Semantic / metrics layer",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
+  },
+  {
+    "id": "de.data-modeling.normalization-vs-dimensional",
+    "schemaVersion": 1,
+    "contentVersion": "2026.09.1",
+    "type": "concept",
+    "domain": "data-engineering",
+    "topic": "data-modeling",
+    "term": "Normalization vs dimensional",
+    "difficulty": "core",
+    "priority": 82,
+    "shortType": "compare",
+    "definition": "Normalize for writes (OLTP, fewer anomalies); model dimensionally for reads (OLAP, fewer joins).",
+    "explanation": "3NF minimizes redundancy so updates are safe — ideal for transactional apps. Dimensional denormalizes for query speed and business clarity — ideal for analytics. Same data, opposite optimization goals.",
+    "interviewLine": "Normalize OLTP to prevent update anomalies; model OLAP dimensionally to minimize joins — the goal flips from write-safety to read-speed.",
+    "whyItMatters": "Explaining why the warehouse layer deliberately denormalizes is a core interview theme.",
+    "interviewQuestion": "Why is a schema that's great for the app usually wrong for the warehouse?",
+    "prerequisites": [],
+    "relatedConcepts": [
+      "de.data-modeling.dimensional",
+      "de.databases.normalization"
+    ],
+    "nextConcepts": [],
+    "quickPaths": [],
+    "tags": [
+      "data-modeling",
+      "interview"
+    ],
+    "sourceRefs": [
+      {
+        "source": "de_encyclopedia_2025.html",
+        "section": "Normalization vs dimensional",
+        "sourceType": "secondary"
+      }
+    ],
+    "provenance": "supplementary",
+    "authoringStatus": "draft"
   }
 ]
