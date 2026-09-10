@@ -750,9 +750,23 @@
       // Auto-select BR manifest
       const firstCard = cardsPanel.querySelector('.mfex-manifest-card');
       if (firstCard) firstCard.click();
+
+      /* ── Draggable column resizer (manifest cards ↔ detail) ── */
+      const body = page.querySelector('.mfex-body');
+      if (body && window.IcebergViz.SplitPane) {
+        mod._split = window.IcebergViz.SplitPane.attach(body, {
+          key: 'iceberg/manifest-explorer',
+          disableBelow: 720,
+          tracks: [
+            { min: 200, max: 460, def: 260 },  // manifest cards
+            { flex: true, min: 300 },          // detail
+          ],
+        });
+      }
     },
 
     destroy() {
+      if (mod._split) { mod._split.detach(); mod._split = null; }
       document.getElementById('mfex-styles')?.remove();
     },
   };

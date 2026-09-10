@@ -121,7 +121,21 @@
       root.querySelectorAll('.dle-row').forEach(btn =>
         btn.addEventListener('click', () => renderDetail(root, parseInt(btn.dataset.i, 10))));
       renderDetail(root, 0);
+      const cols = root.querySelector('.dle-cols');
+      if (cols && TV.SplitPane) {
+        this._split = TV.SplitPane.attach(cols, {
+          key: 'delta/log-explorer',
+          disableBelow: 760,
+          tracks: [
+            { min: 220, max: 520, def: 320 },  // commit list
+            { flex: true, min: 300 },          // commit detail
+          ],
+        });
+      }
     },
-    destroy() { TV.AnimationControls.hide(); },
+    destroy() {
+      if (this._split) { this._split.detach(); this._split = null; }
+      TV.AnimationControls.hide();
+    },
   });
 })();

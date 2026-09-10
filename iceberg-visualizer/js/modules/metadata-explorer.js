@@ -649,9 +649,23 @@ File Footer:
 
       /* ── Inline styles (scoped to this module) ── */
       this._injectStyles();
+
+      /* ── Draggable column resizers (tree ↔ JSON ↔ role/context) ── */
+      if (window.IcebergViz.SplitPane) {
+        this._split = window.IcebergViz.SplitPane.attach(layout, {
+          key: 'iceberg/metadata-explorer',
+          disableBelow: 1100,
+          tracks: [
+            { min: 200, max: 480, def: 280 },  // S3 file tree
+            { flex: true, min: 280 },          // file contents (JSON)
+            { min: 240, max: 620, def: 320 },  // File Role & Context
+          ],
+        });
+      }
     },
 
     destroy() {
+      if (this._split) { this._split.detach(); this._split = null; }
       this._cleanup.forEach(fn => fn());
       this._cleanup = [];
       const style = document.getElementById('me-module-styles');
@@ -768,8 +782,8 @@ File Footer:
         }
         .me-ctx-table td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: top; }
         .me-ctx-field code { font-family: var(--font-mono); font-size: 11px; color: var(--blue); }
-        .me-ctx-val { font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); }
-        .me-ctx-note { font-size: 11px; color: var(--text-muted); }
+        .me-ctx-val { font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); word-break: break-all; }
+        .me-ctx-note { font-size: 11px; color: var(--text-muted); overflow-wrap: anywhere; }
         .me-ctx-insight {
           background: rgba(74, 174, 255, .08); border: 1px solid rgba(74,174,255,.2);
           border-radius: 8px; padding: 12px; margin: 14px 0;

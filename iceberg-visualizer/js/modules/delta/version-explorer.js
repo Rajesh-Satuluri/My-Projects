@@ -79,7 +79,21 @@
       const root = container.querySelector('.dve');
       root.querySelectorAll('.dve-row').forEach(b => b.addEventListener('click', () => renderDetail(root, parseInt(b.dataset.i, 10))));
       renderDetail(root, 0);
+      const cols = root.querySelector('.dve-cols');
+      if (cols && TV.SplitPane) {
+        this._split = TV.SplitPane.attach(cols, {
+          key: 'delta/version-explorer',
+          disableBelow: 760,
+          tracks: [
+            { min: 220, max: 520, def: 320 },  // version list
+            { flex: true, min: 300 },          // version detail
+          ],
+        });
+      }
     },
-    destroy() { TV.AnimationControls.hide(); },
+    destroy() {
+      if (this._split) { this._split.detach(); this._split = null; }
+      TV.AnimationControls.hide();
+    },
   });
 })();
