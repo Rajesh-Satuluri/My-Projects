@@ -58,7 +58,9 @@
         { id: 'migrate-to-iceberg',  label: 'Migrate to Iceberg',   icon: 'upload',   available: true },
         { id: 'maintenance',         label: 'Maintenance Ops',      icon: 'tool',     available: true },
         { id: 'performance',         label: 'Performance Sim',      icon: 'zap',      available: true },
+        { id: 'write-tuning',        label: 'Write Tuning & Metrics', icon: 'sliders', available: true },
         { id: 'engine-integrations', label: 'Engine Integrations',  icon: 'link',     available: true },
+        { id: 'format-v3',           label: 'Spec v3 & Deletion Vectors', icon: 'sparkles', available: true },
       ],
     },
     {

@@ -417,6 +417,61 @@
       correct: 1,
       explanation: 'The changelog view emits per-row changes with _change_type = INSERT / UPDATE_BEFORE / UPDATE_AFTER / DELETE. An append scan only surfaces appended files — it misses row-level updates and Merge-on-Read deletes.',
     },
+    {
+      q: 'What is the headline change in Iceberg format-version 3 over v2?',
+      options: [
+        'A new Parquet replacement file format',
+        'Deletion vectors — one roaring bitmap per data file instead of many positional delete files',
+        'Removal of ACID transactions',
+        'Mandatory Hive Metastore catalog',
+      ],
+      correct: 1,
+      explanation: 'v3\'s headline feature is deletion vectors: a single compressed bitmap per data file (Puffin-backed) replaces v2\'s pile of positional delete files. v3 also adds row lineage, the variant/geo types, nanosecond timestamps, and default column values.',
+    },
+    {
+      q: 'In v2, a hot data file has accumulated 3,000 positional delete files. How does a v3 deletion vector improve this?',
+      options: [
+        'It compresses the 3,000 files with gzip',
+        'It replaces them with one bitmap per data file, updated in place — reads apply a single vector',
+        'It deletes the data file and rewrites it',
+        'It moves the delete files to a separate bucket',
+      ],
+      correct: 1,
+      explanation: 'A deletion vector is one roaring bitmap of deleted positions per data file, maintained in place. The reader applies a single bitmap instead of merging thousands of delete files, so read cost stops scaling with the number of delete operations.',
+    },
+    {
+      q: 'ShopKart compacts nightly but still gets thousands of tiny files each morning. The most likely root cause is…',
+      options: [
+        'Snapshots are not expired',
+        'write.distribution-mode = none — every task writes into every partition on each commit',
+        'Bloom filters are disabled',
+        'The schema has too many columns',
+      ],
+      correct: 1,
+      explanation: 'With distribution-mode = none there is no shuffle, so tasks × partitions tiny files are created on every write. Fix it at write time with hash or range distribution plus write.target-file-size-bytes; compaction is the safety net, not the primary tool.',
+    },
+    {
+      q: 'You set write.metadata.metrics for a large free-text payload column to \'none\'. What is the effect?',
+      options: [
+        'The column is dropped from the table',
+        'No min/max/counts are stored for it — smaller manifests, but no pruning on that column',
+        'The column is compressed more aggressively',
+        'Queries on that column fail',
+      ],
+      correct: 1,
+      explanation: 'Metrics modes (full / truncate / counts / none) trade manifest size against pruning. Setting a rarely-filtered wide column to none keeps manifests small and planning fast; keep filter/join-key columns on full or truncate so they still prune.',
+    },
+    {
+      q: 'ShopKart queries the same tables from Spark, Trino, and Snowflake and wants one governed catalog with no metastore-DB contention. Which catalog fits best?',
+      options: [
+        'Hadoop/filesystem catalog',
+        'A REST catalog (e.g. Polaris/Tabular, Unity, Nessie, Gravitino)',
+        'A per-engine JDBC catalog each',
+        'Hive Metastore',
+      ],
+      correct: 1,
+      explanation: 'A REST catalog is an HTTP spec any engine can call and any provider can implement, decoupling engines from a specific metastore and enabling server-side commit coordination, credential vending, and governance — ideal for multi-engine lakehouses. Hive/Glue are metastore-bound; Hadoop has weak multi-writer guarantees.',
+    },
   ];
 
   /* ── Render ──────────────────────────────────────────────── */

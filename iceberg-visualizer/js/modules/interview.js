@@ -717,6 +717,82 @@ spark.read.format(<span class="hi-str">"iceberg"</span>)
 <strong>3. Requirements & ordering.</strong> Changelog needs format-version 2 and the snapshots in the range retained. Use <code>_change_ordinal</code> / <code>_commit_snapshot_id</code> to apply changes in the right order downstream; an UPDATE arrives as a matched BEFORE/AFTER pair.`,
       shopkart: '<strong>ShopKart:</strong> an incremental job broke after retention was cut to 3 days while a downstream consumer lagged 4 days — the start snapshot had been expired. Fix: 14-day retention floor, plus alerting when consumer lag approaches the retention window.',
     },
+    {
+      q: 'What is new in Iceberg format-version 3 compared to v2?',
+      tags: ['advanced', 'senior'],
+      answer: `The headline change is <strong>deletion vectors</strong>, plus several data-model additions:
+
+<strong>Deletion vectors</strong> — a single compressed roaring bitmap per data file (stored in a Puffin file) replaces v2's pile of positional delete <em>files</em>. One vector per file instead of many small .avro deletes → far fewer files, faster planning and scans on high-churn tables.
+<strong>Row lineage</strong> — every row gets a stable <code>_row_id</code> and a <code>_last_updated_sequence_number</code>, making change tracking / incremental processing cheap without diffing snapshots.
+<strong>New types</strong> — <code>variant</code> (semi-structured JSON), <code>geometry</code>/<code>geography</code> (spatial), and nanosecond timestamps.
+<strong>Default column values</strong> — a newly added column can carry a real default instead of only null.
+
+Adopt v3 only when <em>every</em> engine that reads or writes the table supports it — a mixed fleet on older readers can't read v3 tables.`,
+      shopkart: '<strong>ShopKart:</strong> the CDC-heavy orders table was accumulating millions of positional delete files between compactions. Moving it to v3 deletion vectors cut delete-side file count ~1000× and dropped read planning noticeably — after confirming Spark, Trino, and the Flink sink were all on v3-capable versions.',
+    },
+    {
+      q: 'How do deletion vectors differ from v2 positional delete files, and why do they matter?',
+      tags: ['senior'],
+      answer: `Both implement Merge-on-Read deletes (mark rows deleted without rewriting the data file), but the storage differs:
+
+<strong>v2 positional delete files:</strong> each delete operation writes a separate file of (file_path, row_position) pairs. Over time a hot data file can have hundreds or thousands of associated delete files, and every read must open and merge all of them.
+<strong>v3 deletion vectors:</strong> one deletion vector per data file — a roaring bitmap of deleted row positions, stored in a Puffin blob and updated in place as more rows are deleted. A read applies a single bitmap.
+
+Why it matters: it removes the delete-side small-file problem. Read cost stops scaling with the number of delete operations, planning is simpler, and compaction has far less delete-file cleanup to do. Positionally it's the same concept (delete by position); the win is the compact, single-file representation.`,
+      shopkart: '<strong>ShopKart:</strong> before v3, a nightly job existed purely to compact positional delete files on the orders table. With deletion vectors that job largely went away — the vector is maintained per data file instead of spawning new delete files.',
+    },
+    {
+      q: 'You run compaction nightly but still see thousands of tiny files each morning. What is wrong and how do you fix it at write time?',
+      tags: ['advanced', 'senior'],
+      answer: `Compaction is the safety net, not the fix — the files are being created tiny <em>on write</em>. The usual culprit is <code>write.distribution-mode = none</code>: with no shuffle, every writer task emits a file into every partition it holds rows for, so <code>tasks × partitions</code> tiny files land per commit.
+
+Fix it where the files are made:
+<strong>1. distribution-mode = hash</strong> — shuffle rows by partition key so each partition is written by few tasks (the sensible default for partitioned tables).
+<strong>2. distribution-mode = range</strong> — range-partition on the sort order for the fewest, largest files <em>and</em> tight per-file min/max (best for clustered reads).
+<strong>3. write.target-file-size-bytes</strong> — size files as they're written (512 MB default).
+<strong>4. fanout-enabled</strong> — lets unsorted input still land in the right per-partition files (costs memory) instead of forcing a global pre-sort.
+
+Then compaction only mops up the occasional straggler instead of doing the primary work.`,
+      code: `<span class="hi-kw">ALTER TABLE</span> shopkart.orders.events <span class="hi-kw">SET</span> <span class="hi-kw">TBLPROPERTIES</span> (
+  <span class="hi-str">'write.distribution-mode'</span>      = <span class="hi-str">'hash'</span>,
+  <span class="hi-str">'write.target-file-size-bytes'</span> = <span class="hi-str">'536870912'</span>,
+  <span class="hi-str">'write.spark.fanout.enabled'</span>   = <span class="hi-str">'true'</span>
+);`,
+      shopkart: '<strong>ShopKart:</strong> a Spark job with distribution-mode=none was producing ~2,000 sub-10 MB files per run on the orders table. Switching to hash distribution + a 512 MB target cut it to ~120 well-sized files per commit — before compaction even ran.',
+    },
+    {
+      q: 'What are metrics modes (write.metadata.metrics) and how do they affect pruning?',
+      tags: ['senior'],
+      answer: `Manifests store per-column statistics (min/max bounds, null and value counts) that drive file pruning. <code>write.metadata.metrics</code> controls how much stat is stored per column:
+
+<strong>full</strong> — full min/max/null/value counts. Best pruning, largest manifests.
+<strong>truncate(N)</strong> — bounds truncated to N chars/bytes (default is truncate(16)). Balanced; the default.
+<strong>counts</strong> — only null/value counts, no min/max → no range pruning on that column.
+<strong>none</strong> — nothing stored → no pruning at all on that column.
+
+The trade-off is manifest size vs pruning power. Wide columns (long strings, blobs, JSON payloads) with full metrics bloat manifests and slow planning while rarely being filtered on — turn those down to <code>counts</code> or <code>none</code>, and keep filter/join-key columns on <code>full</code> or <code>truncate</code>.`,
+      code: `<span class="hi-kw">ALTER TABLE</span> shopkart.orders.events <span class="hi-kw">SET</span> <span class="hi-kw">TBLPROPERTIES</span> (
+  <span class="hi-str">'write.metadata.metrics.default'</span>          = <span class="hi-str">'truncate(16)'</span>,
+  <span class="hi-str">'write.metadata.metrics.column.order_id'</span>   = <span class="hi-str">'full'</span>,
+  <span class="hi-str">'write.metadata.metrics.column.raw_payload'</span> = <span class="hi-str">'none'</span>
+);`,
+      shopkart: '<strong>ShopKart:</strong> a 4 KB JSON payload column on full metrics was inflating manifests and slowing planning. Setting that one column to <code>none</code> (keeping order_id/customer_id on full) shrank manifests ~40% and sped up planning, with no pruning lost on the columns that are actually filtered.',
+    },
+    {
+      q: 'What catalog options does Iceberg support, and how do you choose between them?',
+      tags: ['intermediate'],
+      answer: `The catalog maps a table name to its current metadata.json and performs the atomic commit. Options:
+
+<strong>REST catalog</strong> — an HTTP spec any engine can call and any provider can implement (Tabular/Polaris, Unity, Nessie, Gravitino). Decouples engines from a specific metastore and enables server-side commit coordination, credential vending, and governance. The modern default for multi-engine shops.
+<strong>Hive Metastore</strong> — classic and ubiquitous, but a shared-DB bottleneck and Hive-centric.
+<strong>AWS Glue</strong> — managed metastore on AWS; convenient but AWS-bound.
+<strong>JDBC</strong> — catalog state in a relational DB; simple to run.
+<strong>Hadoop / filesystem</strong> — a pointer file in the table dir; simplest, but weak multi-writer guarantees on some object stores.
+<strong>Nessie</strong> — git-like catalog with cross-table branches/tags.
+
+Rule of thumb: REST for a governed, multi-engine lakehouse; Glue if you're all-in on AWS; Hive only for legacy compatibility; Hadoop for quick local/testing. (See the Catalog Explorer and Engine Integrations screens for the exact Spark/Trino/Flink config.)`,
+      shopkart: '<strong>ShopKart:</strong> moved off Hive Metastore to a REST catalog so Spark (ETL), Trino (ad-hoc), and Snowflake (BI) share one governed catalog with centralized access control and no metastore-DB contention during Black Friday.',
+    },
   ];
 
   /* ── Render ──────────────────────────────────────────────── */
