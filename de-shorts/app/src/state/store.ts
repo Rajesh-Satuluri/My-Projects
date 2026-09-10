@@ -4,11 +4,13 @@
 import { create } from "zustand";
 import { db, type Progress, type Status } from "./db";
 import { grade, type Grade } from "./scheduler";
+import { pushOne, fullSync } from "./sync";
 
 interface ProgressState {
   loaded: boolean;
   byId: Record<string, Progress>;
   load: () => Promise<void>;
+  syncNow: () => Promise<void>;
   rate: (conceptId: string, g: Grade) => Promise<Progress>;
   statusOf: (conceptId: string) => Status;
   dueCount: () => number;
@@ -30,6 +32,22 @@ export const useProgress = create<ProgressState>((set, get) => ({
     } catch {
       set({ loaded: true }); // private mode / blocked storage: run in-memory
     }
+    // reconcile with the cloud in the background (no-op if signed out / unconfigured)
+    void get().syncNow();
+  },
+
+  syncNow: async () => {
+    try {
+      const res = await fullSync();
+      if (res && (res.pulled || res.pushed)) {
+        const rows = await db.progress.toArray();
+        const byId: Record<string, Progress> = {};
+        for (const r of rows) byId[r.conceptId] = r;
+        set({ byId });
+      }
+    } catch {
+      /* offline or sync error: local state is authoritative, retry next load */
+    }
   },
 
   rate: async (conceptId, g) => {
@@ -41,6 +59,7 @@ export const useProgress = create<ProgressState>((set, get) => ({
     } catch {
       /* ignore persistence failure; state stays in memory */
     }
+    void pushOne(next); // background cloud push; no-op if signed out
     if ("vibrate" in navigator) navigator.vibrate(g === "again" ? 30 : 12);
     return next;
   },

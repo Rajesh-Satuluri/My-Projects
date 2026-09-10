@@ -159,6 +159,21 @@ body {
 .grid-header { margin-bottom: var(--s-5); }
 .grid-title { font-size: var(--fs-hero); font-weight: 800; letter-spacing: -0.02em; margin: 0; }
 .grid-sub { color: var(--text-3); font-size: var(--fs-sm); margin: var(--s-1) 0 0; }
+
+/* Account / sync affordance (only rendered when Supabase is configured) */
+.account { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin-top: var(--s-3); }
+.account__who { color: var(--text-3); font-size: var(--fs-sm); }
+.account__input {
+  flex: 1 1 auto; min-width: 0; padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-2, 10px); border: 1px solid var(--line, #2a2a33);
+  background: var(--surface-2, #17171d); color: var(--text-1, #f5f5f7); font-size: var(--fs-sm);
+}
+.account__btn {
+  padding: var(--s-2) var(--s-3); border-radius: var(--r-2, 10px); border: 0;
+  background: var(--accent, #6c8cff); color: #0b0b0f; font-weight: 700; font-size: var(--fs-sm);
+}
+.account__btn:disabled { opacity: 0.5; }
+.account__err { flex-basis: 100%; color: #ff6b6b; font-size: var(--fs-xs, 12px); }
 .topic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
 .topic-tile {
   text-align: left;

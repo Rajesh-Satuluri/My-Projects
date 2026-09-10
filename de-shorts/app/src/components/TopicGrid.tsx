@@ -4,6 +4,7 @@
 import { topics } from "../content/loadContent";
 import { go } from "../router";
 import { useProgress } from "../state/store";
+import { Account } from "./Account";
 
 export function TopicGrid() {
   const due = useProgress((s) => s.dueCount());
@@ -12,6 +13,7 @@ export function TopicGrid() {
       <header className="grid-header">
         <h1 className="grid-title">DE Shorts</h1>
         <p className="grid-sub">{topics.length} topics · pick one to jump in</p>
+        <Account />
       </header>
       {due > 0 && (
         <button className="review-banner" onClick={() => go.review()}>
