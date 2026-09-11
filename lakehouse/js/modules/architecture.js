@@ -29,9 +29,23 @@
       _buildQueryPathView(page.querySelector('#arch-querypath-container'));
       _wireTabBar(page, this);
       _wireHierarchyInteractions(page, this._cleanups);
+
+      /* ── Draggable resizer: diagram canvas ↔ detail panel (laptop only) ── */
+      const main = page.querySelector('.arch-main');
+      if (main && window.IcebergViz.SplitPane) {
+        this._split = window.IcebergViz.SplitPane.attach(main, {
+          key: 'iceberg/architecture',
+          disableBelow: 820,
+          tracks: [
+            { flex: true, min: 300 },          // metadata hierarchy diagram
+            { min: 280, max: 560, def: 380 },  // detail panel
+          ],
+        });
+      }
     },
 
     destroy() {
+      if (this._split) { this._split.detach(); this._split = null; }
       this._cleanups.forEach(fn => fn && fn());
       this._cleanups = [];
       if (this._engine) { this._engine.destroy(); this._engine = null; }
