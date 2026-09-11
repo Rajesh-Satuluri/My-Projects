@@ -10,6 +10,10 @@
   const D = () => window.IcebergViz.Data;
   const AE = () => window.IcebergViz.AnimationEngine;
   const CV = () => window.IcebergViz.CodeViewer;
+  // CodeViewer.create() returns an element; detail panels build HTML strings,
+  // so serialise to markup here (interpolating the element gave
+  // "[object HTMLDivElement]"). Inline JSON comments are preserved.
+  const _codeHTML = (code, lang, title) => CV().create(code, lang, title).outerHTML;
 
   const mod = {
     id: 'architecture',
@@ -157,6 +161,69 @@
   margin-bottom: var(--space-3);
 }
 
+/* "Where it sits" relationship strip */
+.arch-rel {
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-1);
+}
+.arch-rel-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: 7px var(--space-3);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+.arch-rel-row + .arch-rel-row { border-top: 1px solid var(--border-default); }
+.arch-rel-row.is-self { background: var(--brand-glow, rgba(74,174,255,.10)); }
+.arch-rel-dir {
+  flex-shrink: 0;
+  width: 58px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-size: 9.5px;
+  color: var(--text-muted);
+  padding-top: 1px;
+}
+.arch-rel-row.is-self .arch-rel-dir { color: var(--blue); }
+.arch-rel-main { color: var(--text-secondary); }
+.arch-rel-main strong { color: var(--text-primary); font-weight: 600; }
+.arch-rel-main code {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-secondary);
+}
+
+.arch-detail-body p.layer-card-desc + .code-block { margin-top: var(--space-3); }
+
+/* Field-guide list: what the key fields on this node mean */
+.arch-fields {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.arch-fields li {
+  display: flex;
+  gap: var(--space-2);
+  padding: 6px 0;
+  font-size: var(--text-xs);
+  line-height: 1.55;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-subtle, var(--border-default));
+}
+.arch-fields li:first-child { border-top: none; }
+.arch-fields code {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--blue);
+  white-space: nowrap;
+}
+
 /* Layer description cards */
 .layer-card {
   background: var(--bg-3);
@@ -288,29 +355,37 @@
   /* ── Default Detail Panel ──────────────────────────────── */
   function _defaultDetailHTML() {
     return `
-      <p style="color:var(--text-secondary);font-size:var(--text-sm);line-height:var(--leading-relaxed);margin-bottom:var(--space-5)">
-        The Iceberg metadata hierarchy is a five-layer tree that describes every file in the table.
-        Click any node in the diagram to explore its structure.
+      <p style="color:var(--text-secondary);font-size:var(--text-sm);line-height:var(--leading-relaxed);margin-bottom:var(--space-4)">
+        The Iceberg metadata hierarchy is a six-layer tree that describes every file in the table.
+        A query walks it top-down, pruning at each level so it opens only the data files it truly needs.
+      </p>
+      <p style="color:var(--text-muted);font-size:var(--text-xs);line-height:var(--leading-relaxed);margin-bottom:var(--space-5)">
+        <strong>Click any node</strong> in the diagram to see its real contents, the fields explained,
+        and how it links to the layers above and below.
       </p>
       <div class="layer-card">
         <div class="layer-card-title">🏛 Layer 1 — Catalog</div>
-        <div class="layer-card-desc">Maps table name → metadata.json location. AWS Glue, Hive Metastore, Nessie, or REST Catalog.</div>
+        <div class="layer-card-desc">Maps the table name → current metadata.json location. AWS Glue, Hive Metastore, Nessie, or REST Catalog. The atomic pointer swap here is the transaction.</div>
       </div>
       <div class="layer-card">
-        <div class="layer-card-title">📄 Layer 2 — metadata.json</div>
-        <div class="layer-card-desc">JSON file containing schema, partition specs, all snapshots, and the current snapshot pointer.</div>
+        <div class="layer-card-title">📄 Layer 2 — Metadata File</div>
+        <div class="layer-card-desc">metadata.json — schema history, partition specs, sort orders, table properties, every snapshot, and the current pointers. Rewritten on every commit.</div>
       </div>
       <div class="layer-card">
-        <div class="layer-card-title">📋 Layer 3 — Manifest List</div>
-        <div class="layer-card-desc">Avro file (snap-*.avro) listing all manifests for a snapshot with partition statistics per manifest.</div>
+        <div class="layer-card-title">📸 Layer 3 — Snapshots</div>
+        <div class="layer-card-desc">One immutable record per commit. Each points to a manifest list and carries a change summary. Choosing a snapshot is how time travel &amp; rollback work.</div>
       </div>
       <div class="layer-card">
-        <div class="layer-card-title">📊 Layer 4 — Manifest Files</div>
-        <div class="layer-card-desc">Avro files listing data files with column-level statistics (min, max, null counts) for each file.</div>
+        <div class="layer-card-title">📋 Layer 4 — Manifest List</div>
+        <div class="layer-card-desc">Avro file (snap-*.avro) listing every manifest for a snapshot with partition bounds — the first pruning stage.</div>
       </div>
       <div class="layer-card">
-        <div class="layer-card-title">🗄 Layer 5 — Data Files</div>
-        <div class="layer-card-desc">Parquet, ORC, or Avro files containing the actual table rows. Leaf nodes of the metadata tree.</div>
+        <div class="layer-card-title">📊 Layer 5 — Manifest Files</div>
+        <div class="layer-card-desc">Avro files listing data files with column-level statistics (min, max, null counts) — the second pruning stage.</div>
+      </div>
+      <div class="layer-card">
+        <div class="layer-card-title">🗄 Layer 6 — Data Files</div>
+        <div class="layer-card-desc">Parquet / ORC / Avro files holding the actual rows. Immutable leaves of the tree — writes create new files, never edit these.</div>
       </div>
     `;
   }
@@ -565,20 +640,43 @@ ${_dataFileNode(673, 598, 'part-00001-k1l2.parquet', '129 MB')}
   }
 
   /* ── Node Detail Panels ────────────────────────────────── */
-  function _catalogDetail() {
+  function _hdr(icon, title, sub) {
     return `
       <div class="arch-detail-header" style="padding:0;margin-bottom:var(--space-4)">
-        <div class="arch-detail-icon">🏛</div>
+        <div class="arch-detail-icon">${icon}</div>
         <div>
-          <div class="arch-detail-title">AWS Glue Data Catalog</div>
-          <div class="arch-detail-subtitle">shopkart_prod.orders</div>
+          <div class="arch-detail-title">${title}</div>
+          <div class="arch-detail-subtitle">${sub}</div>
         </div>
-      </div>
+      </div>`;
+  }
+  function _infoIcon() {
+    return `<svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+  }
+  function _info(kind, html) {
+    return `<div class="info-box info-box-${kind}" style="margin-top:var(--space-3)">${_infoIcon()}<span>${html}</span></div>`;
+  }
+
+  function _catalogDetail() {
+    return `
+      ${_hdr('🏛', 'AWS Glue Data Catalog', 'Layer 1 · shopkart_prod.orders')}
+      ${_relations([
+        { dir: 'This', self: true, html: '<strong>Catalog</strong> — one row per table' },
+        { dir: '↓ Points to', html: 'the current <code>metadata.json</code> (Layer 2)' },
+      ])}
       <p class="layer-card-desc" style="margin-bottom:var(--space-4)">
-        The catalog maps the human-readable table name to the current <code>metadata.json</code> path on S3.
-        It is the entry point for every query — Spark, Trino, and Athena all ask the catalog first.
+        The catalog is a tiny lookup table that maps a human-readable table name
+        (<code>shopkart_prod.orders</code>) to the S3 path of the table's <em>current</em>
+        <code>metadata.json</code>. Every engine — Spark, Trino, Athena, Flink — asks the
+        catalog first, then follows the pointer down into the tree below.
       </p>
-      ${CV().create(JSON.stringify({
+      <p class="layer-card-desc" style="margin-bottom:var(--space-4)">
+        This one pointer is what makes Iceberg <strong>ACID</strong>. A commit writes all new
+        files first, then swaps <code>metadata_location</code> to the new metadata.json in a
+        single atomic compare-and-set. Readers see either the old table or the new one — never
+        a half-written state.
+      </p>
+      ${_codeHTML(JSON.stringify({
         DatabaseName: "shopkart_prod",
         TableName: "orders",
         Parameters: {
@@ -586,16 +684,16 @@ ${_dataFileNode(673, 598, 'part-00001-k1l2.parquet', '129 MB')}
           "metadata_location": "s3://shopkart-lakehouse/warehouse/prod/orders/metadata/v12-a3f8bc.metadata.json"
         }
       }, null, 2), 'json', 'Glue Catalog Entry')}
-      <div class="info-box info-box-tip" style="margin-top:var(--space-3)">
-        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span>The <code>metadata_location</code> pointer is atomically updated on every write commit. This single swap IS the transaction.</span>
-      </div>
+      ${_fieldGuide('Key fields', [
+        ['table_type', 'Tells engines to use the Iceberg reader, not treat the folder as raw files.'],
+        ['metadata_location', 'The only pointer that changes on a commit — the root of the whole tree.'],
+      ])}
+      ${_info('tip', 'The <code>metadata_location</code> swap <strong>is</strong> the transaction. Different catalogs implement the atomic swap differently — Glue &amp; Hive use a locked update, the REST catalog and Nessie/Polaris use a commit API, but the guarantee is identical.')}
     `;
   }
 
   function _metadataDetail() {
     const meta = D().metadataJson.content;
-    // Show a simplified version
     const simplified = {
       "format-version": meta["format-version"],
       "table-uuid": meta["table-uuid"],
@@ -609,64 +707,82 @@ ${_dataFileNode(673, 598, 'part-00001-k1l2.parquet', '129 MB')}
       "properties": meta.properties,
     };
     return `
-      <div class="arch-detail-header" style="padding:0;margin-bottom:var(--space-4)">
-        <div class="arch-detail-icon">📄</div>
-        <div>
-          <div class="arch-detail-title">metadata.json</div>
-          <div class="arch-detail-subtitle">v12-a3f8bc.metadata.json · 142.8 KB</div>
-        </div>
-      </div>
+      ${_hdr('📄', 'metadata.json', 'Layer 2 · v12-a3f8bc.metadata.json · 142.8 KB')}
+      ${_relations([
+        { dir: '↑ Named by', html: 'the <strong>Catalog</strong> pointer (Layer 1)' },
+        { dir: 'This', self: true, html: '<strong>metadata.json</strong> — the table\'s brain' },
+        { dir: '↓ Points to', html: 'the current snapshot\'s <strong>manifest list</strong> (Layer 3)' },
+      ])}
       <p class="layer-card-desc" style="margin-bottom:var(--space-4)">
-        The brain of the Iceberg table. Contains the complete schema history,
-        all partition specs ever used, all snapshots, and the current pointers.
+        The complete state of the table in one JSON file: every schema it has ever had,
+        every partition spec, every sort order, the full snapshot history, table properties,
+        and the pointers marking which of those are "current". A brand-new file is written
+        on <em>every</em> commit (v12 here means the twelfth) — the old ones are kept for
+        rollback until they're expired.
       </p>
-      ${CV().create(JSON.stringify(simplified, null, 2), 'json', 'metadata.json (simplified)')}
-      <div class="info-box info-box-note" style="margin-top:var(--space-3)">
-        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span>Notice <code>current-schema-id: 3</code> — the table has been through 4 schema versions. Old data files written under schema-id 0 are still readable.</span>
-      </div>
+      ${_codeHTML(JSON.stringify(simplified, null, 2), 'json', 'metadata.json (simplified)')}
+      ${_fieldGuide('Reading the pointers', [
+        ['format-version', 'Iceberg spec level in use — v2 adds row-level deletes, v3 adds deletion vectors.'],
+        ['current-schema-id', 'Which schema in the history queries use now (older files still readable).'],
+        ['current-snapshot-id', 'Which version a plain SELECT sees — change this and you time-travel.'],
+        ['last-sequence-number', 'A monotonic counter bumped every commit; orders snapshots and deletes.'],
+        ['snapshots', 'The whole version chain kept inline — this is what powers time travel & rollback.'],
+        ['properties', 'Tuning knobs: target file size, compression, snapshot retention, and more.'],
+      ])}
+      ${_info('note', 'Because the file is rewritten each commit, it stays small by keeping only <em>metadata</em> — never data. Millions of data files are described indirectly through the manifest layers below, so metadata.json rarely grows past a few hundred KB.')}
     `;
   }
 
   function _snapDetail() {
     const snap = D().metadataJson.content.snapshots[1];
     return `
-      <div class="arch-detail-header" style="padding:0;margin-bottom:var(--space-4)">
-        <div class="arch-detail-icon">📸</div>
-        <div>
-          <div class="arch-detail-title">Current Snapshot</div>
-          <div class="arch-detail-subtitle">snap-8922019143787970520</div>
-        </div>
-      </div>
-      ${CV().create(JSON.stringify(snap, null, 2), 'json', 'Snapshot entry from metadata.json')}
-      <div class="info-box info-box-tip" style="margin-top:var(--space-3)">
-        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span>The <code>manifest-list</code> field points to the snap-*.avro file that lists ALL manifests for this snapshot. Changing the current snapshot pointer is a time-travel or rollback.</span>
-      </div>
+      ${_hdr('📸', 'Current Snapshot', 'Layer 3 · snap-8922019143787970520')}
+      ${_relations([
+        { dir: '↑ Listed in', html: '<strong>metadata.json</strong> → <code>snapshots[]</code> (Layer 2)' },
+        { dir: 'This', self: true, html: '<strong>Snapshot</strong> — one committed version of the table' },
+        { dir: '↓ Points to', html: 'the <strong>manifest list</strong> Avro file (Layer 4)' },
+      ])}
+      <p class="layer-card-desc" style="margin-bottom:var(--space-4)">
+        A snapshot is a complete, immutable picture of the table at one commit. It never holds
+        data itself — it holds a single pointer (<code>manifest-list</code>) to the Avro file
+        that enumerates every manifest, plus a <code>summary</code> of what the commit changed.
+        Reading "the table" means reading whichever snapshot <code>current-snapshot-id</code>
+        names.
+      </p>
+      ${_codeHTML(JSON.stringify(snap, null, 2), 'json', 'Snapshot entry from metadata.json')}
+      ${_fieldGuide('Anatomy of a snapshot', [
+        ['snapshot-id', 'This version\'s unique ID — the value you pass to VERSION AS OF.'],
+        ['parent-snapshot-id', 'The snapshot this one was built on — follow it back to replay history.'],
+        ['sequence-number', 'Commit order; higher wins, and drives which deletes apply to which files.'],
+        ['manifest-list', 'The single pointer down to Layer 4 — everything else hangs off this.'],
+        ['summary', 'operation (append/overwrite/delete) plus added/deleted rows &amp; files.'],
+      ])}
+      ${_info('tip', 'Time travel and rollback are cheap because a snapshot is just this small record. <code>ROLLBACK</code> simply re-points <code>current-snapshot-id</code> at an older entry — no data is copied or rewritten.')}
     `;
   }
 
   function _snap2Detail() {
     return `
-      <div class="arch-detail-header" style="padding:0;margin-bottom:var(--space-4)">
-        <div class="arch-detail-icon">🏷</div>
-        <div>
-          <div class="arch-detail-title">Tagged Snapshot</div>
-          <div class="arch-detail-subtitle">q4_2024_close — 7-year retention</div>
-        </div>
-      </div>
+      ${_hdr('🏷', 'Tagged Snapshot', 'Layer 3 · q4_2024_close — 7-year retention')}
+      ${_relations([
+        { dir: '↑ Held in', html: '<strong>metadata.json</strong> → <code>refs</code> (Layer 2)' },
+        { dir: 'This', self: true, html: 'A <strong>tag</strong> — a named, fixed pointer to one snapshot' },
+        { dir: '↓ Points to', html: 'snapshot <code>3051729675574597004</code>' },
+      ])}
       <p class="layer-card-desc" style="margin-bottom:var(--space-4)">
-        This snapshot is tagged for compliance retention. Even after the normal 7-day expiry window,
-        this snapshot and its data files will be retained for 7 years.
+        A <strong>tag</strong> is a named reference that pins one snapshot in place. Here the
+        Q4 books are frozen for audit: normal snapshots expire after the retention window, but
+        anything a tag points to (and its data files) is protected for as long as the tag lives —
+        7 years in this case.
       </p>
-      ${CV().create(JSON.stringify({
+      ${_codeHTML(JSON.stringify({
         "q4_2024_close": {
           "snapshot-id": 3051729675574597004,
           "type": "tag",
           "max-ref-age-ms": 220752000000
         }
       }, null, 2), 'json', 'Tag definition (from metadata.json refs)')}
-      ${CV().create(`-- Create compliance tag
+      ${_codeHTML(`-- Create compliance tag
 CALL shopkart.system.create_tag(
   'prod.orders',
   'q4_2024_close',
@@ -677,62 +793,74 @@ CALL shopkart.system.create_tag(
 -- Read the tagged snapshot (always same result)
 SELECT * FROM shopkart.prod.orders
 VERSION AS OF 'q4_2024_close';`, 'sql', 'Creating & querying a tag')}
+      ${_info('note', '<strong>Tag vs. branch:</strong> a <em>tag</em> is fixed — it always points to the same snapshot, ideal for audits and reproducible reports. A <em>branch</em> moves forward as you commit to it, enabling write-audit-publish and experimentation without touching <code>main</code>.')}
     `;
   }
 
   function _manifestListDetail() {
     const ml = D().manifestListEntry;
     return `
-      <div class="arch-detail-header" style="padding:0;margin-bottom:var(--space-4)">
-        <div class="arch-detail-icon">📋</div>
-        <div>
-          <div class="arch-detail-title">Manifest List</div>
-          <div class="arch-detail-subtitle">snap-8922...-a3f8bc.avro · 10.3 KB</div>
-        </div>
-      </div>
+      ${_hdr('📋', 'Manifest List', 'Layer 4 · snap-8922...-a3f8bc.avro · 10.3 KB')}
+      ${_relations([
+        { dir: '↑ Pointed to by', html: 'the current <strong>Snapshot</strong> (Layer 3)' },
+        { dir: 'This', self: true, html: '<strong>Manifest list</strong> — index of manifests for this snapshot' },
+        { dir: '↓ Points to', html: '3 <strong>manifest files</strong> — BR, US, DE (Layer 5)' },
+      ])}
       <p class="layer-card-desc" style="margin-bottom:var(--space-4)">
-        Lists all manifest files for this snapshot. The <code>partitions</code> field per entry
-        enables manifest-level pruning — entire manifests are skipped before opening them.
+        One Avro file per snapshot that lists every manifest making up the table, and — crucially —
+        the partition value <em>range</em> covered by each one. This is the first pruning stage:
+        the engine reads this small file and decides which manifests are even worth opening.
       </p>
-      ${CV().create(JSON.stringify(ml.entries[0], null, 2), 'json', 'Entry 1 of 3 (BR manifest)')}
-      <div class="info-box info-box-tip" style="margin-top:var(--space-3)">
-        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span>A query <code>WHERE country_code = 'US'</code> skips the BR and DE manifests entirely — before reading any data file, based purely on these partition bounds.</span>
-      </div>
+      ${_codeHTML(JSON.stringify(ml.entries[0], null, 2), 'json', 'Entry 1 of 3 (BR manifest)')}
+      ${_fieldGuide('Per-manifest entry', [
+        ['manifest_path', 'S3 location of the manifest file this entry describes.'],
+        ['partition_spec_id', 'Which partition layout the files in that manifest were written with.'],
+        ['added_snapshot_id', 'The snapshot that first added this manifest — used by incremental reads.'],
+        ['partitions', 'Min/max partition bounds — the summary that drives manifest-level pruning.'],
+      ])}
+      ${_info('tip', 'A query <code>WHERE country_code = \'US\'</code> reads only this ~10&nbsp;KB file, sees the BR and DE entries can\'t contain US rows, and skips both manifests — before opening a single data file. That\'s the first of Iceberg\'s two pruning stages.')}
     `;
   }
 
   function _manifestBRDetail() {
     const entry = D().manifestFileEntry.entries[0];
     return `
-      <div class="arch-detail-header" style="padding:0;margin-bottom:var(--space-4)">
-        <div class="arch-detail-icon">📊</div>
-        <div>
-          <div class="arch-detail-title">Manifest: Brazil 2024-11-29</div>
-          <div class="arch-detail-subtitle">a1b2c3d4-manifest.avro · 4.2 MB · 3 data files</div>
-        </div>
-      </div>
-      ${CV().create(JSON.stringify(entry, null, 2), 'json', 'Data file entry 1 of 3')}
-      <div class="info-box info-box-note" style="margin-top:var(--space-3)">
-        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span><code>status: 1</code> = ADDED (this file was added in the current snapshot). <code>content: 0</code> = DATA file (not a delete file). Column lower/upper bounds enable data-file level skip.</span>
-      </div>
+      ${_hdr('📊', 'Manifest: Brazil 2024-11-29', 'Layer 5 · a1b2c3d4-manifest.avro · 4.2 MB · 3 data files')}
+      ${_relations([
+        { dir: '↑ Listed in', html: 'the <strong>manifest list</strong> (Layer 4)' },
+        { dir: 'This', self: true, html: '<strong>Manifest</strong> for the BR partition' },
+        { dir: '↓ Points to', html: '3 <strong>Parquet data files</strong> (Layer 6)' },
+      ])}
+      <p class="layer-card-desc" style="margin-bottom:var(--space-4)">
+        An Avro file that lists the actual data files for one partition region, each with rich
+        column statistics. This is the second pruning stage: after the manifest list narrows things
+        to BR, the engine reads these per-file bounds to skip individual Parquet files too.
+      </p>
+      ${_codeHTML(JSON.stringify(entry, null, 2), 'json', 'Data file entry 1 of 3')}
+      ${_fieldGuide('Per-data-file entry', [
+        ['status', '0 = EXISTING, 1 = ADDED, 2 = DELETED — how this file changed in the snapshot.'],
+        ['content', '0 = data file, 1 = position deletes, 2 = equality deletes.'],
+        ['file_path', 'Exact S3 path of the Parquet file the reader will open.'],
+        ['record_count', 'Rows in the file — feeds cost estimates and split planning.'],
+        ['lower_bounds / upper_bounds', 'Per-column min/max — lets the engine skip this file on a predicate.'],
+      ])}
+      ${_info('note', 'These column bounds are what turn a "scan everything" query into a targeted read. <code>WHERE order_id &gt; 90000000</code> can skip any file whose <code>upper_bounds</code> for order_id is below that — no bytes read.')}
     `;
   }
 
   function _manifestUSDetail() {
     return `
-      <div class="arch-detail-header" style="padding:0;margin-bottom:var(--space-4)">
-        <div class="arch-detail-icon">📊</div>
-        <div>
-          <div class="arch-detail-title">Manifest: USA 2024-11-29</div>
-          <div class="arch-detail-subtitle">e5f6g7h8-manifest.avro · 18.7 MB · 389 data files</div>
-        </div>
-      </div>
+      ${_hdr('📊', 'Manifest: USA 2024-11-29', 'Layer 5 · e5f6g7h8-manifest.avro · 18.7 MB · 389 data files')}
+      ${_relations([
+        { dir: '↑ Listed in', html: 'the <strong>manifest list</strong> (Layer 4)' },
+        { dir: 'This', self: true, html: '<strong>Manifest</strong> for the US partition — peer of BR &amp; DE' },
+        { dir: '↓ Points to', html: '389 <strong>Parquet data files</strong> (Layer 6)' },
+      ])}
       <p class="layer-card-desc" style="margin-bottom:var(--space-4)">
-        Black Friday USA orders. 389 Parquet files, each ~128 MB.
-        A query <code>WHERE country_code = 'BR'</code> skips this entire manifest
-        based on the partition bounds in the manifest list.
+        Black Friday made the US the largest region — 389 Parquet files at ~128&nbsp;MB each. It has
+        the same structure as the Brazil manifest, just far more entries. A query filtered to
+        <code>country_code = 'BR'</code> skips this entire manifest at the list stage, never paying
+        to read its 18.7&nbsp;MB.
       </p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-4)">
         ${_statMini('389', 'Data Files')}
@@ -740,27 +868,30 @@ VERSION AS OF 'q4_2024_close';`, 'sql', 'Creating & querying a tag')}
         ${_statMini('~127 MB', 'Avg File Size')}
         ${_statMini('48.2 GB', 'Total Data')}
       </div>
+      ${_info('tip', 'Iceberg targets ~128&nbsp;MB files (<code>write.target-file-size-bytes</code>) to balance parallelism against per-file overhead. The US region hits that target cleanly; smaller regions like Germany end up below it and are prime candidates for compaction.')}
     `;
   }
 
   function _manifestDEDetail() {
     return `
-      <div class="arch-detail-header" style="padding:0;margin-bottom:var(--space-4)">
-        <div class="arch-detail-icon">📊</div>
-        <div>
-          <div class="arch-detail-title">Manifest: Germany 2024-11-29</div>
-          <div class="arch-detail-subtitle">i9j0k1l2-manifest.avro · 2.1 MB · 47 data files</div>
-        </div>
-      </div>
-      <p class="layer-card-desc">
-        Germany orders. Smaller volume — 47 files, 5.9 GB total.
+      ${_hdr('📊', 'Manifest: Germany 2024-11-29', 'Layer 5 · i9j0k1l2-manifest.avro · 2.1 MB · 47 data files')}
+      ${_relations([
+        { dir: '↑ Listed in', html: 'the <strong>manifest list</strong> (Layer 4)' },
+        { dir: 'This', self: true, html: '<strong>Manifest</strong> for the DE partition — peer of BR &amp; US' },
+        { dir: '↓ Points to', html: '47 <strong>Parquet data files</strong> (Layer 6)' },
+      ])}
+      <p class="layer-card-desc" style="margin-bottom:var(--space-4)">
+        A smaller region: 47 files, 5.9&nbsp;GB total. Same manifest structure as BR and US — the
+        three are siblings under the manifest list, one per <code>country_code</code>, and the
+        engine keeps or drops each independently based on the partition bounds.
       </p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-4)">
         ${_statMini('47', 'Data Files')}
         ${_statMini('2.1 MB', 'Manifest Size')}
         ${_statMini('~128 MB', 'Avg File Size')}
         ${_statMini('5.9 GB', 'Total Data')}
       </div>
+      ${_info('note', 'Splitting one snapshot across three partition manifests (BR/US/DE) is what lets a country-filtered query touch only the manifests it needs. Add more countries and you add more sibling manifests — pruning scales with them.')}
     `;
   }
 
@@ -769,6 +900,26 @@ VERSION AS OF 'q4_2024_close';`, 'sql', 'Creating & querying a tag')}
       <div style="font-size:var(--text-xl);font-weight:700;color:var(--text-primary)">${value}</div>
       <div style="font-size:var(--text-xs);color:var(--text-muted)">${label}</div>
     </div>`;
+  }
+
+  /* Position-in-hierarchy strip. rows: [{dir, html}], one flagged self. */
+  function _relations(rows) {
+    return `<div class="arch-rel">` + rows.map(r =>
+      `<div class="arch-rel-row${r.self ? ' is-self' : ''}">
+        <span class="arch-rel-dir">${r.dir}</span>
+        <span class="arch-rel-main">${r.html}</span>
+      </div>`).join('') + `</div>`;
+  }
+
+  /* Field guide: [ [field, meaning], ... ] */
+  function _fieldGuide(title, items) {
+    return `
+      <div class="arch-detail-section">
+        <div class="arch-detail-section-title">${title}</div>
+        <ul class="arch-fields">
+          ${items.map(([f, m]) => `<li><code>${f}</code><span>${m}</span></li>`).join('')}
+        </ul>
+      </div>`;
   }
 
   /* ── Query Path Animation ──────────────────────────────── */
