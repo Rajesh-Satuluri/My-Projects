@@ -19,6 +19,10 @@
       const wrapper = document.createElement('div');
       wrapper.className = 'code-block';
 
+      // Inline explanatory comments apply to JSON only, when the
+      // annotation dictionary is loaded.
+      const annotate = String(lang).toLowerCase() === 'json' && _canAnnotate();
+
       const header = document.createElement('div');
       header.className = 'code-block-header';
 
@@ -26,10 +30,32 @@
       langEl.className = 'code-block-lang';
       langEl.textContent = title || lang.toUpperCase();
 
+      const actions = document.createElement('div');
+      actions.className = 'code-block-actions';
+
+      // ── Comments toggle (JSON only) ──
+      if (annotate) {
+        const hidden = _commentsHidden();
+        if (hidden) wrapper.classList.add('cv-hide-comments');
+        const cmtBtn = document.createElement('button');
+        cmtBtn.className = 'code-block-toggle btn-icon';
+        cmtBtn.type = 'button';
+        cmtBtn.setAttribute('aria-pressed', String(!hidden));
+        cmtBtn.title = 'Show or hide inline explanations';
+        cmtBtn.innerHTML = _iconComment() + '<span>Comments</span>';
+        if (!hidden) cmtBtn.classList.add('active');
+        // Click handled by a delegated document listener (below) so the
+        // toggle keeps working even when a block is embedded via outerHTML.
+        _ensureToggleDelegate();
+        actions.appendChild(cmtBtn);
+      }
+
       const copyBtn = document.createElement('button');
       copyBtn.className = 'code-block-copy btn-icon';
+      copyBtn.type = 'button';
       copyBtn.innerHTML = _iconCopy() + '<span>Copy</span>';
       copyBtn.addEventListener('click', () => {
+        // Always copy the clean source — comments are display-only.
         navigator.clipboard.writeText(code).then(() => {
           copyBtn.classList.add('copied');
           copyBtn.querySelector('span').textContent = 'Copied!';
@@ -39,16 +65,21 @@
           }, 2000);
         });
       });
+      actions.appendChild(copyBtn);
 
       header.appendChild(langEl);
-      header.appendChild(copyBtn);
+      header.appendChild(actions);
 
       const body = document.createElement('div');
       body.className = 'code-block-body';
 
-      const pre = document.createElement('pre');
-      pre.innerHTML = this.highlight(code, lang);
-      body.appendChild(pre);
+      if (annotate) {
+        body.appendChild(_buildAnnotated(code));
+      } else {
+        const pre = document.createElement('pre');
+        pre.innerHTML = this.highlight(code, lang);
+        body.appendChild(pre);
+      }
 
       wrapper.appendChild(header);
       wrapper.appendChild(body);
@@ -171,7 +202,86 @@
     return result;
   }
 
+  /* ── Inline annotations (JSON) ───────────────────────────── */
+  const CMT_KEY = 'iv:json-comments-hidden';
+
+  function _canAnnotate() {
+    return !!(window.IcebergViz &&
+      window.IcebergViz.JsonAnnotations &&
+      typeof window.IcebergViz.JsonAnnotations.lookup === 'function');
+  }
+
+  function _commentsHidden() {
+    try { return localStorage.getItem(CMT_KEY) === '1'; }
+    catch (e) { return false; }
+  }
+
+  // One document-level listener drives every Comments toggle, so buttons
+  // survive being re-serialised through outerHTML (as several screens do).
+  let _toggleDelegated = false;
+  function _ensureToggleDelegate() {
+    if (_toggleDelegated) return;
+    _toggleDelegated = true;
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest && e.target.closest('.code-block-toggle');
+      if (!btn) return;
+      const block = btn.closest('.code-block');
+      if (!block) return;
+      const nowHidden = block.classList.toggle('cv-hide-comments');
+      btn.classList.toggle('active', !nowHidden);
+      btn.setAttribute('aria-pressed', String(!nowHidden));
+      _setCommentsHidden(nowHidden);
+    });
+  }
+  function _setCommentsHidden(hidden) {
+    try {
+      if (hidden) localStorage.setItem(CMT_KEY, '1');
+      else localStorage.removeItem(CMT_KEY);
+    } catch (e) { /* storage unavailable — non-fatal */ }
+  }
+
+  // Leading JSON key on a line, e.g.  `  "file-path": "s3://…",`
+  function _lineKey(rawLine) {
+    const m = /^\s*"((?:\\.|[^"\\])+)"\s*:/.exec(rawLine);
+    return m ? m[1] : '';
+  }
+
+  /**
+   * Build a two-column grid: highlighted code + trailing "// note".
+   * Lines with no known key (or Avro rows that already carry "doc")
+   * get an empty comment cell so the grid stays aligned.
+   */
+  function _buildAnnotated(code) {
+    const ann = window.IcebergViz.JsonAnnotations;
+    const lines = String(code).split('\n');
+    const wrap = document.createElement('div');
+    wrap.className = 'cv-lines';
+
+    lines.forEach((line) => {
+      const codeCell = document.createElement('span');
+      codeCell.className = 'cv-code';
+      codeCell.innerHTML = _highlightJSON(_esc(line)) || '&nbsp;';
+
+      const cmtCell = document.createElement('span');
+      cmtCell.className = 'cv-cmt';
+      // Avro/self-documenting rows already explain themselves via "doc".
+      const note = /"doc"\s*:/.test(line) ? '' : ann.lookup(_lineKey(line));
+      if (note) cmtCell.textContent = '// ' + note;
+
+      wrap.appendChild(codeCell);
+      wrap.appendChild(cmtCell);
+    });
+
+    return wrap;
+  }
+
   /* ── Icon ────────────────────────────────────────────────── */
+  function _iconComment() {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+    </svg>`;
+  }
+
   function _iconCopy() {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
       <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
