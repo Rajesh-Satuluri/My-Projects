@@ -319,6 +319,7 @@
   /* ── Current module tracking ─────────────────────────────── */
   let _currentModuleId = null;
   let _currentModuleInstance = null;
+  let _currentSplit = null; // central canvas↔sidebar resizer for iceberg animated screens
 
   /* ── Hash parsing: #[format/]screen[/step] ───────────────── */
   function _parseHash() {
@@ -371,6 +372,7 @@
     id = id || homeScreen();
     if (id === _currentModuleId) { _seek(step); return; }
 
+    if (_currentSplit) { try { _currentSplit.detach(); } catch (e) {} _currentSplit = null; }
     if (_currentModuleInstance && typeof _currentModuleInstance.destroy === 'function') {
       try { _currentModuleInstance.destroy(); } catch (e) { console.warn('Module destroy error:', e); }
     }
@@ -408,6 +410,16 @@
     }
 
     _currentModuleId = id; _currentModuleInstance = mod;
+
+    /* Central draggable resizer for iceberg animated diagram screens
+       (canvas ↔ step sidebar). Grid-based screens (metadata/manifest/
+       architecture) manage their own resizer and don't match this
+       flex pattern, so they're skipped. Laptop-only via SplitPane. */
+    if (fmt() === 'iceberg' && TV.SplitPane) {
+      try { _currentSplit = TV.SplitPane.attachCanvasSidebar(container, 'iceberg/' + id + '/canvas'); }
+      catch (e) { _currentSplit = null; }
+    }
+
     _setActiveNav(id); _setBreadcrumb(id); _riseIn();
     container.scrollTop = 0; window.scrollTo(0, 0);
 
