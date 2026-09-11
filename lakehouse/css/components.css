@@ -490,6 +490,25 @@
 .code-block-copy:hover { background: var(--bg-3); color: var(--text-primary); }
 .code-block-copy.copied { color: var(--green); }
 
+.code-block-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.code-block-toggle {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  transition: background var(--ease-fast), color var(--ease-fast);
+}
+.code-block-toggle:hover { background: var(--bg-3); color: var(--text-primary); }
+.code-block-toggle.active { color: var(--teal); }
+
 .code-block-body {
   padding: var(--space-4);
   overflow-x: auto;
@@ -501,6 +520,31 @@
   margin: 0;
   white-space: pre;
 }
+
+/* ── Annotated JSON: code + trailing "// note" ───────────────── */
+.code-block-body .cv-lines {
+  display: grid;
+  grid-template-columns: max-content minmax(160px, 1fr);
+  column-gap: var(--space-6);
+  align-items: baseline;
+}
+.code-block-body .cv-code {
+  white-space: pre;
+  font-family: var(--font-mono);
+}
+.code-block-body .cv-cmt {
+  color: var(--text-muted);
+  font-style: italic;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  -webkit-user-select: none;
+  user-select: none;
+}
+/* Toggled off → collapse to a single code column, no gutter. */
+.code-block.cv-hide-comments .cv-lines {
+  grid-template-columns: max-content;
+}
+.code-block.cv-hide-comments .cv-cmt { display: none; }
 
 /* Syntax tokens */
 .tok-key { color: #79c0ff; }       /* JSON keys */
