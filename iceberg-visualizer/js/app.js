@@ -319,7 +319,7 @@
   /* ── Current module tracking ─────────────────────────────── */
   let _currentModuleId = null;
   let _currentModuleInstance = null;
-  let _currentSplit = null; // central canvas↔sidebar resizer for iceberg animated screens
+  let _currentSplit = null; // central canvas↔sidebar resizer for animated screens (all formats)
 
   /* ── Hash parsing: #[format/]screen[/step] ───────────────── */
   function _parseHash() {
@@ -411,12 +411,15 @@
 
     _currentModuleId = id; _currentModuleInstance = mod;
 
-    /* Central draggable resizer for iceberg animated diagram screens
-       (canvas ↔ step sidebar). Grid-based screens (metadata/manifest/
-       architecture) manage their own resizer and don't match this
-       flex pattern, so they're skipped. Laptop-only via SplitPane. */
-    if (fmt() === 'iceberg' && TV.SplitPane) {
-      try { _currentSplit = TV.SplitPane.attachCanvasSidebar(container, 'iceberg/' + id + '/canvas'); }
+    /* Central draggable resizer for any animated diagram screen
+       (canvas ↔ step sidebar), across every format. attachCanvasSidebar
+       only binds where the `-outer/-canvas/-sidebar` flex trio exists —
+       iceberg, Delta (dk-*) and Hudi (hk-*) share it — and returns null
+       otherwise, so Compare, static screens, and grid-based explorers
+       (which manage their own resizer) are harmlessly skipped with no
+       double-attach. Laptop-only, iPad-safe via SplitPane's pointer gate. */
+    if (TV.SplitPane) {
+      try { _currentSplit = TV.SplitPane.attachCanvasSidebar(container, fmt() + '/' + id + '/canvas'); }
       catch (e) { _currentSplit = null; }
     }
 
