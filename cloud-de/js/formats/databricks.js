@@ -1,20 +1,16 @@
-/* Format descriptor — Databricks (stub; built out in Block C). */
+/* ============================================================
+   Format descriptor — Databricks (Block C, fully built).
+   Registers the 12 Databricks service pages + overview home and
+   derives the sidebar navGroups from the catalogue.
+   ============================================================ */
 (function () {
   'use strict';
   const TV = window.TableViz;
 
-  TV.StubHome.register('databricks', {
-    title: 'Databricks',
-    subtitle: 'The Databricks lakehouse layer is next up. Delta Lake, Unity Catalog, Delta Live Tables, Auto Loader, Workflows, Photon, Databricks SQL, MLflow and more — each with the same six-depth detail as the Azure services.',
-    roadmap: [
-      'Delta Lake & Unity Catalog',
-      'Delta Live Tables + Auto Loader + Workflows',
-      'Structured Streaming & Change Data Feed',
-      'Photon, Clusters & Databricks SQL',
-      'MLflow & Delta Sharing',
-    ],
-    ctaHref: '#azure/home',
-    ctaLabel: 'Explore Azure (live now)',
+  TV.ServiceDetail.registerAll('databricks', TV.DatabricksServices);
+  TV.ServiceDetail.registerHome('databricks', {
+    title: 'Databricks Lakehouse',
+    subtitle: 'The interview-critical Databricks components — Delta Lake, Unity Catalog, Delta Live Tables, Auto Loader, Workflows, Structured Streaming, Change Data Feed, Photon, Clusters, Databricks SQL, MLflow and Delta Sharing — each broken down six ways with interview Q&A, and cross-linked to the Azure services they pair with.',
   });
 
   const LOGO = `
@@ -40,9 +36,6 @@
     comparable: true,
     home: 'home',
     logoSvg: LOGO,
-    navGroups: [{
-      id: 'overview', label: 'Overview',
-      items: [{ id: 'home', label: 'Overview', icon: 'home', available: true }],
-    }],
+    navGroups: TV.ServiceDetail.navGroupsFor('databricks', { homeLabel: 'Overview' }),
   });
 })();
