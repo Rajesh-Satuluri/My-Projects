@@ -243,5 +243,63 @@
     },
   ];
 
-  TV.Equivalences = { MATRIX, CONCEPTS };
+  // Migration / design scenarios — the "design a stack" interview format.
+  // Each: prompt, the recommended answer, the mapping steps, and the trap.
+  const SCENARIOS = [
+    {
+      id: 's-adf-synapse-to-dbx',
+      title: 'An ADF + Synapse team moves to Databricks',
+      prompt: 'Your company runs nightly ADF pipelines that load an Azure Synapse dedicated SQL pool serving Power BI. Leadership wants to move to Databricks. What maps to what, and what do you keep?',
+      answer: 'Keep ADLS as the lake and keep Power BI. Replace Synapse serving with Databricks SQL over Gold Delta tables; move ETL from ADF Data Flows into Auto Loader + Delta Live Tables; replace ADF orchestration with Databricks Workflows (or keep ADF as the top-level orchestrator triggering Databricks). Govern with Unity Catalog.',
+      steps: [
+        { from: 'ADLS Gen2 (lake)', to: 'ADLS Gen2 — unchanged', note: 'Databricks uses the same storage via UC external locations.' },
+        { from: 'ADF orchestration', to: 'Databricks Workflows (or ADF triggers Databricks)', note: 'Native DAGs; hybrid keeps ADF if many non-Databricks sources remain.' },
+        { from: 'ADF Mapping Data Flows', to: 'Auto Loader + Delta Live Tables', note: 'Incremental ingest + quality-gated transforms.' },
+        { from: 'Synapse dedicated pool', to: 'Databricks SQL over Gold Delta', note: 'No separate warehouse copy; Photon serves BI.' },
+        { from: 'Power BI', to: 'Power BI — unchanged', note: 'Repoint to a Databricks SQL warehouse.' },
+      ],
+      trap: 'Don’t claim you "replace Event Hubs with Databricks" — this is batch. And don’t forget governance: moving to Databricks means adopting Unity Catalog, not just moving compute.',
+    },
+    {
+      id: 's-realtime-dashboard',
+      title: 'Real-time revenue dashboard',
+      prompt: 'You need a live revenue dashboard: millions of order events per second, 5-minute rolling revenue by category, on Azure. Design the pipeline. When would you use Databricks instead of Stream Analytics?',
+      answer: 'Event Hubs ingests the stream. For a simple windowed aggregation, Azure Stream Analytics (tumbling 5-min window) → Power BI is the low-ops choice. Also enable Event Hubs Capture → ADLS Bronze for the cold path. Use Databricks Structured Streaming instead when you need rich transforms, ML, joins to reference data, or a Delta sink feeding the lakehouse.',
+      steps: [
+        { from: 'Order events', to: 'Azure Event Hubs', note: 'Partitioned by orderId for ordering; Kafka-compatible.' },
+        { from: 'Hot path', to: 'Stream Analytics (5-min tumbling) → Power BI', note: 'Serverless SQL, exactly-once to sink.' },
+        { from: 'Cold path', to: 'Event Hubs Capture → ADLS Bronze (Parquet)', note: 'Zero-code archival for reprocessing.' },
+        { from: 'When complex', to: 'Databricks Structured Streaming → Delta Silver', note: 'Code-first, stateful, ML, Delta-native.' },
+      ],
+      trap: 'A common miss: saying "Databricks ingests the events." Databricks has no broker — you still need Event Hubs (or Kafka) in front of it.',
+    },
+    {
+      id: 's-onprem-sql-to-lake',
+      title: 'Ingest an on-prem SQL Server into the lake',
+      prompt: 'You must land 300 tables from an on-prem SQL Server into an Azure lakehouse nightly, incrementally. Design it.',
+      answer: 'Use ADF with a Self-hosted Integration Runtime to reach on-prem. A metadata-driven pipeline (control table + parameters) copies only changed rows — via CDC/Change Tracking or a watermark column — into ADLS Bronze as Parquet. Then Auto Loader + DLT (or a Databricks job) MERGE changes into Silver Delta. Secrets in Key Vault, access via managed identity, governed by Unity Catalog.',
+      steps: [
+        { from: 'On-prem SQL Server', to: 'ADF Self-hosted IR', note: 'Reaches sources behind the firewall.' },
+        { from: '300 tables', to: 'Metadata-driven ADF pipeline', note: 'One parameterized pipeline + control table.' },
+        { from: 'Incremental', to: 'CDC / Change Tracking / watermark', note: 'Only changed rows, not full reloads.' },
+        { from: 'Bronze → Silver', to: 'Auto Loader + DLT MERGE (or APPLY CHANGES)', note: 'Exactly-once, quality-checked.' },
+      ],
+      trap: 'Forgetting the Self-hosted IR (you can’t reach on-prem with Azure IR), or proposing full-table reloads of 300 tables nightly instead of incremental extraction.',
+    },
+    {
+      id: 's-governance',
+      title: 'Govern PII across lake + warehouse',
+      prompt: 'Compliance asks: where does PII live across our Azure + Databricks estate, who can see it, and what feeds this regulated report? Which tools answer this?',
+      answer: 'Use both governance tools at their right layers. Microsoft Purview scans the whole estate (ADLS, SQL, Synapse, Power BI, on-prem) to classify PII and give cross-system lineage for the report. Unity Catalog enforces access inside Databricks with column masking + row filters at query time and gives lakehouse lineage. Purview answers "where + what feeds this"; UC answers "who can see it in Databricks and is it masked".',
+      steps: [
+        { from: '"Where is PII?"', to: 'Purview scan + classification', note: 'Estate-wide auto-classification.' },
+        { from: '"What feeds the report?"', to: 'Purview cross-system lineage', note: 'Impact analysis across tools.' },
+        { from: '"Who can see it?"', to: 'Unity Catalog grants', note: 'Enforced in the query plan.' },
+        { from: '"Is it masked?"', to: 'UC column masking + row filters', note: 'Dynamic by querying principal.' },
+      ],
+      trap: 'Treating Purview and Unity Catalog as interchangeable. They’re complementary — Purview catalogs/classifies the estate; UC enforces access inside Databricks.',
+    },
+  ];
+
+  TV.Equivalences = { MATRIX, CONCEPTS, SCENARIOS };
 })();
