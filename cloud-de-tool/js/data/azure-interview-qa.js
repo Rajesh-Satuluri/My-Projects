@@ -10,7 +10,7 @@
      Iter 1  — adf-ir (7) + adf-pipeline (3)            ✅
      Iter 2  — adf-pipeline (+4) + storage (5) + synapse (1)  ✅
      Iter 3  — synapse (+3) + security (4) + monitoring (2) + scenario (1)  ✅
-     Iter 4  — scenario / system design + CI/CD (~5)
+     Iter 4  — scenario (+2) + cicd/design (3)          ✅  [Azure complete: 35]
    ============================================================ */
 (function () {
   'use strict';
@@ -131,6 +131,24 @@
       questions: [
         { q: 'Design a real-time pipeline: on-prem SQL Server → ADLS → Databricks → Power BI, with email alerts on failure.',
           a: 'Capture changes at the source with CDC (SQL Server change tracking / CDC, or a tool like Debezium) rather than re-reading whole tables, and land the change events into ADLS Gen2 as a Bronze layer — either through Event Hubs for a truly streaming feed or an ADF/SHIR pull for micro-batch. Databricks then processes it with the medallion pattern: Structured Streaming or Auto Loader ingests Bronze, cleans and de-dupes into Silver Delta tables, and aggregates business metrics into Gold. Power BI connects to a Databricks SQL warehouse (or Synapse) over the Gold tables, using DirectQuery or short refreshes so the dashboard reflects new data quickly. For reliability, orchestrate with Databricks Workflows or ADF, add data-quality expectations (DLT) between layers, and wire failure paths to an alert — an Azure Monitor rule or Logic App — that emails the on-call. Call out the trade-off explicitly: true streaming (Event Hubs + Structured Streaming) for seconds-level latency, micro-batch (ADF + scheduled jobs) when a few minutes is acceptable and simpler to run.' },
+        { q: 'Design a pipeline that pulls from an API every 5 minutes into ADLS, then builds Bronze/Silver/Gold Delta tables, with email on failure.',
+          a: 'A scheduled trigger (ADF or Databricks Workflows) fires every 5 minutes and calls the API — a Copy activity or a small notebook — landing the raw JSON into ADLS Gen2 as the Bronze layer, partitioned by ingestion time. A Databricks job (ideally Auto Loader or DLT) then picks up only the new Bronze files, parses/cleans/de-dupes them into Silver Delta tables, and a second step aggregates business metrics into Gold fact tables. Chain the steps as a Workflow so Silver waits on Bronze and Gold on Silver, add DLT expectations for data quality between layers, and rely on checkpoints so each run processes only new data. Wire the job’s failure path to an Azure Monitor alert or Logic App that emails the on-call. Note the trade-off: a 5-minute micro-batch is simpler and cheaper than true streaming and is the right choice unless you genuinely need sub-minute latency.' },
+        { q: 'How would you migrate a 1 TB on-prem database (or Spark workload) to Azure?',
+          a: 'Split it into a one-time historical load plus ongoing incremental. For the 1 TB history, use ADF with a Self-hosted IR to bulk-copy into ADLS Gen2 — maximising DIU and parallel copy, staging as Parquet/Delta; if the network is the bottleneck, use partitioned parallel copies or physically ship data with Azure Data Box. Then stand up incremental/CDC so daily deltas flow via watermark queries or change tracking rather than reloading everything. If it is a Spark workload moving to Databricks, lift the code onto Databricks clusters, repoint storage to ADLS (abfss / Unity Catalog external locations), convert tables to Delta, and re-tune cluster sizing and partitioning for the new environment. Finally validate with row counts/checksums between source and target, run old and new in parallel for a cutover window, then switch consumers over.' },
+      ],
+    },
+    {
+      id: 'cicd',
+      label: 'CI/CD & Design Principles',
+      icon: 'git-branch',
+      blurb: 'Getting code to production safely, and the principles behind a well-designed pipeline — the senior/lead-level questions.',
+      questions: [
+        { q: 'How do you promote ADF pipelines from Dev to QA/Prod (CI/CD)?',
+          a: 'Connect the Dev factory to a Git repo (Azure DevOps or GitHub) so work happens on feature and collaboration branches, never directly in the live service. Publishing generates ARM templates on the adf_publish branch, and a release pipeline deploys those templates to QA and Prod. Environment-specific values — linked-service endpoints, Key Vault URIs, storage accounts — are parameterised and supplied per stage, so the same template promotes cleanly, with approval gates between environments. The point interviewers listen for: no manual editing in higher environments; everything flows through source control and automated deployment.' },
+        { q: 'How do you do CI/CD for Databricks notebooks and jobs?',
+          a: 'Keep notebooks and code in Git (Databricks Repos integrates directly) and package shared logic as libraries/wheels. A CI pipeline runs unit tests (e.g. pytest over your PySpark logic) and builds the artifact on each pull request; a CD pipeline deploys through the Databricks CLI / REST API or Databricks Asset Bundles, updating job definitions and cluster configs per environment. Secrets come from Key Vault-backed secret scopes, and environment differences (paths, catalog names) are parameterised. So the flow is Git → build/test → deploy jobs — the same discipline as ADF, applied to Spark code.' },
+        { q: 'What are the key design principles when designing a data pipeline?',
+          a: 'Idempotency first — a rerun produces the same result with no duplicates, so failures are safe to retry. Prefer incremental processing over full reloads to control cost and time. Separate concerns into layers (medallion: raw / clean / curated) so each stage has one responsibility and is independently debuggable. Build in data-quality checks and schema enforcement, and make it observable with logging, lineage and failure alerting. Keep it modular and parameterised so one pipeline serves many tables, and design for scale and cost (right-sized compute, sensible partitioning, auto-termination). In one line: reliable, incremental, layered, observable, and cost-efficient.' },
       ],
     },
   ];
