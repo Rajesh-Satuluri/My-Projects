@@ -8,6 +8,8 @@
   const TV = window.TableViz;
 
   TV.ServiceDetail.registerAll('databricks', TV.DatabricksServices);
+  // Register the topic-wise interview-question drill pages (populated from Iteration 5).
+  if (TV.InterviewQA && TV.DatabricksInterviewQA) TV.InterviewQA.register('databricks', TV.DatabricksInterviewQA);
   TV.ServiceDetail.registerHome('databricks', {
     title: 'Databricks Lakehouse',
     subtitle: 'The interview-critical Databricks components — Delta Lake, Unity Catalog, Delta Live Tables, Auto Loader, Workflows, Structured Streaming, Change Data Feed, Photon, Clusters, Databricks SQL, MLflow and Delta Sharing — each broken down six ways with interview Q&A, and cross-linked to the Azure services they pair with.',
@@ -36,6 +38,11 @@
     comparable: true,
     home: 'home',
     logoSvg: LOGO,
-    navGroups: TV.ServiceDetail.navGroupsFor('databricks', { homeLabel: 'Overview' }),
+    navGroups: (function () {
+      const groups = TV.ServiceDetail.navGroupsFor('databricks', { homeLabel: 'Overview' });
+      const iq = TV.InterviewQA && TV.InterviewQA.navGroup('databricks', TV.DatabricksInterviewQA);
+      if (iq) groups.push(iq);
+      return groups;
+    })(),
   });
 })();
