@@ -10,6 +10,8 @@
 
   // Register the 13 service pages + the overview landing.
   TV.ServiceDetail.registerAll('azure', TV.AzureServices);
+  // Register the topic-wise interview-question drill pages.
+  if (TV.InterviewQA && TV.AzureInterviewQA) TV.InterviewQA.register('azure', TV.AzureInterviewQA);
   TV.ServiceDetail.registerHome('azure', {
     title: 'Azure Data Engineering',
     subtitle: 'The interview-critical Azure data services — storage, ingestion, streaming, warehousing, databases, governance and ops — each broken down six ways: what it is, why it exists, how it works, the DE use case, its integrations, and its runtime behavior, with interview Q&A on every page.',
@@ -36,6 +38,11 @@
     comparable: true,
     home: 'home',
     logoSvg: LOGO,
-    navGroups: TV.ServiceDetail.navGroupsFor('azure', { homeLabel: 'Overview' }),
+    navGroups: (function () {
+      const groups = TV.ServiceDetail.navGroupsFor('azure', { homeLabel: 'Overview' });
+      const iq = TV.InterviewQA && TV.InterviewQA.navGroup('azure', TV.AzureInterviewQA);
+      if (iq) groups.push(iq);
+      return groups;
+    })(),
   });
 })();
