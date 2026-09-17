@@ -84,6 +84,24 @@
 .mc-verdict p { font-size:13.5px; color:var(--text-primary); line-height:1.7; margin:0; }
 .mc-back { display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--brand); text-decoration:none; margin-bottom:18px; }
 .mc-back:hover { text-decoration:underline; }
+/* migration scenarios */
+.mc-scn { border:1px solid var(--border-default); border-radius:14px; padding:18px 20px; margin-bottom:16px; background:var(--bg-2); }
+.mc-scn-head { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.mc-scn-q { flex-shrink:0; width:22px; height:22px; border-radius:6px; background:var(--brand); color:#fff; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+.mc-scn-title { font-size:15.5px; font-weight:700; color:var(--text-primary); margin:0; }
+.mc-scn-prompt { font-size:13.5px; color:var(--text-secondary); line-height:1.65; margin:0 0 14px; }
+.mc-scn-answer { border-left:3px solid var(--green); background:var(--bg-1); border-radius:8px; padding:11px 13px; margin-bottom:14px; }
+.mc-scn-l { font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--green); margin-bottom:5px; }
+.mc-scn-answer p { font-size:13px; color:var(--text-primary); line-height:1.65; margin:0; }
+.mc-scn-steps { display:grid; gap:7px; margin-bottom:14px; }
+.mc-scn-step { display:grid; grid-template-columns:minmax(120px,1fr) auto minmax(120px,1.2fr); align-items:baseline; gap:8px; padding:8px 11px; background:var(--bg-1); border:1px solid var(--border-subtle); border-radius:8px; }
+.mc-scn-from { font-size:12px; color:var(--text-secondary); font-weight:600; }
+.mc-scn-arrow { color:var(--brand); font-weight:700; }
+.mc-scn-to { font-size:12px; color:var(--brand); font-weight:700; }
+.mc-scn-note { grid-column:1 / -1; font-size:11.5px; color:var(--text-muted); line-height:1.5; }
+.mc-scn-trap { font-size:12.5px; color:var(--text-secondary); line-height:1.6; background:var(--yellow-subtle); border-radius:8px; padding:10px 13px; }
+.mc-scn-trap-l { font-weight:800; color:var(--yellow); }
+@media (max-width:600px){ .mc-scn-step { grid-template-columns:1fr; } .mc-scn-arrow { display:none; } }
 </style>`;
   }
 
@@ -169,6 +187,44 @@
 </div>`;
   }
 
+  /* ── Migration / design scenarios page ───────────────────── */
+  function renderScenarios(container) {
+    container.className = '';
+    const styles = document.getElementById('mc-styles') ? '' : styleTag();
+    const S = (TV.Equivalences.SCENARIOS) || [];
+    const cards = S.map(s => `
+      <div class="mc-scn" id="scn-${esc(s.id)}">
+        <div class="mc-scn-head">
+          <span class="mc-scn-q">Q</span>
+          <h3 class="mc-scn-title">${esc(s.title)}</h3>
+        </div>
+        <p class="mc-scn-prompt">${esc(s.prompt)}</p>
+        <div class="mc-scn-answer">
+          <div class="mc-scn-l">Recommended approach</div>
+          <p>${esc(s.answer)}</p>
+        </div>
+        <div class="mc-scn-steps">
+          ${s.steps.map(st => `
+            <div class="mc-scn-step">
+              <span class="mc-scn-from">${esc(st.from)}</span>
+              <span class="mc-scn-arrow">→</span>
+              <span class="mc-scn-to">${esc(st.to)}</span>
+              <span class="mc-scn-note">${esc(st.note)}</span>
+            </div>`).join('')}
+        </div>
+        <div class="mc-scn-trap"><span class="mc-scn-trap-l">⚠ Common trap</span> ${esc(s.trap)}</div>
+      </div>`).join('');
+    container.innerHTML = `${styles}
+<div class="mc page-enter">
+  <div class="mc-wrap">
+    <div class="mc-c-eyebrow">Cross-cloud interview drills</div>
+    <h1 class="mc-c-h1">Migration &amp; design scenarios</h1>
+    <p class="mc-c-intro">The "design a stack" / "how would you migrate this" questions interviewers actually ask. Each gives the recommended approach, the service-by-service mapping, and the trap people fall into.</p>
+    ${cards}
+  </div>
+</div>`;
+  }
+
   /* ── Registration ────────────────────────────────────────── */
   function register() {
     if (!TV.Equivalences) return;
@@ -184,6 +240,11 @@
         destroy() { if (TV.AnimationControls) TV.AnimationControls.hide(); },
       });
     });
+    TV.registerModule('multi-cloud', {
+      id: 'scenarios', title: 'Migration Scenarios', group: 'drills', format: 'multi-cloud',
+      render(container) { renderScenarios(container); },
+      destroy() { if (TV.AnimationControls) TV.AnimationControls.hide(); },
+    });
   }
 
   function navGroups() {
@@ -193,6 +254,8 @@
         items: [{ id: 'home', label: 'Equivalence Matrix', icon: 'list', available: true }] },
       { id: 'deep-dives', label: 'Deep Dives',
         items: concepts.map(c => ({ id: c.id, label: c.title, icon: 'columns', available: true })) },
+      { id: 'drills', label: 'Interview Drills',
+        items: [{ id: 'scenarios', label: 'Migration Scenarios', icon: 'message-square', available: true }] },
     ];
   }
 
