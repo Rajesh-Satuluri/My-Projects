@@ -1,23 +1,13 @@
-/* Format descriptor — Multi-Cloud comparison (stub; the equivalence
-   matrix lands in Block D). Registered as a normal visible format
-   for now so the tab is present and honest. */
+/* ============================================================
+   Format descriptor — Multi-Cloud / Cross-Cloud (Block D, built).
+   The Azure ↔ Databricks equivalence matrix + deep-dive concept
+   pages. Registers modules via TV.MultiCloud and derives nav.
+   ============================================================ */
 (function () {
   'use strict';
   const TV = window.TableViz;
 
-  TV.StubHome.register('multi-cloud', {
-    title: 'Cross-Cloud Comparison',
-    subtitle: 'The honest equivalence layer: a side-by-side matrix of Azure ⇄ Databricks (then AWS) capabilities, each rated DIRECT / CLOSE / PARTIAL / NONE. This is the highest-value interview asset and lands right after the Databricks services are in.',
-    roadmap: [
-      'Azure ⇄ Databricks capability matrix',
-      'DIRECT / CLOSE / PARTIAL / NONE ratings',
-      'Deep concept rows (per-cloud bullets)',
-      'Cross-cloud jump chips from any service',
-      'Migration interview questions',
-    ],
-    ctaHref: '#azure/home',
-    ctaLabel: 'Explore Azure (live now)',
-  });
+  TV.MultiCloud.register();
 
   const LOGO = `
     <svg viewBox="0 0 32 32" width="26" height="26" fill="none" aria-hidden="true">
@@ -41,9 +31,6 @@
     comparable: false,
     home: 'home',
     logoSvg: LOGO,
-    navGroups: [{
-      id: 'overview', label: 'Overview',
-      items: [{ id: 'home', label: 'Overview', icon: 'home', available: true }],
-    }],
+    navGroups: TV.MultiCloud.navGroups(),
   });
 })();
