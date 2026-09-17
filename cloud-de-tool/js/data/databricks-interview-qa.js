@@ -12,8 +12,10 @@
      Iter 7  — joins (+5)                               ✅ (joins 9)
      Iter 8  — partitioning (6) + memory-oom (8) + caching (4)     ✅
      Iter 9  — delta (10)                               ✅
-     Iter 10 — file-formats (2) [+ more next]           ✅
-     Later   — streaming, optimization, unity/DBU/workflows, pyspark-coding
+     Iter 10 — file-formats (2)                         ✅
+     Iter 11 — streaming (6) + optimization (6)         ✅
+     Iter 12 — unity (4) + pricing (4) + workflows (3) + pyspark-coding (7)  ✅
+     [Databricks complete: 85 across 14 topics]
    ============================================================ */
 (function () {
   'use strict';
@@ -192,6 +194,114 @@
           a: 'Parquet is a columnar, compressed, splittable format. Being columnar, you read only the columns you need (column pruning) and get far better compression than row formats, and it stores per-column min/max statistics that enable predicate pushdown/file skipping — so analytical queries scan a fraction of the data versus CSV/JSON, and it carries schema. Versus ORC (the other columnar format) they are broadly similar; Parquet is the default in the Spark/Databricks ecosystem and the basis of Delta. CSV/JSON are row-oriented, uncompressed and schema-less — fine as raw landing formats but poor for analytics.' },
         { q: 'What is the difference between row-based and columnar file formats?',
           a: 'Row-based formats (CSV, JSON, Avro) store all fields of a record together, which is efficient for writing whole rows and for OLTP-style access to entire records. Columnar formats (Parquet, ORC) store each column’s values together, which is efficient for analytics: you read only needed columns, compress much better because similar values sit adjacent, and skip data via column statistics. So row formats suit write-heavy or whole-record workloads and columnar suits read-heavy analytical scans — which is why lakehouses land raw data as row/JSON but curate into Parquet/Delta.' },
+      ],
+    },
+    {
+      id: 'streaming',
+      label: 'Structured Streaming',
+      icon: 'activity',
+      blurb: 'Real-time ingestion the Databricks way: the micro-batch model, sources, checkpoints, and Auto Loader.',
+      questions: [
+        { q: 'What is Structured Streaming and how does the micro-batch model work?',
+          a: 'Structured Streaming treats a stream as an unbounded table that grows over time, and you write the same DataFrame/SQL code you would for batch. Under the hood the default engine runs in micro-batches: it periodically checks the source for new data, processes it as a small batch, and updates the result — delivering exactly-once end-to-end with checkpointing. A low-latency Continuous mode exists but is rarely used. The big win is one API and one mental model for batch and streaming, with Delta usable as both a streaming source and sink.' },
+        { q: 'What streaming sources have you used and how do you connect to them?',
+          a: 'Common sources are Apache Kafka, Azure Event Hubs (via its Kafka-compatible endpoint or the EH connector), cloud files through Auto Loader (cloudFiles), and Delta tables themselves. You connect with spark.readStream.format("kafka").option("kafka.bootstrap.servers", ...).option("subscribe", topic) — or format("cloudFiles") for files — then apply transformations and writeStream to a Delta sink with a checkpoint location. The key point: Databricks consumes a broker/stream, it does not provide the broker, so Kafka or Event Hubs still sits in front.' },
+        { q: 'How do checkpoints and offsets give fault tolerance and exactly-once?',
+          a: 'A streaming query keeps a checkpoint directory recording the source offsets it has processed and the state of any aggregations, committed atomically with the output write. On restart it reads the checkpoint, resumes from the last committed offset, and reprocesses nothing already written — giving exactly-once with an idempotent/transactional sink like Delta (at-least-once otherwise). That is why every writeStream needs a stable checkpointLocation; losing it means losing exactly-once and replaying from scratch.' },
+        { q: 'If the Spark streaming job is down, is the Kafka data lost?',
+          a: 'No — Kafka (and Event Hubs) is a durable, replayable log that retains messages for a configured retention period regardless of whether a consumer is reading. If the Spark job goes down, messages keep accumulating in Kafka; when it restarts it resumes from the last committed offset in its checkpoint and catches up. You only lose data if the outage outlasts Kafka’s retention so messages expire before you consume them — which is why retention is sized to cover your worst-case downtime.' },
+        { q: 'What output modes and triggers does Structured Streaming support?',
+          a: 'Output modes are Append (only new rows — for non-aggregated or watermarked-windowed streams), Update (only changed result rows), and Complete (the whole result table each batch — for aggregations). Triggers control cadence: the default processes as fast as it can, ProcessingTime("30 seconds") fixes an interval, Trigger.AvailableNow/Once processes all available data once and stops (great for scheduled incremental jobs), and Continuous is the experimental low-latency mode. You combine mode and trigger to match your latency and aggregation needs.' },
+        { q: 'What is Auto Loader and how does it guarantee exactly-once file ingestion?',
+          a: 'Auto Loader (the cloudFiles source) incrementally ingests new files from cloud storage as they arrive, inferring and evolving schema, and — crucially — tracks exactly which files it has processed in its checkpoint (RocksDB state), so restarts never reprocess or skip files. It has two discovery modes: directory listing (simple, good for modest volumes) and file notification (uses cloud events/queues, scaling to millions of files cheaply). It is the standard way to build the Bronze ingestion layer for file-based streaming.' },
+      ],
+    },
+    {
+      id: 'optimization',
+      label: 'Optimization Techniques',
+      icon: 'zap',
+      blurb: 'The catch-all "how do you make Spark faster" question — the umbrella checklist and the levers that are not just partition tuning.',
+      questions: [
+        { q: 'What optimization techniques have you used in Spark/Databricks?',
+          a: 'A prioritised checklist: broadcast small-dimension joins to avoid shuffles; enable AQE for adaptive partitioning and skew handling; salt residual skew; tune partition count (repartition/coalesce, shuffle partitions) to ~128–256 MB tasks; prefer Spark SQL and built-in functions over Python UDFs; filter and select columns early so Catalyst pushes down predicates and prunes columns; cache only genuinely reused datasets; store data as Parquet/Delta and OPTIMIZE/Z-order to skip data; and right-size the cluster with Photon on. Interviewers want a reasoned, prioritised list with the why behind each, not one trick.' },
+        { q: 'Why should you avoid Python UDFs, and what do you use instead?',
+          a: 'A plain Python UDF runs row-by-row in a separate Python process, so Spark must serialize each row out of the JVM to Python and back — which breaks Catalyst optimisation and Tungsten codegen and adds heavy overhead. Prefer Spark’s built-in SQL functions (native in the JVM and optimised), and if you truly need custom logic use pandas / vectorized UDFs (Arrow-based and batched), which are far faster than plain UDFs. So the order is: built-in functions first, pandas UDFs if necessary, plain Python UDFs only as a last resort.' },
+        { q: 'A daily ETL is slow even with AQE enabled — how do you optimise it further?',
+          a: 'Go beyond AQE to the workload itself. Profile in the Spark UI to find the expensive stage — shuffle, skewed task, spill, or small-file reads. Then attack the root cause: broadcast small joins, salt residual skew AQE did not fully fix, prune and filter earlier to cut data read, fix small files with OPTIMIZE/compaction, partition or Z-order on the filter/join keys, cache truly reused datasets, and switch on Photon. Also check infra — right-size the cluster and ensure Delta files are well-sized. AQE tunes partitions and skew at runtime, but data layout, join strategy and I/O are still yours to optimise.' },
+        { q: 'How do you handle the small output files problem when writing?',
+          a: 'Too many small output files hurt downstream reads. Reduce writer parallelism with coalesce(n) (cheap, no shuffle) or repartition(n) (shuffle but balanced) before writing so you emit fewer, larger files; for Delta, enable Optimized Writes / Auto Compaction, or run OPTIMIZE afterwards to bin-pack. Aim for files roughly 128 MB–1 GB. Watch that coalescing too aggressively cuts write parallelism, so balance file size against throughput.' },
+        { q: 'You need only 3 of 100 columns and filter on one, over millions of rows — how do you optimise the read?',
+          a: 'Lean on columnar pushdown: store the data as Parquet/Delta and simply select the 3 columns and filter on the one. Catalyst applies column pruning (reads only those columns’ chunks) and predicate pushdown (skips row groups/files whose min-max cannot match the filter), so you scan a fraction of the data. Partitioning or Z-ordering on the filter column makes the skipping even stronger. The optimisation is largely free if the format is columnar and you filter/select early rather than reading everything and filtering in memory.' },
+        { q: 'How does Photon speed up workloads?',
+          a: 'Photon is Databricks’ native, vectorised query engine written in C++ that replaces parts of the JVM execution for SQL and DataFrame workloads. It processes data in columnar batches using SIMD, avoiding JVM row-at-a-time overhead, so scans, joins, aggregations and writes run significantly faster and cheaper on the same hardware. You enable it by choosing a Photon-enabled cluster/runtime — the code does not change. It is a common answer to "how do you speed up SQL workloads", with the caveat that it accelerates SQL/DataFrame ops, not arbitrary Python UDF logic.' },
+      ],
+    },
+    {
+      id: 'unity',
+      label: 'Unity Catalog & Governance',
+      icon: 'shield',
+      blurb: 'Governing the lakehouse: what Unity Catalog is, how it beats the Hive metastore, and how you do lineage, access control and quality.',
+      questions: [
+        { q: 'What is Unity Catalog and what are its key features?',
+          a: 'Unity Catalog is Databricks’ unified governance layer for data and AI across workspaces. Key features: a three-level namespace (catalog.schema.table), centralised fine-grained access control with ANSI GRANTs including row-level security and column masking, automatic end-to-end data lineage, a searchable catalog, managed storage credentials/external locations, and auditing — all defined once at the account level and enforced across every workspace. It governs tables, views, volumes (files), models and functions. In short, it centralises identity, permissions, lineage and discovery for the lakehouse.' },
+        { q: 'What does Unity Catalog give you over the legacy Hive metastore?',
+          a: 'The Hive metastore is per-workspace and only maps table names to storage paths with coarse control. Unity Catalog is account-level and adds the three-level namespace, fine-grained grants down to columns/rows (with masking), centralised identity via account groups, automatic lineage, and managed storage credentials — all enforced inside the query plan. So UC governs data consistently across many workspaces and clouds where the Hive metastore was isolated and permission-poor. Migrating from the Hive metastore to UC is a common modernisation task.' },
+        { q: 'How do you implement data governance, lineage and access control in Databricks?',
+          a: 'Implement it with Unity Catalog: define catalogs/schemas per domain, grant privileges to account groups (least privilege) rather than individuals, and apply row-level security and column masking for sensitive data. UC captures lineage automatically — which tables/columns a table derives from and which jobs/notebooks/dashboards consume it — for impact analysis and compliance. Pair it with Delta constraints/expectations for quality and, at the estate level, Purview for cross-source cataloguing. The story to tell: centralised permissions plus lineage plus auditing, enforced at query time.' },
+        { q: 'What is data profiling and how do you do data-quality checks?',
+          a: 'Data profiling means understanding a dataset’s shape before or during processing — row counts, null rates, distinct values, min/max, distributions — which Databricks surfaces via summarize / the notebook data profile or libraries. For ongoing quality you enforce rules: Delta CHECK constraints, DLT expectations that quarantine or drop bad rows, or frameworks like Great Expectations. So profiling is the exploratory "what does the data look like" step, and quality checks/expectations are the enforced gates in the pipeline.' },
+      ],
+    },
+    {
+      id: 'pricing',
+      label: 'Clusters, DBU & Cost',
+      icon: 'sliders',
+      blurb: 'The cost and compute questions: how Databricks bills, how to spend less, and which cluster type for production.',
+      questions: [
+        { q: 'How does Databricks pricing work (the DBU model)?',
+          a: 'Databricks bills in DBUs — Databricks Units — a normalised measure of processing consumed per second, whose rate depends on the workload tier (Jobs vs All-Purpose vs SQL), the SKU, and whether Photon is on. Your total is DBUs × the DBU price for that tier, plus the underlying cloud VM/storage cost you pay to Azure/AWS separately. So a cluster’s cost = compute (DBUs) + cloud infra. Cheaper tiers (Jobs) suit automated pipelines; interactive All-Purpose costs more per DBU.' },
+        { q: 'What levers reduce Databricks cost?',
+          a: 'The big levers: use ephemeral job clusters (cheaper Jobs rate, torn down after each run) instead of leaving All-Purpose clusters running; enable auto-termination on interactive clusters; use autoscaling so you pay only for needed workers; right-size instance types; use spot/low-priority VMs for fault-tolerant jobs; and enable Photon to finish in fewer DBU-seconds. On the data side, incremental processing, good file sizes (OPTIMIZE) and pruning reduce compute. In short: right tier, right size, do not leave it idle, and process less data.' },
+        { q: 'All-purpose vs job cluster — which do you use for production and why?',
+          a: 'An all-purpose (interactive) cluster is shared, long-lived and meant for exploration and collaboration in notebooks — convenient but expensive and easily left running. A job cluster is created for a single job run and terminated when it finishes, at the cheaper Jobs DBU rate, isolated per run. For scheduled production pipelines you use job clusters (or serverless) because they are cheaper, isolated and right-sized per run; reserve all-purpose clusters for development. Leaving an all-purpose cluster running for production is the classic cost mistake.' },
+        { q: 'What Databricks runtime have you used and what does it include?',
+          a: 'The Databricks Runtime is the pre-built image running on cluster nodes — a specific Spark version plus Delta, optimised connectors and libraries. Variants include the standard runtime, Runtime for ML (adds ML libraries and GPU support), and Photon-enabled runtimes, and you typically pick an LTS version for stability. The runtime version matters because features — AQE defaults, liquid clustering, Photon, Unity Catalog support — depend on it, so teams standardise on a recent LTS.' },
+      ],
+    },
+    {
+      id: 'workflows',
+      label: 'Workflows & Orchestration',
+      icon: 'git-branch',
+      blurb: 'Scheduling and chaining jobs: native Workflows, calling notebooks, and passing parameters from ADF.',
+      questions: [
+        { q: 'What orchestration tools have you used for Databricks jobs?',
+          a: 'Databricks Workflows (Jobs) is the native orchestrator — define multi-task DAGs of notebooks/JARs/DLT pipelines with dependencies, retries, schedules and alerts, running on job clusters. Externally, Azure Data Factory orchestrates across the wider Azure estate and can trigger Databricks notebooks, and Apache Airflow is common where teams want code-based DAGs across many systems. Choose Workflows for Databricks-centric pipelines, ADF when coordinating broader Azure services, Airflow for complex cross-platform orchestration — and many shops use ADF to trigger Databricks Workflows.' },
+        { q: 'How do you trigger one notebook from another and pass parameters?',
+          a: 'Use dbutils.notebook.run("path", timeout_seconds, {params}) to run another notebook as a child and get its return value via dbutils.notebook.exit(value) — good for modular flows and passing results. dbutils.notebook.run executes in a separate ephemeral scope, whereas %run inlines another notebook’s code and variables into the current one. For real pipelines prefer Workflows tasks over deep notebook-calls-notebook chaining, but the command interviewers look for is dbutils.notebook.run.' },
+        { q: 'How do you receive parameters passed from ADF into a Databricks notebook?',
+          a: 'ADF’s Databricks Notebook activity passes base parameters, which the notebook reads via widgets: dbutils.widgets.text(...) to declare and dbutils.widgets.get("param_name") to read. The notebook can return a value to ADF with dbutils.notebook.exit(value), which appears in the activity output for downstream steps. So the contract is: ADF sets base parameters → the notebook reads them with dbutils.widgets.get → it optionally returns a value via dbutils.notebook.exit.' },
+      ],
+    },
+    {
+      id: 'pyspark-coding',
+      label: 'PySpark Coding Patterns',
+      icon: 'cpu',
+      blurb: 'The hands-on "share your screen and write it" patterns that come up in almost every PySpark round.',
+      questions: [
+        { q: 'How do you read a multi-line CSV, many CSV files at once, and ignore bad records?',
+          a: 'For a multi-line CSV: spark.read.option("multiLine","true").option("header","true").csv(path). To read many files, point at a directory or glob — spark.read.csv("/data/*.csv") — since Spark reads all matching files into one DataFrame. To tolerate bad rows use option("mode","PERMISSIVE") with columnNameOfCorruptRecord to capture them (or DROPMALFORMED to skip, FAILFAST to error). These options cover the common "how do you read messy CSVs" questions.' },
+        { q: 'How do you remove duplicate rows and handle nulls in a DataFrame?',
+          a: 'Remove duplicates with df.dropDuplicates() (all columns) or dropDuplicates(["k1","k2"]) on a subset key; distinct() dedupes entire rows. To choose which duplicate to keep, window by the key ordered by a timestamp and keep row_number() = 1. Drop nulls with df.na.drop() (how="any"/"all", or subset=[...]) or fill them with df.na.fill(value). For CDC-style "keep the latest", the window + row_number pattern is the expected answer.' },
+        { q: 'How do you add a column derived from the source file name?',
+          a: 'Use the built-in input_file_name() function: df = spark.read.csv(path).withColumn("source_file", input_file_name()), then parse the country/state out of the path with regexp_extract or split. That is exactly how you answer "read india.csv/germany.csv and add a country column from the filename" — read the whole directory, add input_file_name(), and derive the column from it.' },
+        { q: 'How do you remove spaces from all 100 column names at once?',
+          a: 'Rebuild the column list in one shot: df = df.toDF(*[c.replace(" ","_") for c in df.columns]). toDF with the star-unpacked cleaned names renames every column at once. You could loop withColumnRenamed instead, but toDF(*...) is the concise idiom interviewers want — and the star operator is needed because toDF takes varargs, not a list.' },
+        { q: 'How do you split a full-name column (e.g. "Monica Bhat") into first and last name?',
+          a: 'Use split and index: from pyspark.sql.functions import split; df.withColumn("first_name", split("name"," ").getItem(0)).withColumn("last_name", split("name"," ").getItem(1)). split returns an array on the delimiter and getItem picks each part. For names with middle parts, take getItem(0) for first and the remainder for last, or use regexp_extract for more control.' },
+        { q: 'How do you convert one row with an array column back into multiple rows?',
+          a: 'Use explode: from pyspark.sql.functions import explode; df.withColumn("mark", explode("marks")) turns one row with marks=[50,70,90] into three rows, one per element, while keeping the other columns. explode_outer keeps a null row if the array is empty or null. This is the standard answer to "convert a single row with an array column back into multiple rows".' },
+        { q: 'inferSchema vs an explicit schema when reading CSV — which and why?',
+          a: 'inferSchema="true" makes Spark read the data once to guess types — convenient but it costs an extra scan and can guess wrong. In production you supply an explicit StructType (or DDL string) schema: it is faster (no inference pass), deterministic, and rejects or quarantines mismatches. So use inferSchema for ad-hoc exploration and an explicit schema for pipelines — which also ties into schema enforcement on the Delta write.' },
       ],
     },
   ];
