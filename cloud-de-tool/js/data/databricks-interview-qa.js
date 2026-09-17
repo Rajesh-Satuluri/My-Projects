@@ -10,8 +10,10 @@
      Iter 5  — spark-arch (10)                          ✅
      Iter 6  — transformations (6) + joins (4)          ✅ (transformations 6, joins started)
      Iter 7  — joins (+5)                               ✅ (joins 9)
-     Later   — partitioning, memory/OOM, caching, delta, file-formats,
-               streaming, optimization, unity/DBU/workflows, pyspark-coding
+     Iter 8  — partitioning (6) + memory-oom (8) + caching (4)     ✅
+     Iter 9  — delta (10)                               ✅
+     Iter 10 — file-formats (2) [+ more next]           ✅
+     Later   — streaming, optimization, unity/DBU/workflows, pyspark-coding
    ============================================================ */
 (function () {
   'use strict';
@@ -90,6 +92,106 @@
           a: 'Liquid clustering is a newer Delta/Databricks feature that replaces static partitioning and Z-ordering with a flexible clustering scheme: you declare clustering keys and Databricks organises the data files by them, so queries and joins that filter on those keys read far less data. Unlike hive-style partitioning it avoids the small-file and over-partitioning problems and lets you change keys without rewriting the table. It helps joins and filters by improving data skipping on the clustered columns.' },
         { q: 'What is the output of an inner join vs a left join, and how do row counts behave with duplicate keys?',
           a: 'An inner join returns only rows whose key exists in both tables; a left join returns every row from the left table plus matched right rows, with nulls where there is no match. Row counts multiply on duplicate keys: if a key appears twice on the left and three times on the right, an inner join emits 2×3 = 6 rows for that key. So a join can increase the row count — a common gotcha interviewers check by handing you small sample tables and asking for the exact output.' },
+      ],
+    },
+    {
+      id: 'partitioning',
+      label: 'Partitioning & Repartitioning',
+      icon: 'layers',
+      blurb: 'Controlling how data is split across tasks and files — repartition vs coalesce, sizing, and Delta data-skipping.',
+      questions: [
+        { q: 'What is the difference between repartition and coalesce, and which is better for reducing partitions?',
+          a: 'repartition(n) does a full shuffle and can increase or decrease the partition count, producing evenly sized partitions. coalesce(n) only reduces partitions and avoids a full shuffle by merging existing partitions on the same executors, so it is cheaper but can leave uneven partitions. To reduce partitions cheaply — e.g. before writing fewer output files — use coalesce; to increase partitions or to rebalance skew, use repartition despite the shuffle. Rule of thumb: shrinking → coalesce, growing or rebalancing → repartition.' },
+        { q: 'In a skewed job, would you use repartition or coalesce, and why?',
+          a: 'If one partition holds ~90% of the data, coalesce will not help — it merges partitions without redistributing rows, so the hot partition and its overloaded task remain. repartition (ideally on a well-distributed key, or with more partitions) does a full shuffle that spreads rows evenly and breaks up the hot partition. So in a genuinely skewed job you use repartition, or salting plus repartition, accepting the shuffle cost because balanced partitions are exactly what you need. coalesce is only for cheaply reducing partition count when the data is already balanced.' },
+        { q: 'How do you decide the number of partitions for 1 TB of data?',
+          a: 'Work from total cluster cores and a target partition size of roughly 128–256 MB. For 1 TB at ~128 MB that is ~8,000 partitions of work; you want the shuffle-partition count to be a multiple of total executor cores so every core stays busy over several waves of tasks. Concretely: pick an executor shape (e.g. ~5 cores), compute total cores across the cluster, and set spark.sql.shuffle.partitions to about 2–4× that, adjusting so each task handles ~128–256 MB. The aim is partitions small enough to avoid OOM/skew but large enough to avoid tiny-task overhead.' },
+        { q: 'Where does coalesce execute — on the driver or the executor?',
+          a: 'The DataFrame/RDD coalesce runs on the executors, not the driver — it logically merges existing partitions on the worker nodes without a full network shuffle, and no data is pulled to the driver. The confusion usually comes from the SQL COALESCE function, which is a per-row null-handling expression and a completely different thing. So partition coalesce is executor-side partition merging.' },
+        { q: 'Explain partition pruning and Z-ordering in Delta Lake.',
+          a: 'Partition pruning: when a table is physically partitioned by a column such as date, a query filtering on that column reads only the matching partition folders and skips the rest — large I/O savings. Z-ordering (in Delta) is a multi-dimensional clustering of data within files so rows with similar values on the Z-order columns sit together, improving min-max data skipping for high-cardinality columns you filter or join on but would not partition by. Partition on low-cardinality filter columns and Z-order/OPTIMIZE on the high-cardinality ones. Newer runtimes fold both ideas into liquid clustering.' },
+        { q: 'What is the difference between partitioning and bucketing?',
+          a: 'Partitioning splits data into separate directories by a column value (e.g. /date=2024-01-01/), which enables partition pruning but suffers when the column is high-cardinality, creating too many tiny folders. Bucketing hashes a column into a fixed number of buckets/files within each partition, co-locating rows by that key so joins and aggregations on it can avoid a shuffle. Partition on low-cardinality filter columns; bucket on high-cardinality join keys. In Databricks, liquid clustering increasingly replaces manual bucketing and partitioning.' },
+      ],
+    },
+    {
+      id: 'memory-oom',
+      label: 'Memory, OOM & Cluster Sizing',
+      icon: 'zap',
+      blurb: 'The most common live-interview firefight: diagnosing out-of-memory errors, understanding Spark memory, and sizing compute.',
+      questions: [
+        { q: 'What steps do you follow to troubleshoot an OOM error in Spark?',
+          a: 'First identify whether the driver or an executor OOMs — the error and Spark UI show which. Driver OOM usually means you pulled too much back (collect()/toPandas(), broadcasting something too large, a huge result); fix by not collecting and lowering the broadcast threshold. Executor OOM usually means partitions are too large or skewed, too much is cached, or a wide join/aggregation is overflowing; fix by increasing partitions (repartition / more shuffle partitions), handling skew (salting/AQE), raising executor memory or memoryOverhead, and avoiding groupByKey. Use the Spark UI to spot a single long/failing task (skew) and spill metrics. In short: locate driver vs executor, then reduce data per task or raise memory.' },
+        { q: 'Explain Spark memory management (execution vs storage memory).',
+          a: 'Each executor JVM heap is split by the unified memory manager into execution memory (shuffles, joins, sorts, aggregations) and storage memory (cached/persisted data), which share one region and can borrow from each other — execution can evict cached blocks when it needs space. There is also reserved memory and user memory for your own data structures, plus off-heap memoryOverhead for non-JVM allocations (Python workers, network buffers). spark.executor.memory and spark.memory.fraction tune the balance. Knowing that execution can evict storage explains why cached data sometimes disappears under memory pressure.' },
+        { q: 'What is data spilling, and how do you detect and fix it?',
+          a: 'Spilling is when a task’s execution memory cannot hold the data for a shuffle/sort/aggregation, so Spark writes the overflow to local disk and reads it back — correct but slow. You detect it from the "spill (memory)" and "spill (disk)" metrics in the Spark UI stage details. You reduce it by increasing partitions so each task handles less data, raising executor memory, handling skew, and avoiding operations that build huge in-memory structures like groupByKey. A little spill is normal; heavy spill is a signal to repartition or resize.' },
+        { q: 'How would you configure executor memory, cores and number of executors for, say, 70 GB of weekly data?',
+          a: 'Start from a balanced executor shape — commonly ~5 cores and a moderate memory block (e.g. 16–32 GB) — because more than ~5 cores per executor hurts I/O throughput. Compute how many executors fit per node (leaving ~1 core and ~1 GB for the OS/daemons), then total cores across the cluster, and check data-per-core: you want each task to handle ~128–256 MB with headroom for shuffle. Add ~10% memoryOverhead for non-heap needs, and set shuffle partitions to roughly 2–4× total cores. Interviewers want the reasoned formula — cores/executor → executors/node → total cores → partitions — not a magic number.' },
+        { q: 'What cluster size would you recommend for a 100 GB initial load plus 20 GB daily incremental?',
+          a: 'Size for the heavier one-time 100 GB load and let autoscaling handle the lighter daily runs. For 100 GB at ~128 MB/partition that is ~800 partitions; pick a cluster whose total cores clear that in a few waves — a handful of workers with a few hundred GB aggregate memory so data fits with shuffle headroom. For the 20 GB daily incremental a much smaller autoscaling job cluster (or serverless) suffices. Use ephemeral job clusters that terminate after each run and enable autoscaling so you never pay for idle capacity, and stress that incremental processing means you never reprocess the full 100 GB daily.' },
+        { q: 'Would you prefer a cluster of 10 big nodes or 40 small nodes, and why?',
+          a: 'Fewer big nodes give more cores/memory per machine, so large partitions, big broadcasts and memory-hungry joins fit comfortably and there is less inter-machine shuffle — but a single failure loses more work and you can under-utilise at low parallelism. Many small nodes give more parallelism, better fault isolation and often better elasticity/price — but more network shuffle, and each node may be too small for large partitions or broadcasts, risking OOM. Choose big nodes for memory-intensive, shuffle-heavy work; small nodes for highly parallel, easily partitioned work. It is a trade-off between per-node capacity and parallelism/resilience.' },
+        { q: 'How does salting help with an out-of-memory error?',
+          a: 'OOM in a wide operation is often caused by skew — one key’s rows all land in a single partition/task that then cannot fit in memory. Salting spreads that hot key across many partitions by adding a random suffix, so no single task holds the whole hot group at once, which relieves the memory pressure and evens out runtime. It trades a little extra work (exploding the small side, an extra aggregation stage) for avoiding the OOM. So salting fixes OOM specifically when the root cause is skew.' },
+        { q: 'What is the difference between a driver OOM and an executor OOM?',
+          a: 'Driver OOM happens when too much data or metadata lives on the driver — collect()/toPandas() on a big DataFrame, broadcasting a table above the threshold, or a plan with an enormous number of tasks/partitions. Executor OOM happens on the workers when a task’s partition is too big or skewed, too much is cached, or a join/aggregation/sort exceeds execution memory and cannot spill enough. The fixes differ: for the driver, stop pulling data back and lower broadcast size; for executors, add partitions, handle skew, reduce caching, or raise executor memory/overhead. Always diagnose which one first.' },
+      ],
+    },
+    {
+      id: 'caching',
+      label: 'Caching & Persistence',
+      icon: 'activity',
+      blurb: 'When and how to keep data in memory across actions — and the difference between caching and checkpointing.',
+      questions: [
+        { q: 'What is the difference between cache and persist, and what storage levels exist?',
+          a: 'cache() is shorthand for persist() with the default storage level (MEMORY_AND_DISK for DataFrames). persist() lets you choose a StorageLevel — MEMORY_ONLY, MEMORY_AND_DISK, MEMORY_ONLY_SER, DISK_ONLY, plus replicated (_2) and off-heap variants — trading memory against CPU (serialization) against disk. So they are the same mechanism; persist just gives explicit control over where and how the data is stored. Use MEMORY_AND_DISK when the data might not fit in memory so it spills instead of recomputing.' },
+        { q: 'When do you use caching in production, and what are the trade-offs?',
+          a: 'Cache a DataFrame only when you reuse it multiple times — an iterative algorithm, or a dataset feeding several downstream actions — and it is expensive to recompute; caching then turns repeated recomputation into a one-time cost. The trade-offs: cached data consumes memory that could serve shuffles (and can be evicted under pressure), and caching a single-use dataset is pure overhead. So cache deliberately, unpersist when done, and never cache huge single-use data. Remember caching is lazy — it materialises on the first action.' },
+        { q: 'How do you explicitly unpersist cached data?',
+          a: 'Call df.unpersist() (optionally blocking=True) to evict a cached DataFrame/RDD from memory and disk once you no longer need it, freeing that memory for other work. It is good practice in long-running jobs and notebooks where many datasets get cached, because Spark otherwise keeps them until memory pressure forces eviction. Unpersisting promptly avoids the unnecessary eviction of data you still need.' },
+        { q: 'What is the difference between cache and checkpoint?',
+          a: 'Caching keeps the data but preserves the lineage (the DAG), so a lost cached partition is recomputed from its parents — fast, but the lineage can grow long in iterative jobs. Checkpointing writes the data to reliable storage (HDFS/DBFS) and truncates the lineage, so recovery reads from disk instead of recomputing — slower to write but it bounds lineage and is used to stabilise very long iterative jobs and streaming state. So cache is for reuse and performance; checkpoint is for lineage truncation and reliability.' },
+      ],
+    },
+    {
+      id: 'delta',
+      label: 'Delta Lake & Medallion',
+      icon: 'folder',
+      blurb: 'The heart of the lakehouse: the transaction log, ACID features, table maintenance, upserts, and the medallion pattern.',
+      questions: [
+        { q: 'What does Delta Lake give you over plain Parquet?',
+          a: 'Delta stores data as Parquet but adds a transaction log that brings warehouse-grade features: ACID transactions (safe concurrent reads/writes), schema enforcement and evolution, time travel to earlier versions, and MERGE/UPDATE/DELETE — none of which plain Parquet supports. It also enables data skipping, OPTIMIZE/Z-order compaction, and Change Data Feed. So Delta is Parquet plus a log that makes a lake behave transactionally, which is the whole basis of the lakehouse.' },
+        { q: 'How does the Delta transaction log work, and why the checkpoints every ~10 commits?',
+          a: 'Every write commits an ordered JSON entry to the _delta_log describing which Parquet files were added and removed; the table’s current state is the replay of all commits, which gives ACID and time travel. To avoid replaying thousands of tiny JSON files, Delta writes a Parquet checkpoint every ~10 commits that summarises cumulative state, so a reader loads the latest checkpoint and replays only the few commits after it — keeping table-open latency low. That log is also how concurrent writers get optimistic-concurrency conflict detection.' },
+        { q: 'Explain time travel and how you would use it to recover data.',
+          a: 'Because the log versions every commit, you can query an earlier state with VERSION AS OF n or TIMESTAMP AS OF t. To recover from a bad write or accidental delete, read the last good version and RESTORE the table to it (or write it back), effectively undoing the change. It is invaluable for audits, reproducing a report as of a date, or rolling back a broken ETL run — as long as the old files have not yet been VACUUMed away.' },
+        { q: 'What is the trade-off of running VACUUM on a Delta table?',
+          a: 'VACUUM permanently deletes data files no longer referenced by the log that are older than the retention window (default 7 days), reclaiming storage from overwritten/deleted rows and compaction. The trade-off: once those files are gone you can no longer time-travel to versions that relied on them. So VACUUM balances storage cost against how far back you can time travel — do not set retention too low if you need history or have long-running readers.' },
+        { q: 'How do you handle the small-files problem and optimise a Delta table?',
+          a: 'Streaming and frequent small writes create many small Parquet files, which slows reads through excess file listing and opening. OPTIMIZE compacts them into fewer, larger files (bin-packing), and OPTIMIZE ... ZORDER BY (cols) additionally co-locates data on those columns to improve data skipping for filters and joins. Auto Optimize / Optimized Writes can compact automatically on write. Regular OPTIMIZE, plus VACUUM to clean up, is standard Delta table maintenance.' },
+        { q: 'How do you do upserts and SCD Type 2 in Delta?',
+          a: 'MERGE INTO does an atomic upsert: match target and source on a key, then WHEN MATCHED UPDATE/DELETE and WHEN NOT MATCHED INSERT — this is how you apply CDC changes and build Silver tables. For SCD Type 2 you use MERGE to close out the current row (set end-date / active-flag = false) when a tracked attribute changes and insert a new current row, preserving full history. Delta’s ACID guarantees make this safe under concurrency, which plain Parquet cannot do.' },
+        { q: 'What is the difference between Delta Lake and a generic data lake?',
+          a: 'A generic data lake is just files (CSV/JSON/Parquet) on object storage — cheap and flexible but with no transactions, so concurrent writes can corrupt data, there is no schema enforcement, no updates/deletes, and no time travel (the "data swamp" risk). Delta Lake adds a transaction log over that same storage to provide ACID, schema management, upserts and versioning — the reliability of a warehouse with the openness and cost of a lake. That combination is what people mean by "lakehouse".' },
+        { q: 'Explain the medallion (Bronze/Silver/Gold) architecture.',
+          a: 'Medallion organises the lakehouse into three progressively refined layers. Bronze holds raw ingested data as-is — append-only, full fidelity, replayable. Silver holds cleaned, de-duplicated, conformed and joined data — the trustworthy single source. Gold holds business-level aggregates and marts optimised for BI and reporting. Each layer is a set of Delta tables, and the pattern gives clear responsibilities, natural reprocessing points, and data-quality gates between stages. It is the default reference architecture for Databricks pipelines.' },
+        { q: 'What is Change Data Feed and when do you use it?',
+          a: 'Change Data Feed (CDF) makes a Delta table emit the row-level changes — inserts, updates with pre/post images, and deletes — between versions, so downstream consumers process only what changed instead of re-reading the whole table. You enable it per table (delta.enableChangeDataFeed) and read it with readChangeFeed between versions/timestamps. It is ideal for incrementally propagating changes from Silver to Gold or out to external systems — the table-side complement to source-side CDC.' },
+        { q: 'What is the difference between a managed and an external Delta table?',
+          a: 'For a managed table, Databricks/Unity Catalog owns both the metadata and the underlying data location, so DROP TABLE deletes the data too. For an external (unmanaged) table you point at a location you control (e.g. an ADLS path), so the catalog manages only metadata and DROP leaves the files intact. Use managed for lifecycle-coupled data you want the platform to govern fully; external when the data is shared, externally managed, or must survive a table drop.' },
+      ],
+    },
+    {
+      id: 'file-formats',
+      label: 'File Formats & Storage',
+      icon: 'folder',
+      blurb: 'Why analytics runs on columnar formats — Parquet vs the row-based world.',
+      questions: [
+        { q: 'What are the advantages of Parquet over CSV/JSON (and how does it compare to ORC)?',
+          a: 'Parquet is a columnar, compressed, splittable format. Being columnar, you read only the columns you need (column pruning) and get far better compression than row formats, and it stores per-column min/max statistics that enable predicate pushdown/file skipping — so analytical queries scan a fraction of the data versus CSV/JSON, and it carries schema. Versus ORC (the other columnar format) they are broadly similar; Parquet is the default in the Spark/Databricks ecosystem and the basis of Delta. CSV/JSON are row-oriented, uncompressed and schema-less — fine as raw landing formats but poor for analytics.' },
+        { q: 'What is the difference between row-based and columnar file formats?',
+          a: 'Row-based formats (CSV, JSON, Avro) store all fields of a record together, which is efficient for writing whole rows and for OLTP-style access to entire records. Columnar formats (Parquet, ORC) store each column’s values together, which is efficient for analytics: you read only needed columns, compress much better because similar values sit adjacent, and skip data via column statistics. So row formats suit write-heavy or whole-record workloads and columnar suits read-heavy analytical scans — which is why lakehouses land raw data as row/JSON but curate into Parquet/Delta.' },
       ],
     },
   ];
