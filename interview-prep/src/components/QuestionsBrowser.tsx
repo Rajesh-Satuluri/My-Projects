@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { Category, Question } from "@/lib/types";
 import { QuestionRow } from "@/components/ui";
 
@@ -11,15 +12,14 @@ export default function QuestionsBrowser({
   questions,
   categories,
   tags,
-  initialCategory = "",
 }: {
   questions: Question[];
   categories: Category[];
   tags: string[];
-  initialCategory?: string;
 }) {
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState(initialCategory);
+  const [category, setCategory] = useState(searchParams.get("category") ?? "");
   const [difficulty, setDifficulty] = useState("");
   const [status, setStatus] = useState("");
   const [tag, setTag] = useState("");

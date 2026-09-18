@@ -4,6 +4,13 @@ import { getCategory, getQuestion } from "@/lib/data";
 import { Card, DifficultyBadge, StatusBadge, Tag } from "@/components/ui";
 import KeyPointChecklist from "@/components/KeyPointChecklist";
 import AnswerReveal from "@/components/AnswerReveal";
+import { getQuestions } from "@/lib/data";
+
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return getQuestions().map((q) => ({ id: q.id }));
+}
 
 export default async function QuestionDetailPage({
   params,
