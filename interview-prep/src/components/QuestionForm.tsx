@@ -34,6 +34,7 @@ export default function QuestionForm({ existing }: { existing?: Question }) {
   const [difficulty, setDifficulty] = useState<Difficulty>(existing?.difficulty ?? "Medium");
   const [status, setStatus] = useState<PreparedStatus>(existing?.status ?? "Not Prepared");
   const [answer, setAnswer] = useState(existing?.answer ?? "");
+  const [guidance, setGuidance] = useState(existing?.guidance ?? "");
   const [keyPoints, setKeyPoints] = useState(
     existing?.keyPoints.map((k) => k.point).join("\n") ?? ""
   );
@@ -51,6 +52,7 @@ export default function QuestionForm({ existing }: { existing?: Question }) {
       subcategory: subcategory || undefined,
       question,
       answer: answer || undefined,
+      guidance: guidance || undefined,
       difficulty,
       status,
       keyPoints: linesToArray(keyPoints),
@@ -141,6 +143,11 @@ export default function QuestionForm({ existing }: { existing?: Question }) {
             </select>
           </label>
         </div>
+
+        <label className={label}>
+          What the interviewer is looking for <span className="text-muted">(2–3 lines)</span>
+          <textarea rows={3} value={guidance} onChange={(e) => setGuidance(e.target.value)} className={field} />
+        </label>
 
         <label className={label}>
           Answer

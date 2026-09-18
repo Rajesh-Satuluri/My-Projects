@@ -10,6 +10,7 @@ interface QuestionRow {
   subcategory: string | null;
   question: string;
   answer: string | null;
+  guidance: string | null;
   difficulty: Difficulty;
   status: PreparedStatus;
   answer_locked: boolean | null;
@@ -29,6 +30,7 @@ function toQuestion(r: QuestionRow): Question {
     subcategory: r.subcategory ?? undefined,
     question: r.question,
     answer: r.answer ?? undefined,
+    guidance: r.guidance ?? undefined,
     difficulty: r.difficulty,
     status: r.status,
     answerLocked: r.answer_locked ?? false,
@@ -85,6 +87,7 @@ export interface QuestionInput {
   subcategory?: string;
   question: string;
   answer?: string;
+  guidance?: string;
   difficulty: Difficulty;
   status: PreparedStatus;
   keyPoints: string[];
@@ -151,6 +154,7 @@ export async function createQuestion(input: QuestionInput): Promise<string> {
       subcategory: input.subcategory || null,
       question: input.question,
       answer: input.answer || null,
+      guidance: input.guidance || null,
       difficulty: input.difficulty,
       status: input.status,
     })
@@ -169,6 +173,7 @@ export async function updateQuestion(id: string, input: QuestionInput): Promise<
       subcategory: input.subcategory || null,
       question: input.question,
       answer: input.answer || null,
+      guidance: input.guidance || null,
       difficulty: input.difficulty,
       status: input.status,
       updated_at: new Date().toISOString(),
@@ -216,6 +221,30 @@ export async function setAnswerLocked(id: string, locked: boolean): Promise<void
     .update({ answer_locked: locked })
     .eq("id", id);
   if (error) throw error;
+}
+
+export async function saveGuidance(id: string, guidance: string): Promise<void> {
+  const { error } = await supabase
+    .from("questions")
+    .update({ guidance: guidance || null })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+// Replace the key points for a question with a new ordered list.
+export async function saveKeyPoints(id: string, points: string[]): Promise<void> {
+  await supabase.from("question_points").delete().eq("question_id", id);
+  if (points.length) {
+    const { error } = await supabase.from("question_points").insert(
+      points.map((point, i) => ({
+        question_id: id,
+        point,
+        sort_order: i + 1,
+        completed: false,
+      }))
+    );
+    if (error) throw error;
+  }
 }
 
 export async function markReviewed(id: string): Promise<void> {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Question } from "@/lib/types";
 import { DifficultyBadge, StatusBadge, Tag } from "./ui";
 import AnswerPanel from "./AnswerPanel";
+import GuidancePanel from "./GuidancePanel";
 import KeyPointChecklist from "./KeyPointChecklist";
 import { useData } from "./DataProvider";
 
@@ -109,17 +110,19 @@ export default function QuestionItem({
             </div>
           </div>
 
+          <div className="mb-5">
+            <GuidancePanel question={question} />
+          </div>
+
           <AnswerPanel question={question} />
 
           <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-            {question.keyPoints.length > 0 && (
-              <div>
-                <h3 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-muted">
-                  Key points
-                </h3>
-                <KeyPointChecklist points={question.keyPoints} />
-              </div>
-            )}
+            <div>
+              <h3 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-muted">
+                Key points
+              </h3>
+              <KeyPointChecklist points={question.keyPoints} questionId={question.id} />
+            </div>
             {question.followUps.length > 0 && (
               <div>
                 <h3 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-muted">

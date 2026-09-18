@@ -25,6 +25,8 @@ import {
   saveAnswer as dbSaveAnswer,
   setAnswerLocked as dbSetAnswerLocked,
   setPinned as dbSetPinned,
+  saveGuidance as dbSaveGuidance,
+  saveKeyPoints as dbSaveKeyPoints,
 } from "@/lib/db";
 
 interface DataContextValue {
@@ -46,6 +48,8 @@ interface DataContextValue {
   saveAnswer: (id: string, answer: string, locked?: boolean) => Promise<void>;
   setAnswerLocked: (id: string, locked: boolean) => Promise<void>;
   setPinned: (id: string, pinned: boolean) => Promise<void>;
+  saveGuidance: (id: string, guidance: string) => Promise<void>;
+  saveKeyPoints: (id: string, points: string[]) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -152,6 +156,17 @@ export default function DataProvider({ children }: { children: React.ReactNode }
             ),
           }))
         );
+      },
+      saveGuidance: async (id, guidance) => {
+        setQuestions((prev) =>
+          prev.map((q) => (q.id === id ? { ...q, guidance: guidance || undefined } : q))
+        ); // optimistic
+        await dbSaveGuidance(id, guidance);
+      },
+      saveKeyPoints: async (id, points) => {
+        await dbSaveKeyPoints(id, points);
+        const q = await fetchQuestion(id); // refetch to get new point ids
+        if (q) setQuestions((prev) => prev.map((x) => (x.id === id ? q : x)));
       },
       markReviewed: async (id) => {
         const iso = new Date().toISOString();

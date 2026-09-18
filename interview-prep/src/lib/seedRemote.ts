@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 import { categories as seedCategories, questions as seedQuestions } from "./seed";
 import { createQuestion } from "./db";
+import { GUIDANCE } from "./guidance";
 
 // One-time seeding into the logged-in user's Supabase tables. Inserts the 15
 // starter categories and the sample questions, mapping seed category ids to the
@@ -30,13 +31,22 @@ export async function loadStarterData(): Promise<void> {
   // Map seed category id -> real category id via category name.
   const seedIdToName = new Map(seedCategories.map((c) => [c.id, c.name]));
 
-  // Idempotent: skip questions whose text already exists, so re-running only
-  // adds new starter questions rather than duplicating.
-  const { data: existingQs } = await supabase.from("questions").select("question");
-  const existingText = new Set((existingQs ?? []).map((q) => q.question));
+  // Idempotent: skip questions whose text already exists (add only new ones),
+  // but backfill the interviewer guidance on existing rows that lack it.
+  const { data: existingQs } = await supabase
+    .from("questions")
+    .select("id, question, guidance");
+  const existingByText = new Map((existingQs ?? []).map((q) => [q.question, q]));
 
   for (const q of seedQuestions) {
-    if (existingText.has(q.question)) continue;
+    const existing = existingByText.get(q.question);
+    if (existing) {
+      const g = GUIDANCE[q.question];
+      if (g && !existing.guidance) {
+        await supabase.from("questions").update({ guidance: g }).eq("id", existing.id);
+      }
+      continue;
+    }
     const catName = seedIdToName.get(q.categoryId) ?? "";
     const realCatId = byName.get(catName) ?? "";
     await createQuestion({
@@ -44,6 +54,7 @@ export async function loadStarterData(): Promise<void> {
       subcategory: q.subcategory,
       question: q.question,
       answer: q.answer,
+      guidance: GUIDANCE[q.question],
       difficulty: q.difficulty,
       status: q.status,
       keyPoints: q.keyPoints.map((k) => k.point),

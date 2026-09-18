@@ -21,6 +21,7 @@ export interface Question {
   subcategory?: string;
   question: string;
   answer?: string;
+  guidance?: string;
   difficulty: Difficulty;
   status: PreparedStatus;
   answerLocked: boolean;
