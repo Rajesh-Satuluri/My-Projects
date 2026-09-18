@@ -1,10 +1,10 @@
 /* ============================================================
    Cloud DE Visualizer — Multi-Cloud (Cross-Cloud) renderer.
-   Block D: the Azure ↔ Databricks equivalence matrix (home) plus
-   a deep-dive concept page per capability. Rating badges are
-   DIRECT / CLOSE / PARTIAL / NONE. Service cells deep-link to the
-   relevant Azure/Databricks detail pages; matrix rows link to the
-   concept page. Reads TV.Equivalences.
+   Block D: the Azure ↔ Databricks ↔ AWS equivalence matrix
+   (home) plus a deep-dive concept page per capability. Rating
+   badges are DIRECT / CLOSE / PARTIAL / NONE. Service cells
+   deep-link to the relevant Azure/Databricks/AWS detail pages;
+   matrix rows link to the concept page. Reads TV.Equivalences.
    ============================================================ */
 (function () {
   'use strict';
@@ -50,10 +50,10 @@
 .mc-badge--partial { background:var(--yellow-subtle); color:var(--yellow); }
 .mc-badge--none    { background:var(--bg-4);          color:var(--text-muted); }
 .mc-tablewrap { border:1px solid var(--border-default); border-radius:14px; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; }
-.mc-table { width:100%; border-collapse:collapse; font-size:13px; min-width:520px; }
+.mc-table { width:100%; border-collapse:collapse; font-size:13px; min-width:720px; }
 .mc-table thead th { text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted);
   font-weight:800; padding:12px 14px; background:var(--bg-2); border-bottom:1px solid var(--border-default); }
-.mc-table thead th.az { color:var(--brand-2); } .mc-table thead th.db { color:#ff8f6b; }
+.mc-table thead th.az { color:var(--brand-2); } .mc-table thead th.db { color:#ff8f6b; } .mc-table thead th.aws { color:#ff9900; }
 .mc-row { border-bottom:1px solid var(--border-subtle); cursor:pointer; transition:background .12s; }
 .mc-row:last-child { border-bottom:none; }
 .mc-row:hover { background:var(--bg-2); }
@@ -69,16 +69,18 @@
 .mc-c-eyebrow { font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--brand); margin-bottom:8px; }
 .mc-c-h1 { font-size:27px; font-weight:800; letter-spacing:-.02em; color:var(--text-primary); margin:0 0 6px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
 .mc-c-intro { font-size:15px; color:var(--text-secondary); line-height:1.7; margin:0 0 22px; max-width:800px; }
-.mc-cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px; }
-@media (max-width:760px){ .mc-cols { grid-template-columns:1fr; } }
+.mc-cols { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:18px; }
+@media (max-width:920px){ .mc-cols { grid-template-columns:1fr; } }
 .mc-col { border:1px solid var(--border-default); border-radius:14px; padding:18px 18px 8px; background:var(--bg-2); }
 .mc-col--az { border-top:3px solid var(--brand-2); }
 .mc-col--db { border-top:3px solid #ff8f6b; }
+.mc-col--aws { border-top:3px solid #ff9900; }
 .mc-col-h { font-size:14px; font-weight:800; margin:0 0 12px; color:var(--text-primary); }
-.mc-col--az .mc-col-h { color:var(--brand-2); } .mc-col--db .mc-col-h { color:#ff8f6b; }
+.mc-col--az .mc-col-h { color:var(--brand-2); } .mc-col--db .mc-col-h { color:#ff8f6b; } .mc-col--aws .mc-col-h { color:#ff9900; }
 .mc-point { display:flex; gap:9px; margin-bottom:11px; font-size:13px; color:var(--text-secondary); line-height:1.6; }
 .mc-point::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--brand); margin-top:7px; flex-shrink:0; }
 .mc-col--db .mc-point::before { background:#ff8f6b; }
+.mc-col--aws .mc-point::before { background:#ff9900; }
 .mc-verdict { border:1px solid var(--border-default); border-left:3px solid var(--brand); border-radius:10px; padding:14px 16px; background:var(--brand-glow); }
 .mc-verdict-l { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--brand); margin-bottom:6px; }
 .mc-verdict p { font-size:13.5px; color:var(--text-primary); line-height:1.7; margin:0; }
@@ -118,6 +120,7 @@
         <td class="mc-td"><span class="mc-cap">${esc(r.cap)}</span></td>
         <td class="mc-td">${cell(r.az, 'azure')}</td>
         <td class="mc-td">${cell(r.db, 'databricks')}</td>
+        <td class="mc-td">${r.aws ? cell(r.aws, 'aws') : '<span class="mc-svc">—</span>'}</td>
         <td class="mc-td">${badge(r.rating)}<div class="mc-note">${esc(r.note)}</div></td>
         <td class="mc-td">${open}</td>
       </tr>`;
@@ -126,8 +129,8 @@
 <div class="mc page-enter">
   <div class="mc-wrap">
     <div class="mc-hero">
-      <h1>Azure ⇄ Databricks equivalence matrix</h1>
-      <p>How each Azure-native data capability maps onto Databricks — rated honestly. Databricks runs <em>on</em> Azure, so some pairs are the same thing, some are the same job done differently, and a few have no counterpart at all. Click a row to open the deep-dive comparison.</p>
+      <h1>Azure ⇄ Databricks ⇄ AWS equivalence matrix</h1>
+      <p>How each core data-engineering capability maps across Azure, Databricks and AWS — rated honestly. Some are the same thing, some are the same job done differently, and a few have no first-party counterpart in one stack. Click a row to open the deep-dive comparison.</p>
       <div class="mc-legend">
         <span class="mc-legend-item">${badge('DIRECT')} effectively the same / interop-native</span>
         <span class="mc-legend-item">${badge('CLOSE')} same job, different model</span>
@@ -142,6 +145,7 @@
             <th>Capability</th>
             <th class="az">Azure</th>
             <th class="db">Databricks</th>
+            <th class="aws">AWS</th>
             <th>Equivalence</th>
             <th></th>
           </tr>
@@ -178,6 +182,7 @@
     <div class="mc-cols">
       ${col(c.azure, 'az')}
       ${col(c.databricks, 'db')}
+      ${c.aws ? col(c.aws, 'aws') : ''}
     </div>
     <div class="mc-verdict">
       <div class="mc-verdict-l">Interview verdict</div>
