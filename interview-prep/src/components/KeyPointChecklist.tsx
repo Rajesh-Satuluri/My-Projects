@@ -1,14 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import type { KeyPoint } from "@/lib/types";
+import { useData } from "./DataProvider";
 
-// Phase 0: checklist toggles are local UI state only (not persisted).
-// Phase 1 will persist `completed` per point to Supabase.
+// Toggles persist to Supabase (question_points.completed) via the provider.
 export default function KeyPointChecklist({ points }: { points: KeyPoint[] }) {
-  const [checked, setChecked] = useState<Record<string, boolean>>(
-    Object.fromEntries(points.map((p) => [p.id, p.completed]))
-  );
+  const { setPointCompleted } = useData();
 
   if (points.length === 0) {
     return <p className="text-sm text-muted">No key points yet.</p>;
@@ -23,14 +20,10 @@ export default function KeyPointChecklist({ points }: { points: KeyPoint[] }) {
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <input
                 type="checkbox"
-                checked={!!checked[p.id]}
-                onChange={() =>
-                  setChecked((prev) => ({ ...prev, [p.id]: !prev[p.id] }))
-                }
+                checked={p.completed}
+                onChange={() => setPointCompleted(p.id, !p.completed)}
               />
-              <span className={checked[p.id] ? "text-muted line-through" : ""}>
-                {p.point}
-              </span>
+              <span className={p.completed ? "text-muted line-through" : ""}>{p.point}</span>
             </label>
           </li>
         ))}

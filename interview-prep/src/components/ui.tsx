@@ -71,7 +71,7 @@ export function QuestionRow({
 }) {
   return (
     <Link
-      href={`/questions/${id}`}
+      href={`/question?id=${id}`}
       className="flex items-center justify-between gap-4 border-b px-1 py-3 last:border-b-0 hover:bg-[var(--bg)]"
     >
       <div className="min-w-0">

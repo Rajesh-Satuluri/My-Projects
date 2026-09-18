@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useData } from "./DataProvider";
 
 const nav = [
   { href: "/", label: "Dashboard" },
@@ -14,6 +15,7 @@ const nav = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { session, signOut } = useData();
   const [open, setOpen] = useState(false);
 
   const isActive = (href: string) =>
@@ -44,6 +46,20 @@ export default function Sidebar() {
       >
         Settings
       </Link>
+      {session && (
+        <button
+          onClick={() => {
+            setOpen(false);
+            signOut();
+          }}
+          className="mt-1 rounded-md px-3 py-2 text-left text-sm text-muted hover:bg-[var(--bg)]"
+        >
+          Log out
+        </button>
+      )}
+      {session?.user?.email && (
+        <div className="mt-2 truncate px-3 text-xs text-muted">{session.user.email}</div>
+      )}
     </nav>
   );
 
