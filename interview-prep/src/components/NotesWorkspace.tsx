@@ -9,6 +9,7 @@ export default function NotesWorkspace() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [error, setError] = useState<string | null>(null);
   const loadedFor = useRef<string | null>(null);
 
   // Pick a default active tab.
@@ -44,9 +45,19 @@ export default function NotesWorkspace() {
   }, [title, body]);
 
   const addNote = async () => {
-    const id = await createNote();
-    setActiveId(id);
-    loadedFor.current = null;
+    setError(null);
+    try {
+      const id = await createNote();
+      setActiveId(id);
+      loadedFor.current = null;
+    } catch (e) {
+      const msg = e && typeof e === "object" ? (e as { message?: string }).message ?? "" : "";
+      setError(
+        /relation .*notes.* does not exist|could not find the table|schema cache/i.test(msg)
+          ? "The 'notes' table isn't set up yet. Run migration 006 (supabase/migrations/006_notes.sql) in the Supabase SQL editor."
+          : msg || "Couldn't create a note."
+      );
+    }
   };
 
   const removeNote = (id: string) => {
@@ -60,6 +71,7 @@ export default function NotesWorkspace() {
         <button onClick={addNote} className="btn btn-primary mt-4">
           + New note
         </button>
+        {error && <p className="mx-auto mt-4 max-w-md text-sm text-[var(--danger)]">{error}</p>}
       </div>
     );
   }
