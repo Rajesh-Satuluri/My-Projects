@@ -35,9 +35,8 @@ export default function QuestionForm({ existing }: { existing?: Question }) {
   const [status, setStatus] = useState<PreparedStatus>(existing?.status ?? "Not Prepared");
   const [answer, setAnswer] = useState(existing?.answer ?? "");
   const [guidance, setGuidance] = useState(existing?.guidance ?? "");
-  const [keyPoints, setKeyPoints] = useState(
-    existing?.keyPoints.map((k) => k.point).join("\n") ?? ""
-  );
+  // Key points are preserved on edit but no longer edited here (guidance replaces them).
+  const [keyPoints] = useState(existing?.keyPoints.map((k) => k.point).join("\n") ?? "");
   const [followUps, setFollowUps] = useState(existing?.followUps.join("\n") ?? "");
   const [tags, setTags] = useState(existing?.tags.join(", ") ?? "");
   const [busy, setBusy] = useState(false);
@@ -152,11 +151,6 @@ export default function QuestionForm({ existing }: { existing?: Question }) {
         <label className={label}>
           Answer
           <textarea rows={5} value={answer} onChange={(e) => setAnswer(e.target.value)} className={field} />
-        </label>
-
-        <label className={label}>
-          Key Points <span className="text-muted">(one per line)</span>
-          <textarea rows={4} value={keyPoints} onChange={(e) => setKeyPoints(e.target.value)} className={field} />
         </label>
 
         <label className={label}>

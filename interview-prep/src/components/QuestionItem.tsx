@@ -5,7 +5,6 @@ import type { Question } from "@/lib/types";
 import { DifficultyBadge, StatusBadge, Tag } from "./ui";
 import AnswerPanel from "./AnswerPanel";
 import GuidancePanel from "./GuidancePanel";
-import KeyPointChecklist from "./KeyPointChecklist";
 import { useData } from "./DataProvider";
 
 export default function QuestionItem({
@@ -116,29 +115,21 @@ export default function QuestionItem({
 
           <AnswerPanel question={question} />
 
-          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div>
+          {question.followUps.length > 0 && (
+            <div className="mt-6">
               <h3 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-muted">
-                Key points
+                Follow-ups
               </h3>
-              <KeyPointChecklist points={question.keyPoints} questionId={question.id} />
+              <ul className="space-y-1.5 text-sm text-fgSoft">
+                {question.followUps.map((f, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="text-muted">→</span>
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            {question.followUps.length > 0 && (
-              <div>
-                <h3 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-muted">
-                  Follow-ups
-                </h3>
-                <ul className="space-y-1.5 text-sm text-fgSoft">
-                  {question.followUps.map((f, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="text-muted">→</span>
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+          )}
 
           {question.tags.length > 0 && (
             <div className="mt-6 flex flex-wrap gap-1.5 border-t pt-4">

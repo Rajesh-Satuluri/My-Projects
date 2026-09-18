@@ -3,7 +3,6 @@
 import { useState } from "react";
 import type { Category, Question } from "@/lib/types";
 import { Card, DifficultyBadge, StatusBadge } from "@/components/ui";
-import KeyPointChecklist from "@/components/KeyPointChecklist";
 import { useData } from "@/components/DataProvider";
 import { daysAgoLabel } from "@/lib/review";
 
@@ -39,10 +38,12 @@ export default function PracticeDeck({
       <h2 className="text-xl font-semibold tracking-[-0.01em]">{q.question}</h2>
       <p className="mt-1 text-xs text-muted">Last reviewed: {daysAgoLabel(q.lastReviewedAt)}</p>
 
-      {q.keyPoints.length > 0 && (
-        <div className="mt-5">
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Key points</h3>
-          <KeyPointChecklist key={q.id} points={q.keyPoints} />
+      {q.guidance && (
+        <div className="mt-5 rounded-xl border border-l-2 border-l-accent bg-[var(--panel-2)]/40 p-4">
+          <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-accent">
+            What the interviewer is looking for
+          </h3>
+          <p className="whitespace-pre-wrap text-sm leading-6 text-fgSoft">{q.guidance}</p>
         </div>
       )}
 
