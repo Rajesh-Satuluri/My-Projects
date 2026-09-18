@@ -20,7 +20,13 @@ export default function QuestionItem({
   onToggle: () => void;
   highlighted?: boolean;
 }) {
-  const { setStatus, setPinned } = useData();
+  const { setStatus, setPinned, deleteQuestion } = useData();
+
+  const remove = () => {
+    if (confirm(`Delete "${question.question}"? This can't be undone.`)) {
+      deleteQuestion(question.id);
+    }
+  };
 
   return (
     <div
@@ -94,6 +100,12 @@ export default function QuestionItem({
               >
                 Edit details
               </Link>
+              <button
+                onClick={remove}
+                className="btn btn-ghost px-2.5 py-1.5 text-xs text-[var(--danger)]"
+              >
+                Delete
+              </button>
             </div>
           </div>
 
