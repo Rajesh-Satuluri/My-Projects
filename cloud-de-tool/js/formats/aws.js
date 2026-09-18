@@ -1,21 +1,18 @@
-/* Format descriptor — AWS (placeholder; built out after the Azure +
-   Databricks interview push). */
+/* ============================================================
+   Format descriptor — AWS. Registers the AWS service detail
+   pages + overview home and derives the sidebar navGroups from
+   the catalogue. Interview Q&A wiring lands once populated.
+   ============================================================ */
 (function () {
   'use strict';
   const TV = window.TableViz;
 
-  TV.StubHome.register('aws', {
+  TV.ServiceDetail.registerAll('aws', TV.AwsServices);
+  // Register the topic-wise interview-question drill pages (populated later).
+  if (TV.InterviewQA && TV.AwsInterviewQA) TV.InterviewQA.register('aws', TV.AwsInterviewQA);
+  TV.ServiceDetail.registerHome('aws', {
     title: 'Amazon Web Services',
-    subtitle: 'AWS is intentionally parked for a later iteration. The full S3 / Glue / EMR / Athena / Kinesis / Lake Formation catalogue will land here, then feed the three-way cross-cloud equivalence matrix (AWS ⇄ Azure ⇄ Databricks).',
-    roadmap: [
-      'Storage & Lake — S3, Glue Catalog, Lake Formation',
-      'Compute — EMR, EMR Serverless, Athena',
-      'Streaming — Kinesis, MSK',
-      'Orchestration — MWAA, Step Functions',
-      'Then: 3-way cross-cloud matrix',
-    ],
-    ctaHref: '#azure/home',
-    ctaLabel: 'Explore Azure (live now)',
+    subtitle: 'The interview-critical AWS data services — S3, the Glue Data Catalog, Glue ETL and Lake Formation, with EMR, Athena, Redshift, Kinesis and orchestration landing next — each broken down six ways: what it is, why it exists, how it works, the DE use case, its integrations and its runtime behavior.',
   });
 
   const LOGO = `
@@ -43,9 +40,11 @@
     comparable: true,
     home: 'home',
     logoSvg: LOGO,
-    navGroups: [{
-      id: 'overview', label: 'Overview',
-      items: [{ id: 'home', label: 'Overview', icon: 'home', available: true }],
-    }],
+    navGroups: (function () {
+      const groups = TV.ServiceDetail.navGroupsFor('aws', { homeLabel: 'Overview' });
+      const iq = TV.InterviewQA && TV.InterviewQA.navGroup('aws', TV.AwsInterviewQA);
+      if (iq) groups.push(iq);
+      return groups;
+    })(),
   });
 })();
