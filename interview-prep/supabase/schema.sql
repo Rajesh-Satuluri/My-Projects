@@ -57,8 +57,19 @@ create table if not exists question_tags (
   primary key (question_id, tag_id)
 );
 
+create table if not exists notes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid(),
+  title text not null default 'Untitled',
+  body text not null default '',
+  sort_order int not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- Row Level Security
 alter table categories enable row level security;
+alter table notes enable row level security;
 alter table questions enable row level security;
 alter table question_points enable row level security;
 alter table follow_up_questions enable row level security;
@@ -69,7 +80,7 @@ alter table question_tags enable row level security;
 do $$
 declare t text;
 begin
-  foreach t in array array['categories','questions','question_points','follow_up_questions','tags']
+  foreach t in array array['categories','questions','question_points','follow_up_questions','tags','notes']
   loop
     execute format($f$
       create policy "own_rows_select" on %1$I for select using (user_id = auth.uid());

@@ -8,6 +8,14 @@ export interface Category {
   sortOrder: number;
 }
 
+export interface Note {
+  id: string;
+  title: string;
+  body: string;
+  sortOrder: number;
+  updatedAt: string;
+}
+
 export interface KeyPoint {
   id: string;
   point: string;

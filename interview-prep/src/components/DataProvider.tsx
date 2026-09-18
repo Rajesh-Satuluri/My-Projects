@@ -10,11 +10,15 @@ import {
 } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import type { Category, Question } from "@/lib/types";
+import type { Category, Note, Question } from "@/lib/types";
 import {
   fetchCategories,
   fetchQuestions,
   fetchQuestion,
+  fetchNotes,
+  createNote as dbCreateNote,
+  updateNote as dbUpdateNote,
+  deleteNote as dbDeleteNote,
   type QuestionInput,
   createQuestion as dbCreate,
   updateQuestion as dbUpdate,
@@ -36,7 +40,11 @@ interface DataContextValue {
   error: string | null;
   categories: Category[];
   questions: Question[];
+  notes: Note[];
   reload: () => Promise<void>;
+  createNote: () => Promise<string>;
+  updateNote: (id: string, patch: { title?: string; body?: string }) => Promise<void>;
+  deleteNote: (id: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   createQuestion: (input: QuestionInput) => Promise<string>;
@@ -65,6 +73,7 @@ export default function DataProvider({ children }: { children: React.ReactNode }
   const [authReady, setAuthReady] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,9 +91,14 @@ export default function DataProvider({ children }: { children: React.ReactNode }
     setLoading(true);
     setError(null);
     try {
-      const [cats, qs] = await Promise.all([fetchCategories(), fetchQuestions()]);
+      const [cats, qs, ns] = await Promise.all([
+        fetchCategories(),
+        fetchQuestions(),
+        fetchNotes().catch(() => []), // notes table may not exist yet
+      ]);
       setCategories(cats);
       setQuestions(qs);
+      setNotes(ns);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load data");
     } finally {
@@ -97,6 +111,7 @@ export default function DataProvider({ children }: { children: React.ReactNode }
     else {
       setCategories([]);
       setQuestions([]);
+      setNotes([]);
     }
   }, [session, reload]);
 
@@ -117,6 +132,22 @@ export default function DataProvider({ children }: { children: React.ReactNode }
       error,
       categories,
       questions,
+      notes,
+      createNote: async () => {
+        const note = await dbCreateNote("Untitled", notes.length);
+        setNotes((prev) => [...prev, note]);
+        return note.id;
+      },
+      updateNote: async (id, patch) => {
+        setNotes((prev) =>
+          prev.map((n) => (n.id === id ? { ...n, ...patch } : n))
+        ); // optimistic
+        await dbUpdateNote(id, patch);
+      },
+      deleteNote: async (id) => {
+        setNotes((prev) => prev.filter((n) => n.id !== id)); // optimistic
+        await dbDeleteNote(id);
+      },
       reload,
       signIn,
       signOut,
@@ -199,7 +230,7 @@ export default function DataProvider({ children }: { children: React.ReactNode }
         await dbSetPinned(id, pinned);
       },
     }),
-    [session, authReady, loading, error, categories, questions, reload, signIn, signOut]
+    [session, authReady, loading, error, categories, questions, notes, reload, signIn, signOut]
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

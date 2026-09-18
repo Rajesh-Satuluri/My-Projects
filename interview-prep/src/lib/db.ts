@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { Category, Difficulty, PreparedStatus, Question } from "./types";
+import type { Category, Difficulty, Note, PreparedStatus, Question } from "./types";
 
 // Maps Supabase rows <-> domain types. All calls run as the logged-in user,
 // so RLS scopes every row automatically; we set user_id = auth.uid() on insert.
@@ -61,6 +61,48 @@ export async function fetchCategories(): Promise<Category[]> {
     description: c.description ?? undefined,
     sortOrder: c.sort_order,
   }));
+}
+
+// ---- Notes ----------------------------------------------------------------
+
+function toNote(r: { id: string; title: string; body: string; sort_order: number; updated_at: string }): Note {
+  return { id: r.id, title: r.title, body: r.body, sortOrder: r.sort_order, updatedAt: r.updated_at };
+}
+
+export async function fetchNotes(): Promise<Note[]> {
+  const { data, error } = await supabase
+    .from("notes")
+    .select("id, title, body, sort_order, updated_at")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map(toNote);
+}
+
+export async function createNote(title: string, sortOrder: number): Promise<Note> {
+  const { data, error } = await supabase
+    .from("notes")
+    .insert({ title, sort_order: sortOrder })
+    .select("id, title, body, sort_order, updated_at")
+    .single();
+  if (error) throw error;
+  return toNote(data);
+}
+
+export async function updateNote(
+  id: string,
+  patch: { title?: string; body?: string }
+): Promise<void> {
+  const { error } = await supabase
+    .from("notes")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteNote(id: string): Promise<void> {
+  const { error } = await supabase.from("notes").delete().eq("id", id);
+  if (error) throw error;
 }
 
 export async function fetchQuestions(): Promise<Question[]> {

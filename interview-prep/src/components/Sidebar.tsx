@@ -11,6 +11,7 @@ const nav = [
   { href: "/questions", label: "Questions", icon: "❯" },
   { href: "/categories", label: "Categories", icon: "▦" },
   { href: "/practice", label: "Practice", icon: "◐" },
+  { href: "/notes", label: "Notes", icon: "✎" },
   { href: "/checklists", label: "Checklists", icon: "☑" },
 ];
 
