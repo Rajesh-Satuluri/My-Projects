@@ -192,4 +192,55 @@ select {
     border: 1px solid var(--border-strong);
     color: var(--fg-soft);
   }
+
+  /* Icon-only button: give it a real tap area (used for pin, etc.). */
+  .icon-btn {
+    @apply inline-grid place-items-center rounded-md;
+    height: 32px;
+    width: 32px;
+  }
+}
+
+/* ---- Touch / iPad ergonomics -------------------------------------------
+   Scoped to coarse pointers so the mouse/desktop web UI is unaffected. */
+@media (pointer: coarse) {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* 16px inputs prevent iOS Safari from zooming in on focus */
+  input,
+  textarea,
+  select,
+  .input {
+    font-size: 16px !important;
+  }
+  /* Comfortable 44px minimum tap targets (Apple HIG) */
+  .btn {
+    min-height: 44px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .icon-btn {
+    height: 44px;
+    width: 44px;
+    font-size: 1.15rem;
+  }
+  select.input {
+    min-height: 44px;
+  }
+  input[type="checkbox"] {
+    height: 1.25rem;
+    width: 1.25rem;
+  }
+  /* Roomier list rows and nav for fingers */
+  nav a {
+    min-height: 44px;
+  }
+  /* Keyboard-shortcut hint is irrelevant without a keyboard */
+  .kbd-hint {
+    display: none;
+  }
 }

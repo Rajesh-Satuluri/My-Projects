@@ -191,7 +191,7 @@ export default function QuestionsBrowser({
         )}
       </div>
 
-      <p className="mt-6 text-center text-xs text-muted">
+      <p className="kbd-hint mt-6 text-center text-xs text-muted">
         Shortcuts: <kbd>/</kbd> search · <kbd>j</kbd>/<kbd>k</kbd> move · <kbd>Enter</kbd> open · <kbd>e</kbd> edit
       </p>
     </div>

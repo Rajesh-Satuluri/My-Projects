@@ -38,13 +38,13 @@ export default function PracticeDeck({
       </div>
 
       <div className="mt-6 flex items-center justify-between text-sm">
-        <button onClick={() => go(-1)} className="rounded-md border px-3 py-1.5 hover:bg-[var(--bg)]">
+        <button onClick={() => go(-1)} className="btn btn-outline">
           ← Previous
         </button>
         <span className="text-muted">
-          Question {i + 1} / {questions.length}
+          {i + 1} / {questions.length}
         </span>
-        <button onClick={() => go(1)} className="rounded-md border px-3 py-1.5 hover:bg-[var(--bg)]">
+        <button onClick={() => go(1)} className="btn btn-outline">
           Next →
         </button>
       </div>

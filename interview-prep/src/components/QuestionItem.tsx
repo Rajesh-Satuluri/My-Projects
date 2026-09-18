@@ -39,7 +39,7 @@ export default function QuestionItem({
             setPinned(question.id, !question.pinned);
           }}
           title={question.pinned ? "Unpin" : "Pin to top"}
-          className={`shrink-0 text-base transition-colors ${
+          className={`icon-btn shrink-0 text-base transition-colors ${
             question.pinned ? "text-[var(--warning)]" : "text-muted hover:text-fg"
           }`}
         >

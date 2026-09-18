@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
@@ -14,6 +14,17 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Interview Prep",
   description: "Personal interview preparation workspace",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Interview Prep" },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f7f7f8" },
+    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+  ],
 };
 
 export default function RootLayout({

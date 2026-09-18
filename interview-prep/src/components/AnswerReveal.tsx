@@ -8,12 +8,9 @@ export default function AnswerReveal({ answer }: { answer?: string }) {
   if (!answer) return <p className="text-sm text-muted">No answer written yet.</p>;
 
   return shown ? (
-    <p className="whitespace-pre-wrap text-sm leading-relaxed">{answer}</p>
+    <p className="whitespace-pre-wrap text-[15px] leading-7 text-fgSoft">{answer}</p>
   ) : (
-    <button
-      onClick={() => setShown(true)}
-      className="rounded-md border px-3 py-1.5 text-sm hover:bg-[var(--bg)]"
-    >
+    <button onClick={() => setShown(true)} className="btn btn-outline">
       Show answer
     </button>
   );
