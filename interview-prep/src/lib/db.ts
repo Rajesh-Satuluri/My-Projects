@@ -90,49 +90,55 @@ export interface QuestionInput {
   tags: string[];
 }
 
-async function replaceChildren(questionId: string, input: QuestionInput) {
-  // Key points
-  await supabase.from("question_points").delete().eq("question_id", questionId);
-  if (input.keyPoints.length) {
-    await supabase.from("question_points").insert(
-      input.keyPoints.map((point, i) => ({
-        question_id: questionId,
-        point,
-        sort_order: i + 1,
-        completed: false,
-      }))
-    );
-  }
-
-  // Follow-ups
-  await supabase.from("follow_up_questions").delete().eq("question_id", questionId);
-  if (input.followUps.length) {
-    await supabase.from("follow_up_questions").insert(
-      input.followUps.map((question) => ({ question_id: questionId, question }))
-    );
-  }
-
-  // Tags: ensure each tag exists for this user, then relink
-  await supabase.from("question_tags").delete().eq("question_id", questionId);
-  for (const name of input.tags) {
-    const { data: existing } = await supabase
+async function resolveTagIds(names: string[]): Promise<string[]> {
+  if (!names.length) return [];
+  // One query to find existing tags, one upsert for the rest.
+  const { data: found } = await supabase.from("tags").select("id, name").in("name", names);
+  const byName = new Map((found ?? []).map((t) => [t.name as string, t.id as string]));
+  const missing = names.filter((n) => !byName.has(n));
+  if (missing.length) {
+    const { data: created } = await supabase
       .from("tags")
-      .select("id")
-      .eq("name", name)
-      .maybeSingle();
-    let tagId = existing?.id;
-    if (!tagId) {
-      const { data: created } = await supabase
-        .from("tags")
-        .insert({ name })
-        .select("id")
-        .single();
-      tagId = created?.id;
-    }
-    if (tagId) {
-      await supabase.from("question_tags").insert({ question_id: questionId, tag_id: tagId });
-    }
+      .insert(missing.map((name) => ({ name })))
+      .select("id, name");
+    (created ?? []).forEach((t) => byName.set(t.name as string, t.id as string));
   }
+  return names.map((n) => byName.get(n)).filter((id): id is string => !!id);
+}
+
+async function replaceChildren(questionId: string, input: QuestionInput) {
+  // Clear existing children in parallel.
+  await Promise.all([
+    supabase.from("question_points").delete().eq("question_id", questionId),
+    supabase.from("follow_up_questions").delete().eq("question_id", questionId),
+    supabase.from("question_tags").delete().eq("question_id", questionId),
+  ]);
+
+  const tagIds = await resolveTagIds(input.tags);
+
+  // Insert new children in parallel (single insert per table).
+  await Promise.all([
+    input.keyPoints.length
+      ? supabase.from("question_points").insert(
+          input.keyPoints.map((point, i) => ({
+            question_id: questionId,
+            point,
+            sort_order: i + 1,
+            completed: false,
+          }))
+        )
+      : Promise.resolve(),
+    input.followUps.length
+      ? supabase.from("follow_up_questions").insert(
+          input.followUps.map((question) => ({ question_id: questionId, question }))
+        )
+      : Promise.resolve(),
+    tagIds.length
+      ? supabase
+          .from("question_tags")
+          .insert(tagIds.map((tag_id) => ({ question_id: questionId, tag_id })))
+      : Promise.resolve(),
+  ]);
 }
 
 export async function createQuestion(input: QuestionInput): Promise<string> {
@@ -183,11 +189,17 @@ export async function setStatus(id: string, status: PreparedStatus): Promise<voi
   if (error) throw error;
 }
 
-export async function saveAnswer(id: string, answer: string): Promise<void> {
-  const { error } = await supabase
-    .from("questions")
-    .update({ answer: answer || null, updated_at: new Date().toISOString() })
-    .eq("id", id);
+export async function saveAnswer(
+  id: string,
+  answer: string,
+  locked?: boolean
+): Promise<void> {
+  const patch: Record<string, unknown> = {
+    answer: answer || null,
+    updated_at: new Date().toISOString(),
+  };
+  if (locked !== undefined) patch.answer_locked = locked;
+  const { error } = await supabase.from("questions").update(patch).eq("id", id);
   if (error) throw error;
 }
 

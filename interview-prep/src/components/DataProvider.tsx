@@ -14,6 +14,7 @@ import type { Category, Question } from "@/lib/types";
 import {
   fetchCategories,
   fetchQuestions,
+  fetchQuestion,
   type QuestionInput,
   createQuestion as dbCreate,
   updateQuestion as dbUpdate,
@@ -39,7 +40,7 @@ interface DataContextValue {
   deleteQuestion: (id: string) => Promise<void>;
   setStatus: (id: string, status: Question["status"]) => Promise<void>;
   setPointCompleted: (pointId: string, completed: boolean) => Promise<void>;
-  saveAnswer: (id: string, answer: string) => Promise<void>;
+  saveAnswer: (id: string, answer: string, locked?: boolean) => Promise<void>;
   setAnswerLocked: (id: string, locked: boolean) => Promise<void>;
 }
 
@@ -113,20 +114,28 @@ export default function DataProvider({ children }: { children: React.ReactNode }
       signOut,
       createQuestion: async (input) => {
         const id = await dbCreate(input);
-        await reload();
+        const q = await fetchQuestion(id); // fetch just the new row, not everything
+        if (q) setQuestions((prev) => [q, ...prev]);
         return id;
       },
       updateQuestion: async (id, input) => {
         await dbUpdate(id, input);
-        await reload();
+        const q = await fetchQuestion(id);
+        if (q) setQuestions((prev) => prev.map((x) => (x.id === id ? q : x)));
       },
       deleteQuestion: async (id) => {
+        setQuestions((prev) => prev.filter((x) => x.id !== id)); // optimistic
         await dbDelete(id);
-        await reload();
       },
       setStatus: async (id, status) => {
+        setQuestions((prev) =>
+          prev.map((q) =>
+            q.id === id
+              ? { ...q, status, lastReviewedAt: new Date().toISOString() }
+              : q
+          )
+        ); // optimistic
         await dbSetStatus(id, status);
-        await reload();
       },
       setPointCompleted: async (pointId, completed) => {
         await dbSetPoint(pointId, completed);
@@ -140,17 +149,22 @@ export default function DataProvider({ children }: { children: React.ReactNode }
           }))
         );
       },
-      saveAnswer: async (id, answer) => {
-        await dbSaveAnswer(id, answer);
+      saveAnswer: async (id, answer, locked) => {
+        // optimistic: reflect immediately, persist in one round-trip
         setQuestions((prev) =>
-          prev.map((q) => (q.id === id ? { ...q, answer: answer || undefined } : q))
+          prev.map((q) =>
+            q.id === id
+              ? { ...q, answer: answer || undefined, ...(locked !== undefined ? { answerLocked: locked } : {}) }
+              : q
+          )
         );
+        await dbSaveAnswer(id, answer, locked);
       },
       setAnswerLocked: async (id, locked) => {
-        await dbSetAnswerLocked(id, locked);
         setQuestions((prev) =>
           prev.map((q) => (q.id === id ? { ...q, answerLocked: locked } : q))
-        );
+        ); // optimistic
+        await dbSetAnswerLocked(id, locked);
       },
     }),
     [session, authReady, loading, error, categories, questions, reload, signIn, signOut]

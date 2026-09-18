@@ -10,24 +10,25 @@ import type { Question } from "@/lib/types";
 export default function AnswerPanel({ question }: { question: Question }) {
   const { saveAnswer, setAnswerLocked } = useData();
   const [draft, setDraft] = useState(question.answer ?? "");
-  const [busy, setBusy] = useState(false);
-  const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [status, setStatusText] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const locked = question.answerLocked;
 
-  const unlock = async () => {
-    setBusy(true);
+  const unlock = () => {
     setDraft(question.answer ?? "");
-    await setAnswerLocked(question.id, false);
-    setBusy(false);
+    setAnswerLocked(question.id, false); // optimistic in provider; no need to await
   };
 
   const save = async (thenLock: boolean) => {
-    setBusy(true);
-    await saveAnswer(question.id, draft);
-    if (thenLock) await setAnswerLocked(question.id, true);
-    setSavedAt(new Date().toLocaleTimeString());
-    setBusy(false);
+    setStatusText("saving");
+    try {
+      // single combined round-trip (answer + optional lock)
+      await saveAnswer(question.id, draft, thenLock ? true : undefined);
+      setStatusText("saved");
+      setTimeout(() => setStatusText("idle"), 2000);
+    } catch {
+      setStatusText("error");
+    }
   };
 
   if (locked) {
@@ -39,8 +40,7 @@ export default function AnswerPanel({ question }: { question: Question }) {
           </span>
           <button
             onClick={unlock}
-            disabled={busy}
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-[var(--bg)] disabled:opacity-60"
+            className="rounded-md border px-3 py-1.5 text-sm hover:bg-[var(--bg)]"
           >
             Unlock to edit
           </button>
@@ -60,7 +60,9 @@ export default function AnswerPanel({ question }: { question: Question }) {
         <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 px-2 py-0.5 text-xs text-amber-600">
           ✎ Editing
         </span>
-        {savedAt && <span className="text-xs text-muted">Saved {savedAt}</span>}
+        {status === "saving" && <span className="text-xs text-muted">Saving…</span>}
+        {status === "saved" && <span className="text-xs text-emerald-600">Saved ✓</span>}
+        {status === "error" && <span className="text-xs text-rose-600">Save failed — retry</span>}
       </div>
       <textarea
         rows={8}
@@ -72,15 +74,13 @@ export default function AnswerPanel({ question }: { question: Question }) {
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           onClick={() => save(true)}
-          disabled={busy}
-          className="rounded-md bg-accent px-3 py-1.5 text-sm text-white disabled:opacity-60"
+          className="rounded-md bg-accent px-3 py-1.5 text-sm text-white"
         >
-          {busy ? "Saving…" : "Save & lock"}
+          Save &amp; lock
         </button>
         <button
           onClick={() => save(false)}
-          disabled={busy}
-          className="rounded-md border px-3 py-1.5 text-sm hover:bg-[var(--bg)] disabled:opacity-60"
+          className="rounded-md border px-3 py-1.5 text-sm hover:bg-[var(--bg)]"
         >
           Save
         </button>
