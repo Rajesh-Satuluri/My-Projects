@@ -10,13 +10,54 @@
      Iter 1  — adf-ir (7) + adf-pipeline (3)            ✅
      Iter 2  — adf-pipeline (+4) + storage (5) + synapse (1)  ✅
      Iter 3  — synapse (+3) + security (4) + monitoring (2) + scenario (1)  ✅
-     Iter 4  — scenario (+2) + cicd/design (3)          ✅  [Azure complete: 35]
+     Iter 4  — scenario (+2) + cicd/design (3)          ✅  [Azure core complete: 35]
+
+   ADF deep-dive expansion (curated ~100 ADF Q&A, tagged by concept):
+     ADF-1  — adf-fundamentals (10)                     ✅
    ============================================================ */
 (function () {
   'use strict';
   const TV = window.TableViz;
 
   const TOPICS = [
+    {
+      id: 'adf-fundamentals',
+      label: 'ADF — Fundamentals & vs SSIS/Databricks',
+      icon: 'book',
+      blurb: 'The opening questions of almost every Azure Data Factory interview: what ADF is, its building blocks, and how it sits next to SSIS, Databricks and Synapse. Get these crisp and you set the tone for the rest of the round.',
+      questions: [
+        { q: 'What is Azure Data Factory and what problem does it solve?',
+          tags: ['Core Concept', 'Architecture', 'ELT'],
+          a: 'Azure Data Factory is Azure’s fully managed, serverless data-integration service. It solves the problem of getting data out of many disparate sources — on-prem databases, SaaS APIs, files, cloud stores — into a central place, and orchestrating the steps that clean and reshape it, without you having to run or maintain your own scheduler and servers. You build pipelines of activities that copy, transform and control the flow, then schedule or trigger them and monitor every run from one place. In practice it is the control plane of an Azure data platform: it lands raw data in the lake and orchestrates the Spark or SQL jobs that build the curated layers.' },
+        { q: 'What are the core components (building blocks) of ADF?',
+          tags: ['Core Concept', 'Architecture'],
+          a: 'Five components matter. A pipeline is a logical grouping of activities that together perform a task. An activity is a single step — copy data, run a notebook, run a stored procedure, loop or branch. A dataset is a named view of the data an activity points at — a table or a file path with a format. A linked service is the connection definition — which storage account or database, plus how to authenticate. And the Integration Runtime is the compute that actually executes the activity. Triggers sit on top and decide when a pipeline runs. If you can explain those, you have explained ADF.' },
+        { q: 'What is the difference between a linked service and a dataset?',
+          tags: ['Linked Service', 'Dataset', 'Core Concept'],
+          a: 'A linked service is the connection — it tells ADF which resource to connect to and how to authenticate, for example “this ADLS Gen2 account using a managed identity” or “this Azure SQL database with credentials pulled from Key Vault”. A dataset is the specific object inside that connection — a particular table, or a folder plus file format within the storage account. The relationship is one-to-many: one linked service is reused by many datasets. The simplest way to say it: a linked service is the server, a dataset is the file or table sitting on it.' },
+        { q: 'What is the difference between a pipeline and an activity?',
+          tags: ['Pipeline', 'Activity', 'Core Concept'],
+          a: 'A pipeline is the unit of orchestration and deployment — a DAG of steps that you schedule, parameterize, trigger and monitor as one thing. An activity is a single step inside that pipeline: the smallest unit of work, such as a Copy, a Data Flow, a Lookup or a ForEach. You don’t run an activity on its own; you run the pipeline, and it executes its activities in the order set by their dependencies. So the pipeline is the “what to do and when”, and the activity is each individual thing being done.' },
+        { q: 'What are the main types of activities in ADF?',
+          tags: ['Activity', 'Control Flow', 'Data Movement'],
+          a: 'They fall into three groups. Data movement is essentially the Copy activity, which moves data from a source to a sink. Data transformation activities run compute to reshape data — Mapping Data Flows, a Databricks notebook or jar, a stored procedure, an HDInsight job or an Azure Function. Control flow activities direct the pipeline itself — ForEach, If Condition, Switch, Until, Wait, Lookup, Get Metadata, Set/Append Variable and Execute Pipeline. In an interview it lands better to name one or two from each group than to try to list them all.' },
+        { q: 'Is ADF an ETL or an ELT tool?',
+          tags: ['ETL', 'ELT', 'Design'],
+          a: 'It supports both, but the modern pattern is ELT. In classic ETL you transform data in flight before landing it, which ADF can do with Mapping Data Flows. In ELT — preferred at scale — ADF extracts and loads raw data into the lake or warehouse first, then pushes the transformation down to where the data already lives, typically Databricks or Synapse SQL. ELT wins because it uses the elastic compute of the destination, keeps the raw data available for reprocessing, and avoids moving data twice. So in most designs ADF owns the extract, load and orchestration, and the transform happens downstream.' },
+        { q: 'What is the difference between ADF and SSIS?',
+          tags: ['Comparison', 'SSIS', 'Migration'],
+          a: 'SSIS is the on-prem, server-based ETL tool that ships with SQL Server; ADF is its cloud-native, serverless successor. SSIS runs on a machine you provision and patch, while ADF is fully managed and scales on demand. SSIS transforms data on that box; ADF orchestrates and can push transformation out to Spark or SQL. ADF also brings 100+ cloud connectors, Git and CI/CD integration, and event and tumbling-window triggers out of the box. They are not mutually exclusive — you can lift existing SSIS packages into the cloud by running them on the Azure-SSIS Integration Runtime, which is a very common migration step.' },
+        { q: 'How do ADF and Azure Databricks relate — when do you use each?',
+          tags: ['Comparison', 'Databricks', 'Orchestration'],
+          a: 'They are complementary, not competing. ADF is the orchestrator and connector layer — it schedules, moves data with 100+ connectors, handles retries and monitoring, and triggers other services. Databricks is the transformation engine — a Spark platform for heavy, code-based data engineering and ML. The standard architecture is that ADF lands raw data in the lake and then calls Databricks notebooks or jobs to do the actual Spark transformation, passing parameters in. ADF’s own Mapping Data Flows can transform too, but for complex logic, large volumes, or anything the team wants expressed in code, the transformation goes to Databricks while ADF stays the control plane.' },
+        { q: 'What is the difference between ADF and Synapse Pipelines?',
+          tags: ['Comparison', 'Synapse', 'Architecture'],
+          a: 'Synapse Pipelines are essentially the same pipeline engine as ADF, embedded inside Azure Synapse Analytics — the authoring canvas, activities and Integration Runtimes are nearly identical. The difference is context and scope. Standalone ADF fits when orchestration is your main need and your platform spans many services. Synapse Pipelines fit when you are already all-in on Synapse and want ingestion, Spark, serverless SQL and the warehouse under one workspace and one security model. The caveats: Synapse Pipelines lack a few ADF features such as the SSIS IR and cross-region data flows, and standalone ADF has a broader CI/CD story. Functionally, if you know one you know the other.' },
+        { q: 'What is the difference between control flow and data flow in ADF?',
+          tags: ['Control Flow', 'Data Flow', 'Core Concept'],
+          a: 'Control flow is the orchestration logic of a pipeline — the sequencing, looping and branching between activities: ForEach, If Condition, Until, dependencies, parameters and variables. It decides what runs, in what order and under what conditions, but it does not itself transform row-level data. A data flow — specifically a Mapping Data Flow — is where the actual row-by-row transformation happens: joins, aggregates, derived columns and filters, all compiled to Spark and run on a managed cluster. A clean one-liner for interviews: control flow moves the pipeline along, data flow moves and reshapes the data.' },
+      ],
+    },
     {
       id: 'adf-ir',
       label: 'ADF — Integration Runtime & Ingestion',
