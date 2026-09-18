@@ -48,6 +48,9 @@
 .iq-q { width:100%; display:flex; align-items:flex-start; gap:11px; padding:12px 15px; background:none; border:none; cursor:pointer; text-align:left; font:inherit; }
 .iq-mark { flex-shrink:0; width:22px; height:22px; border-radius:6px; background:var(--brand); color:#fff; font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center; margin-top:1px; }
 .iq-qtext { flex:1; font-size:14px; font-weight:600; color:var(--text-primary); line-height:1.5; }
+.iq-tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+.iq-tag { font-size:10.5px; font-weight:700; letter-spacing:.02em; color:var(--text-muted);
+  background:var(--bg-2); border:1px solid var(--border-subtle); border-radius:5px; padding:2px 7px; line-height:1.5; }
 .iq-chev { color:var(--text-muted); transition:transform .15s; flex-shrink:0; margin-top:2px; }
 .iq-item.open .iq-chev { transform:rotate(180deg); }
 .iq-a { display:grid; grid-template-rows:0fr; transition:grid-template-rows .2s var(--ease); }
@@ -62,15 +65,20 @@
     container.className = '';
     const styles = document.getElementById('iq-styles') ? '' : styleTag();
     const qs = topic.questions || [];
-    const items = qs.map((x, i) => `
+    const items = qs.map((x, i) => {
+      const tags = (x.tags && x.tags.length)
+        ? `<span class="iq-tags">${x.tags.map(t => `<span class="iq-tag">${esc(t)}</span>`).join('')}</span>`
+        : '';
+      return `
       <div class="iq-item" data-i="${i}">
         <button class="iq-q" type="button" aria-expanded="false">
           <span class="iq-mark">Q</span>
-          <span class="iq-qtext">${esc(x.q)}</span>
+          <span class="iq-qtext">${esc(x.q)}${tags}</span>
           <span class="iq-chev">▾</span>
         </button>
         <div class="iq-a"><div><p><span class="iq-ans-mark">A</span>${esc(x.a)}</p></div></div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
     container.innerHTML = `${styles}
 <div class="iq page-enter">
   <div class="iq-wrap">
