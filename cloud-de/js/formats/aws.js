@@ -12,7 +12,7 @@
   if (TV.InterviewQA && TV.AwsInterviewQA) TV.InterviewQA.register('aws', TV.AwsInterviewQA);
   TV.ServiceDetail.registerHome('aws', {
     title: 'Amazon Web Services',
-    subtitle: 'The interview-critical AWS data services — S3, the Glue Data Catalog, Glue ETL and Lake Formation, with EMR, Athena, Redshift, Kinesis and orchestration landing next — each broken down six ways: what it is, why it exists, how it works, the DE use case, its integrations and its runtime behavior.',
+    subtitle: 'The interview-critical AWS data services — S3, Glue Data Catalog, Glue ETL, Lake Formation, EMR, Athena, Redshift, Redshift Spectrum, Kinesis, MSK, Step Functions, MWAA, Lambda and DMS — each broken down six ways: what it is, why it exists, how it works, the DE use case, its integrations and its runtime behavior, with interview Q&A on every page.',
   });
 
   const LOGO = `
