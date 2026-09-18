@@ -10,6 +10,15 @@ import type { QuestionInput } from "@/lib/db";
 const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
 const STATUSES: PreparedStatus[] = ["Prepared", "Not Prepared"];
 
+function errMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === "object") {
+    const e = err as { message?: string; details?: string; hint?: string };
+    return e.message || e.details || e.hint || JSON.stringify(err);
+  }
+  return "Save failed";
+}
+
 const linesToArray = (s: string) =>
   s.split("\n").map((x) => x.trim()).filter(Boolean);
 const csvToArray = (s: string) =>
@@ -57,7 +66,7 @@ export default function QuestionForm({ existing }: { existing?: Question }) {
         router.push(`/question?id=${id}`);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
+      setError(errMessage(err));
       setBusy(false);
     }
   };

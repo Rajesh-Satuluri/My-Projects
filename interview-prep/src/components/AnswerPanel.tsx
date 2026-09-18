@@ -41,13 +41,13 @@ export default function AnswerPanel({ question }: { question: Question }) {
     setEditing(true);
   };
 
-  const done = async (lock: boolean) => {
+  const done = async (exit: boolean) => {
     setStatus("saving");
     try {
-      await saveAnswer(question.id, draft, lock ? true : undefined);
+      await saveAnswer(question.id, draft);
       setStatus("saved");
       setTimeout(() => setStatus("idle"), 1500);
-      if (lock) setEditing(false);
+      if (exit) setEditing(false);
     } catch {
       setStatus("error");
     }
