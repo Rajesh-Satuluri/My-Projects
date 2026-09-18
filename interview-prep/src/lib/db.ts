@@ -12,6 +12,7 @@ interface QuestionRow {
   answer: string | null;
   difficulty: Difficulty;
   status: PreparedStatus;
+  answer_locked: boolean | null;
   created_at: string;
   updated_at: string;
   last_reviewed_at: string | null;
@@ -29,6 +30,7 @@ function toQuestion(r: QuestionRow): Question {
     answer: r.answer ?? undefined,
     difficulty: r.difficulty,
     status: r.status,
+    answerLocked: r.answer_locked ?? false,
     keyPoints: [...r.question_points]
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((p) => ({ id: p.id, point: p.point, sortOrder: p.sort_order, completed: p.completed })),
@@ -177,6 +179,22 @@ export async function setStatus(id: string, status: PreparedStatus): Promise<voi
   const { error } = await supabase
     .from("questions")
     .update({ status, last_reviewed_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function saveAnswer(id: string, answer: string): Promise<void> {
+  const { error } = await supabase
+    .from("questions")
+    .update({ answer: answer || null, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function setAnswerLocked(id: string, locked: boolean): Promise<void> {
+  const { error } = await supabase
+    .from("questions")
+    .update({ answer_locked: locked })
     .eq("id", id);
   if (error) throw error;
 }

@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useData } from "@/components/DataProvider";
 import { Card, DifficultyBadge, StatusBadge, Tag } from "@/components/ui";
 import KeyPointChecklist from "@/components/KeyPointChecklist";
-import AnswerReveal from "@/components/AnswerReveal";
+import AnswerPanel from "@/components/AnswerPanel";
 
 function QuestionInner() {
   const params = useSearchParams();
@@ -78,7 +78,7 @@ function QuestionInner() {
         <div className="space-y-6 md:col-span-2">
           <Card>
             <h2 className="mb-3 text-sm font-semibold text-muted">Answer</h2>
-            <AnswerReveal answer={q.answer} />
+            <AnswerPanel question={q} />
           </Card>
 
           {q.followUps.length > 0 && (

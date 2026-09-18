@@ -20,6 +20,8 @@ import {
   deleteQuestion as dbDelete,
   setStatus as dbSetStatus,
   setPointCompleted as dbSetPoint,
+  saveAnswer as dbSaveAnswer,
+  setAnswerLocked as dbSetAnswerLocked,
 } from "@/lib/db";
 
 interface DataContextValue {
@@ -37,6 +39,8 @@ interface DataContextValue {
   deleteQuestion: (id: string) => Promise<void>;
   setStatus: (id: string, status: Question["status"]) => Promise<void>;
   setPointCompleted: (pointId: string, completed: boolean) => Promise<void>;
+  saveAnswer: (id: string, answer: string) => Promise<void>;
+  setAnswerLocked: (id: string, locked: boolean) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -134,6 +138,18 @@ export default function DataProvider({ children }: { children: React.ReactNode }
               p.id === pointId ? { ...p, completed } : p
             ),
           }))
+        );
+      },
+      saveAnswer: async (id, answer) => {
+        await dbSaveAnswer(id, answer);
+        setQuestions((prev) =>
+          prev.map((q) => (q.id === id ? { ...q, answer: answer || undefined } : q))
+        );
+      },
+      setAnswerLocked: async (id, locked) => {
+        await dbSetAnswerLocked(id, locked);
+        setQuestions((prev) =>
+          prev.map((q) => (q.id === id ? { ...q, answerLocked: locked } : q))
         );
       },
     }),

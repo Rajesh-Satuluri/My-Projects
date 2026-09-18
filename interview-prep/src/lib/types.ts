@@ -23,6 +23,7 @@ export interface Question {
   answer?: string;
   difficulty: Difficulty;
   status: PreparedStatus;
+  answerLocked: boolean;
   keyPoints: KeyPoint[];
   followUps: string[];
   tags: string[];

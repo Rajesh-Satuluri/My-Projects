@@ -30,7 +30,13 @@ export async function loadStarterData(): Promise<void> {
   // Map seed category id -> real category id via category name.
   const seedIdToName = new Map(seedCategories.map((c) => [c.id, c.name]));
 
+  // Idempotent: skip questions whose text already exists, so re-running only
+  // adds new starter questions rather than duplicating.
+  const { data: existingQs } = await supabase.from("questions").select("question");
+  const existingText = new Set((existingQs ?? []).map((q) => q.question));
+
   for (const q of seedQuestions) {
+    if (existingText.has(q.question)) continue;
     const catName = seedIdToName.get(q.categoryId) ?? "";
     const realCatId = byName.get(catName) ?? "";
     await createQuestion({

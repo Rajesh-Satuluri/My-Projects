@@ -1,5 +1,8 @@
 import type { Category, Question } from "./types";
 
+// Seed rows omit answerLocked — the DB defaults it to false on insert.
+type SeedQuestion = Omit<Question, "answerLocked">;
+
 // Phase 0 seed data. In Phase 1 this file is replaced by Supabase queries;
 // nothing else in the app imports the data directly — it all goes through
 // src/lib/data.ts, so the swap is contained.
@@ -24,7 +27,7 @@ export const categories: Category[] = [
 
 const now = "2026-09-18T00:00:00.000Z";
 
-export const questions: Question[] = [
+export const questions: SeedQuestion[] = [
   {
     id: "q1",
     categoryId: "c04",
@@ -142,6 +145,32 @@ export const questions: Question[] = [
     ],
     followUps: ["When would a LEFT JOIN produce duplicates?"],
     tags: ["sql", "joins"],
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: "q7",
+    categoryId: "c04",
+    subcategory: "Project Walkthrough",
+    question: "Walk me through your project.",
+    answer:
+      "Set the scene (business problem + goal), then the end-to-end architecture (sources → ingestion → processing → storage → serving), your specific role and decisions, the tech stack and why, one hard problem you solved, and the measurable outcome.",
+    difficulty: "Medium",
+    status: "Not Prepared",
+    keyPoints: [
+      { id: "kp21", point: "Business problem & goal", sortOrder: 1, completed: false },
+      { id: "kp22", point: "End-to-end architecture", sortOrder: 2, completed: false },
+      { id: "kp23", point: "My role & key decisions", sortOrder: 3, completed: false },
+      { id: "kp24", point: "Tech stack & why", sortOrder: 4, completed: false },
+      { id: "kp25", point: "A hard problem I solved", sortOrder: 5, completed: false },
+      { id: "kp26", point: "Measurable outcome", sortOrder: 6, completed: false },
+    ],
+    followUps: [
+      "What would you do differently?",
+      "How did you ensure data quality?",
+      "How does it scale?",
+    ],
+    tags: ["project", "architecture", "walkthrough"],
     createdAt: now,
     updatedAt: now,
   },
