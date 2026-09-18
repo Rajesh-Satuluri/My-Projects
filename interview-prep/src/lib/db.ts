@@ -153,6 +153,7 @@ export async function createQuestion(input: QuestionInput): Promise<string> {
       answer: input.answer || null,
       difficulty: input.difficulty,
       status: input.status,
+      answer_locked: true, // answers are read-only by default; click Edit to change
     })
     .select("id")
     .single();
