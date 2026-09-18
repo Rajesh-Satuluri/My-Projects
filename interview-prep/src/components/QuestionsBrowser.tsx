@@ -48,18 +48,20 @@ export default function QuestionsBrowser({
     });
   }, [questions, search, category, difficulty, status, tag]);
 
-  const selectClass =
-    "rounded-md border bg-panel px-2 py-1.5 text-sm text-fg";
+  const selectClass = "input w-auto py-1.5 pr-8 text-xs";
 
   return (
     <div>
-      <input
-        autoFocus
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search questions, answers, key points, tags…"
-        className="w-full rounded-md border bg-panel px-3 py-2 text-sm text-fg"
-      />
+      <div className="relative">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">⌕</span>
+        <input
+          autoFocus
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search questions, answers, key points, tags…"
+          className="input pl-9"
+        />
+      </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
         <select className={selectClass} value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -96,16 +98,16 @@ export default function QuestionsBrowser({
         </select>
       </div>
 
-      <div className="mt-2 text-xs text-muted">
+      <div className="mb-3 mt-4 text-xs text-muted">
         {filtered.length} of {questions.length} questions
       </div>
 
-      <div className="mt-2 rounded-lg border bg-panel px-3">
+      <div className="space-y-2.5">
         {filtered.map((q) => (
           <QuestionItem key={q.id} question={q} categoryName={categoryName(q.categoryId)} />
         ))}
         {filtered.length === 0 && (
-          <div className="py-8 text-center text-sm text-muted">No questions match.</div>
+          <div className="card p-10 text-center text-sm text-muted">No questions match.</div>
         )}
       </div>
     </div>

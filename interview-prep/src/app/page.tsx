@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useData } from "@/components/DataProvider";
 import { Card, PageHeader, StatTile } from "@/components/ui";
 import { loadStarterData } from "@/lib/seedRemote";
-import { useState } from "react";
 
 export default function DashboardPage() {
   const { questions, categories, loading, error, reload } = useData();
@@ -12,6 +12,7 @@ export default function DashboardPage() {
   const [seedError, setSeedError] = useState<string | null>(null);
 
   const prepared = questions.filter((q) => q.status === "Prepared").length;
+  const pct = questions.length ? Math.round((prepared / questions.length) * 100) : 0;
   const perCategory = categories
     .map((category) => ({
       category,
@@ -41,49 +42,62 @@ export default function DashboardPage() {
       <PageHeader title="Dashboard" subtitle="Your interview prep at a glance" />
 
       {error && (
-        <Card className="mb-4 border-rose-300">
-          <p className="text-sm text-rose-600">{error}</p>
+        <div className="card mb-6 border-[var(--danger)] p-4">
+          <p className="text-sm text-[var(--danger)]">{error}</p>
           <p className="mt-1 text-xs text-muted">
             If tables are missing, run supabase/schema.sql in the Supabase SQL editor.
           </p>
-        </Card>
+        </div>
       )}
 
       {!loading && questions.length === 0 && categories.length === 0 && (
         <Card className="mb-6">
-          <h2 className="font-medium">No data yet</h2>
+          <h2 className="font-medium">Get started</h2>
           <p className="mt-1 text-sm text-muted">
-            Load the 15 starter categories and sample questions to get going.
+            Load the 15 starter categories and sample questions to begin.
           </p>
-          <button
-            onClick={seed}
-            disabled={seeding}
-            className="mt-3 rounded-md bg-accent px-3 py-2 text-sm text-white disabled:opacity-60"
-          >
+          <button onClick={seed} disabled={seeding} className="btn btn-primary mt-4">
             {seeding ? "Loading…" : "Load starter data"}
           </button>
-          {seedError && <p className="mt-2 text-sm text-rose-600">{seedError}</p>}
+          {seedError && <p className="mt-2 text-sm text-[var(--danger)]">{seedError}</p>}
         </Card>
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatTile label="Questions" value={questions.length} />
-        <StatTile label="Prepared" value={prepared} />
-        <StatTile label="To Review" value={questions.length - prepared} />
+        <StatTile label="Prepared" value={prepared} accent="success" />
+        <StatTile label="To review" value={questions.length - prepared} accent="warning" />
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+      {questions.length > 0 && (
+        <Card className="mt-4">
+          <div className="mb-2 flex items-center justify-between text-sm">
+            <span className="font-medium">Preparation progress</span>
+            <span className="text-muted">{pct}%</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--panel-2)]">
+            <div
+              className="h-full rounded-full bg-accent transition-all"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        </Card>
+      )}
+
+      <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card>
-          <h2 className="mb-3 text-sm font-semibold text-muted">Categories</h2>
-          <ul className="space-y-1">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
+            Categories
+          </h2>
+          <ul className="-mx-2 space-y-0.5">
             {perCategory.map(({ category, count }) => (
               <li key={category.id}>
                 <Link
                   href={`/questions?category=${category.id}`}
-                  className="flex items-center justify-between rounded px-2 py-1.5 text-sm hover:bg-[var(--bg)]"
+                  className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-[var(--panel-2)]"
                 >
                   <span>{category.name}</span>
-                  <span className="text-muted">{count}</span>
+                  <span className="text-xs text-muted">{count}</span>
                 </Link>
               </li>
             ))}
@@ -94,13 +108,15 @@ export default function DashboardPage() {
         </Card>
 
         <Card>
-          <h2 className="mb-3 text-sm font-semibold text-muted">Recently Reviewed</h2>
-          <ul className="space-y-1">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
+            Recently reviewed
+          </h2>
+          <ul className="-mx-2 space-y-0.5">
             {recentlyReviewed.map((q) => (
               <li key={q.id}>
                 <Link
                   href={`/question?id=${q.id}`}
-                  className="block truncate rounded px-2 py-1.5 text-sm hover:bg-[var(--bg)]"
+                  className="block truncate rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-[var(--panel-2)]"
                 >
                   {q.question}
                 </Link>

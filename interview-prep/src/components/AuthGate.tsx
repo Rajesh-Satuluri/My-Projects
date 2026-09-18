@@ -13,7 +13,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   if (!authReady) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted">
-        Loading…
+        <span className="animate-pulse">Loading…</span>
       </div>
     );
   }
@@ -31,45 +31,44 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
-      <form
-        onSubmit={submit}
-        className="w-full max-w-sm rounded-lg border bg-panel p-6"
-      >
-        <h1 className="text-xl font-semibold">Interview Prep</h1>
-        <p className="mt-1 text-sm text-muted">Sign in to continue</p>
+      <div className="w-full max-w-sm">
+        <div className="mb-6 flex items-center justify-center gap-2.5">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-base font-bold text-[var(--accent-fg)]">
+            IP
+          </span>
+          <span className="text-lg font-semibold tracking-[-0.01em]">Interview Prep</span>
+        </div>
+        <form onSubmit={submit} className="card p-6">
+          <h1 className="text-lg font-semibold">Welcome back</h1>
+          <p className="mt-1 text-sm text-muted">Sign in to your workspace</p>
 
-        <label className="mt-5 block text-sm">
-          Email
+          <label className="label mt-6">Email</label>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-md border bg-panel px-3 py-2 text-sm text-fg"
+            className="input mt-1.5"
+            placeholder="you@example.com"
           />
-        </label>
 
-        <label className="mt-3 block text-sm">
-          Password
+          <label className="label mt-4">Password</label>
           <input
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded-md border bg-panel px-3 py-2 text-sm text-fg"
+            className="input mt-1.5"
+            placeholder="••••••••"
           />
-        </label>
 
-        {error && <p className="mt-3 text-sm text-rose-600">{error}</p>}
+          {error && <p className="mt-4 text-sm text-[var(--danger)]">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={busy}
-          className="mt-5 w-full rounded-md bg-accent px-3 py-2 text-sm text-white disabled:opacity-60"
-        >
-          {busy ? "Signing in…" : "Sign in"}
-        </button>
-      </form>
+          <button type="submit" disabled={busy} className="btn btn-primary mt-6 w-full">
+            {busy ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

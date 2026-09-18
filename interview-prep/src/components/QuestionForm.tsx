@@ -62,8 +62,8 @@ export default function QuestionForm({ existing }: { existing?: Question }) {
     }
   };
 
-  const field = "mt-1 w-full rounded-md border bg-panel px-3 py-2 text-sm text-fg";
-  const label = "block text-sm";
+  const field = "input mt-1.5";
+  const label = "label";
 
   return (
     <Card className="max-w-2xl">
@@ -156,18 +156,10 @@ export default function QuestionForm({ existing }: { existing?: Question }) {
         {error && <p className="text-sm text-rose-600">{error}</p>}
 
         <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={busy}
-            className="rounded-md bg-accent px-4 py-2 text-sm text-white disabled:opacity-60"
-          >
+          <button type="submit" disabled={busy} className="btn btn-primary">
             {busy ? "Saving…" : existing ? "Save changes" : "Create question"}
           </button>
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="rounded-md border px-4 py-2 text-sm hover:bg-[var(--bg)]"
-          >
+          <button type="button" onClick={() => router.back()} className="btn btn-outline">
             Cancel
           </button>
         </div>

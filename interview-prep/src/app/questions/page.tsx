@@ -12,15 +12,15 @@ function QuestionsInner() {
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
-        <PageHeader title="Questions" subtitle="Browse, search and filter" />
-        <Link
-          href="/questions/new"
-          className="rounded-md bg-accent px-3 py-2 text-sm text-white"
-        >
-          + Add
-        </Link>
-      </div>
+      <PageHeader
+        title="Questions"
+        subtitle="Click a question to read the answer. Unlock to edit inline."
+        action={
+          <Link href="/questions/new" className="btn btn-primary">
+            + New question
+          </Link>
+        }
+      />
       {loading ? (
         <p className="text-sm text-muted">Loading…</p>
       ) : (

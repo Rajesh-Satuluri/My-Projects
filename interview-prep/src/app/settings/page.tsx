@@ -56,7 +56,7 @@ export default function SettingsPage() {
         <button
           onClick={sync}
           disabled={busy}
-          className="mt-3 rounded-md bg-accent px-3 py-2 text-sm text-white disabled:opacity-60"
+          className="btn btn-primary mt-3"
         >
           {busy ? "Syncing…" : "Load / sync starter data"}
         </button>

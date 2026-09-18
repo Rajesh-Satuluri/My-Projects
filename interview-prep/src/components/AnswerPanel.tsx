@@ -4,86 +4,73 @@ import { useState } from "react";
 import { useData } from "./DataProvider";
 import type { Question } from "@/lib/types";
 
-// Answer with a device-synced lock. Locked = read-only until unlocked;
-// the lock state lives in Supabase (questions.answer_locked) so unlocking on
-// one device is reflected everywhere. Unlocked = inline textarea to edit + save.
+// Answer with a device-synced lock. Locked = clean read view; unlock to edit
+// inline. The lock lives in Supabase so it syncs across devices.
 export default function AnswerPanel({ question }: { question: Question }) {
   const { saveAnswer, setAnswerLocked } = useData();
   const [draft, setDraft] = useState(question.answer ?? "");
-  const [status, setStatusText] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const locked = question.answerLocked;
 
   const unlock = () => {
     setDraft(question.answer ?? "");
-    setAnswerLocked(question.id, false); // optimistic in provider; no need to await
+    setAnswerLocked(question.id, false);
   };
 
   const save = async (thenLock: boolean) => {
-    setStatusText("saving");
+    setStatus("saving");
     try {
-      // single combined round-trip (answer + optional lock)
       await saveAnswer(question.id, draft, thenLock ? true : undefined);
-      setStatusText("saved");
-      setTimeout(() => setStatusText("idle"), 2000);
+      setStatus("saved");
+      setTimeout(() => setStatus("idle"), 1800);
     } catch {
-      setStatusText("error");
+      setStatus("error");
     }
   };
 
   if (locked) {
     return (
-      <div>
-        <div className="mb-3 flex items-center justify-between">
-          <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs text-muted">
-            🔒 Locked
-          </span>
-          <button
-            onClick={unlock}
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-[var(--bg)]"
-          >
-            Unlock to edit
-          </button>
-        </div>
+      <div className="rounded-xl border bg-[var(--panel-2)]/40 p-4">
         {question.answer ? (
-          <p className="whitespace-pre-wrap text-sm leading-relaxed">{question.answer}</p>
+          <p className="whitespace-pre-wrap text-[15px] leading-7 text-fgSoft">
+            {question.answer}
+          </p>
         ) : (
-          <p className="text-sm text-muted">No answer written yet.</p>
+          <p className="text-sm italic text-muted">No answer written yet — unlock to add one.</p>
         )}
+        <div className="mt-4 flex items-center gap-3">
+          <button onClick={unlock} className="btn btn-outline">
+            ✎ Edit answer
+          </button>
+          <span className="text-xs text-muted">Locked · saved</span>
+        </div>
       </div>
     );
   }
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between">
-        <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 px-2 py-0.5 text-xs text-amber-600">
-          ✎ Editing
-        </span>
-        {status === "saving" && <span className="text-xs text-muted">Saving…</span>}
-        {status === "saved" && <span className="text-xs text-emerald-600">Saved ✓</span>}
-        {status === "error" && <span className="text-xs text-rose-600">Save failed — retry</span>}
-      </div>
       <textarea
-        rows={8}
+        rows={7}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         placeholder="Write your answer…"
-        className="w-full rounded-md border bg-panel px-3 py-2 text-sm leading-relaxed text-fg"
+        className="input resize-y text-[15px] leading-7"
+        autoFocus
       />
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          onClick={() => save(true)}
-          className="rounded-md bg-accent px-3 py-1.5 text-sm text-white"
-        >
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <button onClick={() => save(true)} className="btn btn-primary">
           Save &amp; lock
         </button>
-        <button
-          onClick={() => save(false)}
-          className="rounded-md border px-3 py-1.5 text-sm hover:bg-[var(--bg)]"
-        >
-          Save
+        <button onClick={() => save(false)} className="btn btn-outline">
+          Save draft
         </button>
+        <span className="ml-1 text-xs">
+          {status === "saving" && <span className="text-muted">Saving…</span>}
+          {status === "saved" && <span className="text-[var(--success)]">Saved ✓</span>}
+          {status === "error" && <span className="text-[var(--danger)]">Save failed — retry</span>}
+        </span>
       </div>
     </div>
   );

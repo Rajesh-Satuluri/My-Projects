@@ -1,39 +1,70 @@
-import Link from "next/link";
 import type { Difficulty, PreparedStatus } from "@/lib/types";
 
-export function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+export function PageHeader({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+}) {
   return (
-    <header className="mb-6">
-      <h1 className="text-2xl font-semibold">{title}</h1>
-      {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
+    <header className="mb-8 flex items-start justify-between gap-4">
+      <div>
+        <h1 className="text-[1.75rem] font-semibold leading-tight tracking-[-0.02em]">{title}</h1>
+        {subtitle && <p className="mt-1.5 text-sm text-muted">{subtitle}</p>}
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
     </header>
   );
 }
 
-export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`rounded-lg border bg-panel p-4 ${className}`}>{children}</div>
-  );
+export function Card({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <div className={`card p-5 ${className}`}>{children}</div>;
 }
 
-export function StatTile({ label, value }: { label: string; value: number | string }) {
+export function StatTile({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: number | string;
+  accent?: "default" | "success" | "warning";
+}) {
+  const color =
+    accent === "success"
+      ? "text-[var(--success)]"
+      : accent === "warning"
+      ? "text-[var(--warning)]"
+      : "text-fg";
   return (
-    <Card>
-      <div className="text-3xl font-semibold">{value}</div>
-      <div className="mt-1 text-sm text-muted">{label}</div>
-    </Card>
+    <div className="card p-5">
+      <div className="text-xs font-medium uppercase tracking-wide text-muted">{label}</div>
+      <div className={`mt-2 text-3xl font-semibold tracking-[-0.02em] ${color}`}>{value}</div>
+    </div>
   );
 }
 
 export function DifficultyBadge({ difficulty }: { difficulty: Difficulty }) {
-  const tone =
-    difficulty === "Easy"
-      ? "text-emerald-600 border-emerald-300"
-      : difficulty === "Medium"
-      ? "text-amber-600 border-amber-300"
-      : "text-rose-600 border-rose-300";
+  const map: Record<Difficulty, { dot: string; text: string }> = {
+    Easy: { dot: "bg-[var(--success)]", text: "text-[var(--success)]" },
+    Medium: { dot: "bg-[var(--warning)]", text: "text-[var(--warning)]" },
+    Hard: { dot: "bg-[var(--danger)]", text: "text-[var(--danger)]" },
+  };
+  const s = map[difficulty];
   return (
-    <span className={`rounded-full border px-2 py-0.5 text-xs ${tone}`}>{difficulty}</span>
+    <span className="pill border-[var(--border)]">
+      <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+      <span className={s.text}>{difficulty}</span>
+    </span>
   );
 }
 
@@ -41,47 +72,22 @@ export function StatusBadge({ status }: { status: PreparedStatus }) {
   const prepared = status === "Prepared";
   return (
     <span
-      className={`rounded-full border px-2 py-0.5 text-xs ${
-        prepared ? "text-emerald-600 border-emerald-300" : "text-muted border-border"
-      }`}
+      className="pill"
+      style={{
+        borderColor: prepared ? "var(--success)" : "var(--border-strong)",
+        color: prepared ? "var(--success)" : "var(--muted)",
+        background: prepared ? "var(--success-bg)" : "transparent",
+      }}
     >
-      {status}
+      {prepared ? "● Prepared" : "○ To review"}
     </span>
   );
 }
 
 export function Tag({ label }: { label: string }) {
   return (
-    <span className="rounded bg-[var(--bg)] px-2 py-0.5 text-xs text-muted">#{label}</span>
-  );
-}
-
-export function QuestionRow({
-  id,
-  question,
-  categoryName,
-  difficulty,
-  status,
-}: {
-  id: string;
-  question: string;
-  categoryName: string;
-  difficulty: Difficulty;
-  status: PreparedStatus;
-}) {
-  return (
-    <Link
-      href={`/question?id=${id}`}
-      className="flex items-center justify-between gap-4 border-b px-1 py-3 last:border-b-0 hover:bg-[var(--bg)]"
-    >
-      <div className="min-w-0">
-        <div className="truncate font-medium">{question}</div>
-        <div className="mt-0.5 text-xs text-muted">{categoryName}</div>
-      </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <DifficultyBadge difficulty={difficulty} />
-        <StatusBadge status={status} />
-      </div>
-    </Link>
+    <span className="rounded-md bg-[var(--panel-2)] px-2 py-1 text-xs font-medium text-muted">
+      #{label}
+    </span>
   );
 }

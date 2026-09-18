@@ -6,11 +6,11 @@ import { useState } from "react";
 import { useData } from "./DataProvider";
 
 const nav = [
-  { href: "/", label: "Dashboard" },
-  { href: "/questions", label: "Questions" },
-  { href: "/categories", label: "Categories" },
-  { href: "/practice", label: "Practice" },
-  { href: "/checklists", label: "Checklists" },
+  { href: "/", label: "Dashboard", icon: "▤" },
+  { href: "/questions", label: "Questions", icon: "❯" },
+  { href: "/categories", label: "Categories", icon: "▦" },
+  { href: "/practice", label: "Practice", icon: "◐" },
+  { href: "/checklists", label: "Checklists", icon: "☑" },
 ];
 
 export default function Sidebar() {
@@ -21,69 +21,85 @@ export default function Sidebar() {
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
-  const links = (
-    <nav className="flex flex-col gap-1">
-      {nav.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          onClick={() => setOpen(false)}
-          className={`rounded-md px-3 py-2 text-sm transition-colors ${
-            isActive(item.href)
-              ? "bg-accent text-white"
-              : "text-fg hover:bg-[var(--bg)]"
-          }`}
-        >
-          {item.label}
-        </Link>
-      ))}
-      <Link
-        href="/settings"
-        onClick={() => setOpen(false)}
-        className={`mt-4 rounded-md px-3 py-2 text-sm transition-colors ${
-          isActive("/settings") ? "bg-accent text-white" : "text-muted hover:bg-[var(--bg)]"
-        }`}
-      >
-        Settings
-      </Link>
-      {session && (
-        <button
-          onClick={() => {
-            setOpen(false);
-            signOut();
-          }}
-          className="mt-1 rounded-md px-3 py-2 text-left text-sm text-muted hover:bg-[var(--bg)]"
-        >
-          Log out
-        </button>
-      )}
-      {session?.user?.email && (
-        <div className="mt-2 truncate px-3 text-xs text-muted">{session.user.email}</div>
-      )}
+  const NavLinks = () => (
+    <nav className="flex flex-col gap-0.5">
+      {nav.map((item) => {
+        const active = isActive(item.href);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={() => setOpen(false)}
+            className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+              active
+                ? "bg-[var(--panel-2)] font-medium text-fg"
+                : "text-muted hover:bg-[var(--panel-2)] hover:text-fg"
+            }`}
+          >
+            {active && (
+              <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent" />
+            )}
+            <span className="w-4 text-center text-[13px] opacity-70">{item.icon}</span>
+            {item.label}
+          </Link>
+        );
+      })}
     </nav>
+  );
+
+  const brand = (
+    <div className="flex items-center gap-2.5 px-1">
+      <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-sm font-bold text-[var(--accent-fg)]">
+        IP
+      </span>
+      <span className="text-[15px] font-semibold tracking-[-0.01em]">Interview Prep</span>
+    </div>
   );
 
   return (
     <>
       {/* Mobile top bar */}
       <div className="flex items-center justify-between border-b bg-panel px-4 py-3 md:hidden">
-        <span className="font-semibold">Interview Prep</span>
+        {brand}
         <button
           aria-label="Toggle navigation"
           onClick={() => setOpen((v) => !v)}
-          className="rounded-md border px-3 py-1 text-sm"
+          className="btn btn-outline px-2.5 py-1.5"
         >
-          Menu
+          ☰
         </button>
       </div>
       {open && (
-        <div className="border-b bg-panel px-4 py-3 md:hidden">{links}</div>
+        <div className="border-b bg-panel px-3 py-3 md:hidden">
+          <NavLinks />
+          {session && (
+            <button onClick={() => { setOpen(false); signOut(); }} className="btn btn-ghost mt-1 w-full justify-start">
+              Log out
+            </button>
+          )}
+        </div>
       )}
 
       {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 border-r bg-panel p-4 md:block">
-        <div className="mb-6 px-3 text-lg font-semibold">Interview Prep</div>
-        {links}
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r bg-panel px-3 py-5 md:flex">
+        <div className="mb-7">{brand}</div>
+        <NavLinks />
+
+        <div className="mt-auto border-t pt-3">
+          {session?.user?.email && (
+            <div className="mb-1 flex items-center gap-2.5 px-2">
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-[var(--panel-2)] text-xs font-semibold uppercase text-muted">
+                {session.user.email[0]}
+              </span>
+              <span className="min-w-0 truncate text-xs text-muted">{session.user.email}</span>
+            </div>
+          )}
+          {session && (
+            <button onClick={() => signOut()} className="btn btn-ghost w-full justify-start">
+              Log out
+            </button>
+          )}
+        </div>
       </aside>
     </>
   );
