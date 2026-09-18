@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useData } from "@/components/DataProvider";
 import { Card, PageHeader, StatTile } from "@/components/ui";
 import { loadStarterData } from "@/lib/seedRemote";
+import { isDue } from "@/lib/review";
 
 export default function DashboardPage() {
   const { questions, categories, loading, error, reload } = useData();
@@ -12,6 +13,7 @@ export default function DashboardPage() {
   const [seedError, setSeedError] = useState<string | null>(null);
 
   const prepared = questions.filter((q) => q.status === "Prepared").length;
+  const dueCount = questions.filter((q) => isDue(q)).length;
   const pct = questions.length ? Math.round((prepared / questions.length) * 100) : 0;
   const perCategory = categories
     .map((category) => ({
@@ -81,6 +83,14 @@ export default function DashboardPage() {
               style={{ width: `${pct}%` }}
             />
           </div>
+          {dueCount > 0 && (
+            <Link
+              href="/practice"
+              className="mt-3 inline-flex items-center gap-1.5 text-sm text-accent hover:underline"
+            >
+              ● {dueCount} due for review → practice
+            </Link>
+          )}
         </Card>
       )}
 

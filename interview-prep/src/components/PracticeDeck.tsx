@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import type { Category, Question } from "@/lib/types";
-import { Card } from "@/components/ui";
+import { Card, DifficultyBadge, StatusBadge } from "@/components/ui";
 import KeyPointChecklist from "@/components/KeyPointChecklist";
-import AnswerReveal from "@/components/AnswerReveal";
+import { useData } from "@/components/DataProvider";
+import { daysAgoLabel } from "@/lib/review";
 
 export default function PracticeDeck({
   questions,
@@ -13,40 +14,79 @@ export default function PracticeDeck({
   questions: Question[];
   categories: Category[];
 }) {
+  const { markReviewed, setStatus } = useData();
   const [i, setI] = useState(0);
-  if (questions.length === 0) return <p className="text-sm text-muted">No questions.</p>;
+  const [revealed, setRevealed] = useState(false);
 
   const q = questions[i];
   const categoryName = categories.find((c) => c.id === q.categoryId)?.name ?? "";
 
-  const go = (delta: number) =>
+  const go = (delta: number) => {
     setI((prev) => (prev + delta + questions.length) % questions.length);
+    setRevealed(false);
+  };
 
   return (
     <Card className="mx-auto max-w-2xl">
-      <div className="text-xs text-muted">{categoryName}</div>
-      <h2 className="mt-2 text-xl font-semibold">{q.question}</h2>
-
-      <div className="my-4 border-t" />
-
-      <h3 className="mb-2 text-sm font-semibold text-muted">Key Points</h3>
-      {/* key prop forces a fresh checklist per card */}
-      <KeyPointChecklist key={q.id} points={q.keyPoints} />
-
-      <div className="mt-4">
-        <AnswerReveal key={`ans-${q.id}`} answer={q.answer} />
+      <div className="mb-4 flex items-center justify-between">
+        <span className="text-xs text-muted">{categoryName}</span>
+        <div className="flex items-center gap-2">
+          <DifficultyBadge difficulty={q.difficulty} />
+          <StatusBadge status={q.status} />
+        </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-between text-sm">
-        <button onClick={() => go(-1)} className="btn btn-outline">
-          ← Previous
+      <h2 className="text-xl font-semibold tracking-[-0.01em]">{q.question}</h2>
+      <p className="mt-1 text-xs text-muted">Last reviewed: {daysAgoLabel(q.lastReviewedAt)}</p>
+
+      {q.keyPoints.length > 0 && (
+        <div className="mt-5">
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Key points</h3>
+          <KeyPointChecklist key={q.id} points={q.keyPoints} />
+        </div>
+      )}
+
+      <div className="mt-5 border-t pt-5">
+        {revealed ? (
+          q.answer ? (
+            <p className="whitespace-pre-wrap text-[15px] leading-7 text-fgSoft">{q.answer}</p>
+          ) : (
+            <p className="text-sm italic text-muted">No answer written yet.</p>
+          )
+        ) : (
+          <button onClick={() => setRevealed(true)} className="btn btn-outline">
+            Show answer
+          </button>
+        )}
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center gap-2 border-t pt-5">
+        <button
+          onClick={() => {
+            markReviewed(q.id);
+            go(1);
+          }}
+          className="btn btn-primary"
+        >
+          ✓ Reviewed · next
         </button>
-        <span className="text-muted">
-          {i + 1} / {questions.length}
-        </span>
-        <button onClick={() => go(1)} className="btn btn-outline">
-          Next →
+        <button
+          onClick={() => setStatus(q.id, q.status === "Prepared" ? "Not Prepared" : "Prepared")}
+          className="btn btn-outline"
+        >
+          {q.status === "Prepared" ? "Mark to review" : "Mark prepared"}
         </button>
+        <div className="ml-auto flex items-center gap-2">
+          <button onClick={() => go(-1)} className="btn btn-ghost">
+            ← Prev
+          </button>
+          <span className="text-sm text-muted">
+            {i + 1} / {questions.length}
+          </span>
+          <button onClick={() => go(1)} className="btn btn-ghost">
+            Next →
+          </button>
+        </div>
       </div>
     </Card>
   );

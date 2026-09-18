@@ -21,6 +21,7 @@ import {
   deleteQuestion as dbDelete,
   setStatus as dbSetStatus,
   setPointCompleted as dbSetPoint,
+  markReviewed as dbMarkReviewed,
   saveAnswer as dbSaveAnswer,
   setAnswerLocked as dbSetAnswerLocked,
   setPinned as dbSetPinned,
@@ -41,6 +42,7 @@ interface DataContextValue {
   deleteQuestion: (id: string) => Promise<void>;
   setStatus: (id: string, status: Question["status"]) => Promise<void>;
   setPointCompleted: (pointId: string, completed: boolean) => Promise<void>;
+  markReviewed: (id: string) => Promise<void>;
   saveAnswer: (id: string, answer: string, locked?: boolean) => Promise<void>;
   setAnswerLocked: (id: string, locked: boolean) => Promise<void>;
   setPinned: (id: string, pinned: boolean) => Promise<void>;
@@ -150,6 +152,13 @@ export default function DataProvider({ children }: { children: React.ReactNode }
             ),
           }))
         );
+      },
+      markReviewed: async (id) => {
+        const iso = new Date().toISOString();
+        setQuestions((prev) =>
+          prev.map((q) => (q.id === id ? { ...q, lastReviewedAt: iso } : q))
+        ); // optimistic
+        await dbMarkReviewed(id);
       },
       saveAnswer: async (id, answer, locked) => {
         // optimistic: reflect immediately, persist in one round-trip

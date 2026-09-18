@@ -218,6 +218,14 @@ export async function setAnswerLocked(id: string, locked: boolean): Promise<void
   if (error) throw error;
 }
 
+export async function markReviewed(id: string): Promise<void> {
+  const { error } = await supabase
+    .from("questions")
+    .update({ last_reviewed_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 export async function setPointCompleted(pointId: string, completed: boolean): Promise<void> {
   const { error } = await supabase
     .from("question_points")
