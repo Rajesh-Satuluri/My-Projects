@@ -4,19 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import { useData } from "./DataProvider";
 import type { Question } from "@/lib/types";
 
-// Answer with device-synced lock. Locked = clean read view (with Copy).
-// Unlocked = inline editor with debounced autosave + Cmd/Ctrl+S.
+// Answers open in READ mode by default; click Edit to make changes.
+// Editing autosaves (debounced) + Cmd/Ctrl+S; "Save & lock" returns to read.
 export default function AnswerPanel({ question }: { question: Question }) {
-  const { saveAnswer, setAnswerLocked } = useData();
+  const { saveAnswer } = useData();
+  const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(question.answer ?? "");
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [copied, setCopied] = useState(false);
-  const locked = question.answerLocked;
   const firstRender = useRef(true);
 
   // Debounced autosave while editing.
   useEffect(() => {
-    if (locked) return;
+    if (!editing) return;
     if (firstRender.current) {
       firstRender.current = false;
       return;
@@ -33,20 +33,21 @@ export default function AnswerPanel({ question }: { question: Question }) {
     }, 800);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft, locked]);
+  }, [draft, editing]);
 
-  const unlock = () => {
+  const startEdit = () => {
     setDraft(question.answer ?? "");
     firstRender.current = true;
-    setAnswerLocked(question.id, false);
+    setEditing(true);
   };
 
-  const saveNow = async (thenLock: boolean) => {
+  const done = async (lock: boolean) => {
     setStatus("saving");
     try {
-      await saveAnswer(question.id, draft, thenLock ? true : undefined);
+      await saveAnswer(question.id, draft, lock ? true : undefined);
       setStatus("saved");
       setTimeout(() => setStatus("idle"), 1500);
+      if (lock) setEditing(false);
     } catch {
       setStatus("error");
     }
@@ -60,7 +61,7 @@ export default function AnswerPanel({ question }: { question: Question }) {
     } catch {}
   };
 
-  if (locked) {
+  if (!editing) {
     return (
       <div className="rounded-xl border bg-[var(--panel-2)]/40 p-4">
         {question.answer ? (
@@ -69,7 +70,7 @@ export default function AnswerPanel({ question }: { question: Question }) {
           <p className="text-sm italic text-muted">No answer written yet — click Edit to add one.</p>
         )}
         <div className="mt-4 flex items-center gap-2">
-          <button onClick={unlock} className="btn btn-outline">
+          <button onClick={startEdit} className="btn btn-outline">
             ✎ Edit answer
           </button>
           {question.answer && (
@@ -77,7 +78,6 @@ export default function AnswerPanel({ question }: { question: Question }) {
               {copied ? "Copied ✓" : "Copy"}
             </button>
           )}
-          <span className="ml-auto text-xs text-muted">Locked</span>
         </div>
       </div>
     );
@@ -92,18 +92,18 @@ export default function AnswerPanel({ question }: { question: Question }) {
         onKeyDown={(e) => {
           if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
             e.preventDefault();
-            saveNow(false);
+            done(false);
           }
         }}
-        placeholder="Write your answer…  (autosaves; ⌘/Ctrl+S to save now)"
+        placeholder="Write your answer…  (autosaves; ⌘/Ctrl+S to save)"
         className="input resize-y text-[15px] leading-7"
         autoFocus
       />
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <button onClick={() => saveNow(true)} className="btn btn-primary">
-          Save &amp; lock
+        <button onClick={() => done(true)} className="btn btn-primary">
+          Done
         </button>
-        <button onClick={() => saveNow(false)} className="btn btn-outline">
+        <button onClick={() => done(false)} className="btn btn-outline">
           Save draft
         </button>
         <span className="ml-1 text-xs">

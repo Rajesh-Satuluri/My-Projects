@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { Category, Question } from "@/lib/types";
 import QuestionItem from "@/components/QuestionItem";
-import { useData } from "@/components/DataProvider";
 
 const DIFFICULTIES = ["Easy", "Medium", "Hard"];
 const STATUSES = ["Prepared", "Not Prepared"];
@@ -22,7 +21,6 @@ export default function QuestionsBrowser({
   tags: string[];
 }) {
   const searchParams = useSearchParams();
-  const { setAnswerLocked } = useData();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState(searchParams.get("category") ?? "");
   const [difficulty, setDifficulty] = useState("");
@@ -102,14 +100,12 @@ export default function QuestionsBrowser({
         toggle(filtered[highlight].id);
       } else if (e.key === "e" && highlight >= 0) {
         e.preventDefault();
-        const q = filtered[highlight];
-        setOpenIds((prev) => new Set(prev).add(q.id));
-        if (q.answerLocked) setAnswerLocked(q.id, false);
+        setOpenIds((prev) => new Set(prev).add(filtered[highlight].id));
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [filtered, highlight, toggle, setAnswerLocked]);
+  }, [filtered, highlight, toggle]);
 
   // Keep the highlighted card in view.
   useEffect(() => {
@@ -192,7 +188,7 @@ export default function QuestionsBrowser({
       </div>
 
       <p className="kbd-hint mt-6 text-center text-xs text-muted">
-        Shortcuts: <kbd>/</kbd> search · <kbd>j</kbd>/<kbd>k</kbd> move · <kbd>Enter</kbd> open · <kbd>e</kbd> edit
+        Shortcuts: <kbd>/</kbd> search · <kbd>j</kbd>/<kbd>k</kbd> move · <kbd>Enter</kbd> open/close
       </p>
     </div>
   );
