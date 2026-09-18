@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useData } from "./DataProvider";
+import ThemeToggle from "./ThemeToggle";
 
 const nav = [
   { href: "/", label: "Dashboard", icon: "▤" },
@@ -86,6 +87,7 @@ export default function Sidebar() {
         <NavLinks />
 
         <div className="mt-auto border-t pt-3">
+          <ThemeToggle />
           {session?.user?.email && (
             <div className="mb-1 flex items-center gap-2.5 px-2">
               <span className="grid h-7 w-7 place-items-center rounded-full bg-[var(--panel-2)] text-xs font-semibold uppercase text-muted">

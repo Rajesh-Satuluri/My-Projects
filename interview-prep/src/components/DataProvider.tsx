@@ -23,6 +23,7 @@ import {
   setPointCompleted as dbSetPoint,
   saveAnswer as dbSaveAnswer,
   setAnswerLocked as dbSetAnswerLocked,
+  setPinned as dbSetPinned,
 } from "@/lib/db";
 
 interface DataContextValue {
@@ -42,6 +43,7 @@ interface DataContextValue {
   setPointCompleted: (pointId: string, completed: boolean) => Promise<void>;
   saveAnswer: (id: string, answer: string, locked?: boolean) => Promise<void>;
   setAnswerLocked: (id: string, locked: boolean) => Promise<void>;
+  setPinned: (id: string, pinned: boolean) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -165,6 +167,12 @@ export default function DataProvider({ children }: { children: React.ReactNode }
           prev.map((q) => (q.id === id ? { ...q, answerLocked: locked } : q))
         ); // optimistic
         await dbSetAnswerLocked(id, locked);
+      },
+      setPinned: async (id, pinned) => {
+        setQuestions((prev) =>
+          prev.map((q) => (q.id === id ? { ...q, pinned } : q))
+        ); // optimistic
+        await dbSetPinned(id, pinned);
       },
     }),
     [session, authReady, loading, error, categories, questions, reload, signIn, signOut]

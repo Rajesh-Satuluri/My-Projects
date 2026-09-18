@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import type { Question } from "@/lib/types";
 import { DifficultyBadge, StatusBadge, Tag } from "./ui";
@@ -11,38 +10,64 @@ import { useData } from "./DataProvider";
 export default function QuestionItem({
   question,
   categoryName,
+  open,
+  onToggle,
+  highlighted = false,
 }: {
   question: Question;
   categoryName: string;
+  open: boolean;
+  onToggle: () => void;
+  highlighted?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-  const { setStatus } = useData();
+  const { setStatus, setPinned } = useData();
 
   return (
-    <div className="card overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className={`flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-[var(--panel-2)] ${
+    <div
+      className={`card overflow-hidden transition-shadow ${
+        highlighted ? "ring-2 ring-[var(--ring)]" : ""
+      }`}
+    >
+      <div
+        className={`flex w-full items-center gap-3 px-5 py-4 transition-colors hover:bg-[var(--panel-2)] ${
           open ? "bg-[var(--panel-2)]" : ""
         }`}
-        aria-expanded={open}
       >
-        <span
-          className={`grid h-6 w-6 shrink-0 place-items-center rounded-md text-muted transition-transform duration-200 ${
-            open ? "rotate-90" : ""
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setPinned(question.id, !question.pinned);
+          }}
+          title={question.pinned ? "Unpin" : "Pin to top"}
+          className={`shrink-0 text-base transition-colors ${
+            question.pinned ? "text-[var(--warning)]" : "text-muted hover:text-fg"
           }`}
         >
-          ❯
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[15px] font-medium">{question.question}</div>
-          <div className="mt-0.5 text-xs text-muted">{categoryName}</div>
-        </div>
-        <div className="hidden shrink-0 items-center gap-2 sm:flex">
-          <DifficultyBadge difficulty={question.difficulty} />
-          <StatusBadge status={question.status} />
-        </div>
-      </button>
+          {question.pinned ? "★" : "☆"}
+        </button>
+
+        <button
+          onClick={onToggle}
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+          aria-expanded={open}
+        >
+          <span
+            className={`grid h-6 w-6 shrink-0 place-items-center rounded-md text-muted transition-transform duration-200 ${
+              open ? "rotate-90" : ""
+            }`}
+          >
+            ❯
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[15px] font-medium">{question.question}</div>
+            <div className="mt-0.5 text-xs text-muted">{categoryName}</div>
+          </div>
+          <div className="hidden shrink-0 items-center gap-2 sm:flex">
+            <DifficultyBadge difficulty={question.difficulty} />
+            <StatusBadge status={question.status} />
+          </div>
+        </button>
+      </div>
 
       {open && (
         <div className="border-t px-5 py-5">

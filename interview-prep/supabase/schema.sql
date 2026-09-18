@@ -21,6 +21,7 @@ create table if not exists questions (
   difficulty text not null default 'Medium' check (difficulty in ('Easy','Medium','Hard')),
   status text not null default 'Not Prepared' check (status in ('Prepared','Not Prepared')),
   answer_locked boolean not null default false,
+  pinned boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   last_reviewed_at timestamptz

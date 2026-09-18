@@ -1,7 +1,7 @@
 import type { Category, Question } from "./types";
 
-// Seed rows omit answerLocked — the DB defaults it to false on insert.
-type SeedQuestion = Omit<Question, "answerLocked">;
+// Seed rows omit answerLocked/pinned — the DB defaults them to false on insert.
+type SeedQuestion = Omit<Question, "answerLocked" | "pinned">;
 
 // Phase 0 seed data. In Phase 1 this file is replaced by Supabase queries;
 // nothing else in the app imports the data directly — it all goes through

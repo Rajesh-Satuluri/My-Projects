@@ -24,6 +24,7 @@ export interface Question {
   difficulty: Difficulty;
   status: PreparedStatus;
   answerLocked: boolean;
+  pinned: boolean;
   keyPoints: KeyPoint[];
   followUps: string[];
   tags: string[];

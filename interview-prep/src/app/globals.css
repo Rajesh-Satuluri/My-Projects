@@ -185,4 +185,11 @@ select {
     @apply block text-sm font-medium;
     color: var(--fg-soft);
   }
+
+  kbd {
+    @apply mx-0.5 rounded px-1.5 py-0.5 text-[11px] font-medium;
+    background: var(--panel-2);
+    border: 1px solid var(--border-strong);
+    color: var(--fg-soft);
+  }
 }

@@ -13,6 +13,7 @@ interface QuestionRow {
   difficulty: Difficulty;
   status: PreparedStatus;
   answer_locked: boolean | null;
+  pinned: boolean | null;
   created_at: string;
   updated_at: string;
   last_reviewed_at: string | null;
@@ -31,6 +32,7 @@ function toQuestion(r: QuestionRow): Question {
     difficulty: r.difficulty,
     status: r.status,
     answerLocked: r.answer_locked ?? false,
+    pinned: r.pinned ?? false,
     keyPoints: [...r.question_points]
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((p) => ({ id: p.id, point: p.point, sortOrder: p.sort_order, completed: p.completed })),
@@ -200,6 +202,11 @@ export async function saveAnswer(
   };
   if (locked !== undefined) patch.answer_locked = locked;
   const { error } = await supabase.from("questions").update(patch).eq("id", id);
+  if (error) throw error;
+}
+
+export async function setPinned(id: string, pinned: boolean): Promise<void> {
+  const { error } = await supabase.from("questions").update({ pinned }).eq("id", id);
   if (error) throw error;
 }
 
