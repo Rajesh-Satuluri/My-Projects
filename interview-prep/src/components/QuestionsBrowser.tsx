@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { Category, Question } from "@/lib/types";
-import { QuestionRow } from "@/components/ui";
+import QuestionItem from "@/components/QuestionItem";
 
 const DIFFICULTIES = ["Easy", "Medium", "Hard"];
 const STATUSES = ["Prepared", "Not Prepared"];
@@ -102,14 +102,7 @@ export default function QuestionsBrowser({
 
       <div className="mt-2 rounded-lg border bg-panel px-3">
         {filtered.map((q) => (
-          <QuestionRow
-            key={q.id}
-            id={q.id}
-            question={q.question}
-            categoryName={categoryName(q.categoryId)}
-            difficulty={q.difficulty}
-            status={q.status}
-          />
+          <QuestionItem key={q.id} question={q} categoryName={categoryName(q.categoryId)} />
         ))}
         {filtered.length === 0 && (
           <div className="py-8 text-center text-sm text-muted">No questions match.</div>
