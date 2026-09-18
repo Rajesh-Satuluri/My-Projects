@@ -49,8 +49,8 @@
 .mc-badge--close   { background:var(--blue-subtle);   color:var(--blue); }
 .mc-badge--partial { background:var(--yellow-subtle); color:var(--yellow); }
 .mc-badge--none    { background:var(--bg-4);          color:var(--text-muted); }
-.mc-tablewrap { border:1px solid var(--border-default); border-radius:14px; overflow:hidden; }
-.mc-table { width:100%; border-collapse:collapse; font-size:13px; }
+.mc-tablewrap { border:1px solid var(--border-default); border-radius:14px; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; }
+.mc-table { width:100%; border-collapse:collapse; font-size:13px; min-width:520px; }
 .mc-table thead th { text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted);
   font-weight:800; padding:12px 14px; background:var(--bg-2); border-bottom:1px solid var(--border-default); }
 .mc-table thead th.az { color:var(--brand-2); } .mc-table thead th.db { color:#ff8f6b; }
