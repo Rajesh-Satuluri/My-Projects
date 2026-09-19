@@ -10,6 +10,7 @@ export default function NotesWorkspace() {
   const [body, setBody] = useState("");
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
   const loadedFor = useRef<string | null>(null);
 
   // Pick a default active tab.
@@ -54,7 +55,7 @@ export default function NotesWorkspace() {
       const msg = e && typeof e === "object" ? (e as { message?: string }).message ?? "" : "";
       setError(
         /relation .*notes.* does not exist|could not find the table|schema cache/i.test(msg)
-          ? "The 'notes' table isn't set up yet. Run migration 006 (supabase/migrations/006_notes.sql) in the Supabase SQL editor."
+          ? "The 'notes' table isn't set up yet. Run supabase/setup.sql in the Supabase SQL editor."
           : msg || "Couldn't create a note."
       );
     }
@@ -77,43 +78,59 @@ export default function NotesWorkspace() {
   }
 
   return (
-    <div>
-      {/* Tab strip */}
-      <div className="mb-4 flex items-center gap-1.5 overflow-x-auto pb-1">
-        {notes.map((n) => (
-          <button
-            key={n.id}
-            onClick={() => setActiveId(n.id)}
-            className={`shrink-0 rounded-lg px-3 py-1.5 text-sm transition-colors ${
-              n.id === activeId
-                ? "bg-[var(--panel-2)] font-medium text-fg"
-                : "text-muted hover:bg-[var(--panel-2)] hover:text-fg"
-            }`}
-          >
-            {n.title || "Untitled"}
-          </button>
-        ))}
-        <button
-          onClick={addNote}
-          className="icon-btn shrink-0 text-muted hover:text-fg"
-          title="New note"
-        >
-          +
-        </button>
-      </div>
+    <div className={`flex gap-4 ${expanded ? "flex-col" : "flex-col md:flex-row"}`}>
+      {/* Left rail: vertical list of note tabs */}
+      {!expanded && (
+        <aside className="w-full shrink-0 md:w-56">
+          <div className="mb-2 flex items-center justify-between px-1">
+            <span className="label">Notes</span>
+            <button
+              onClick={addNote}
+              className="icon-btn text-muted hover:text-fg"
+              title="New note"
+            >
+              +
+            </button>
+          </div>
+          <div className="flex flex-row gap-1 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0">
+            {notes.map((n) => (
+              <button
+                key={n.id}
+                onClick={() => setActiveId(n.id)}
+                className={`shrink-0 truncate rounded-lg px-3 py-2 text-left text-sm transition-colors md:w-full ${
+                  n.id === activeId
+                    ? "bg-[var(--panel-2)] font-medium text-fg"
+                    : "text-muted hover:bg-[var(--panel-2)] hover:text-fg"
+                }`}
+                title={n.title || "Untitled"}
+              >
+                {n.title || "Untitled"}
+              </button>
+            ))}
+          </div>
+        </aside>
+      )}
 
+      {/* Editor pane */}
       {active && (
-        <div className="card p-5">
+        <div className="card min-w-0 flex-1 p-5">
           <div className="mb-3 flex items-center gap-3">
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Note title"
-              className="flex-1 bg-transparent text-lg font-semibold outline-none placeholder:text-muted"
+              className="min-w-0 flex-1 bg-transparent text-lg font-semibold outline-none placeholder:text-muted"
             />
-            <span className="text-xs text-muted">
+            <span className="whitespace-nowrap text-xs text-muted">
               {status === "saving" ? "Saving…" : status === "saved" ? "Saved ✓" : ""}
             </span>
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              className="icon-btn text-muted hover:text-fg"
+              title={expanded ? "Show note list" : "Expand editor"}
+            >
+              {expanded ? "⤡" : "⤢"}
+            </button>
             <button
               onClick={() => removeNote(active.id)}
               className="btn btn-ghost px-2.5 py-1.5 text-xs text-[var(--danger)]"
@@ -125,7 +142,9 @@ export default function NotesWorkspace() {
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="Write freely — your project story, notes, anything…"
-            className="input min-h-[60vh] resize-y text-[15px] leading-7"
+            className={`input resize-y text-[15px] leading-7 ${
+              expanded ? "min-h-[78vh]" : "min-h-[62vh]"
+            }`}
           />
         </div>
       )}
