@@ -48,7 +48,7 @@ export default function RootLayout({
             <div className="flex min-h-screen flex-col md:flex-row">
               <Sidebar />
               <main className="flex-1 px-5 py-8 md:px-10 md:py-10">
-                <div className="mx-auto max-w-6xl">{children}</div>
+                <div className="mx-auto w-full max-w-[1600px]">{children}</div>
               </main>
             </div>
           </AuthGate>
