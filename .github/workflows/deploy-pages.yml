@@ -88,6 +88,9 @@ jobs:
           mkdir -p /tmp/site-root/db-internals
           cp -r _branches/db-internals/db-internals-visualizer/. /tmp/site-root/db-internals/
 
+          mkdir -p /tmp/site-root/db-lab
+          cp -r _branches/db-internals/db-lab/. /tmp/site-root/db-lab/
+
           cp _branches/db-internals/landing/index.html /tmp/site-root/index.html
           touch /tmp/site-root/.nojekyll
 
