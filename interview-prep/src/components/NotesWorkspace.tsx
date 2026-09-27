@@ -11,15 +11,59 @@ export default function NotesWorkspace() {
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
+  const restored = useRef(false);
   const loadedFor = useRef<string | null>(null);
 
-  // Pick a default active tab.
+  const LAST_KEY = "notes:lastActive";
+  const EXPANDED_KEY = "notes:expanded";
+
+  // Restore the editor-expanded preference once on mount.
   useEffect(() => {
-    if (!activeId && notes.length) setActiveId(notes[0].id);
-    if (activeId && !notes.some((n) => n.id === activeId)) {
-      setActiveId(notes[0]?.id ?? null);
+    try {
+      setExpanded(localStorage.getItem(EXPANDED_KEY) === "1");
+    } catch {}
+  }, []);
+
+  // Select a note: current selection → last-viewed (localStorage) → first note.
+  useEffect(() => {
+    if (!notes.length) {
+      if (activeId) setActiveId(null);
+      return;
     }
+    // If the current selection is still valid, keep it.
+    if (activeId && notes.some((n) => n.id === activeId)) return;
+
+    // First run after notes load: try to restore the last-viewed tab.
+    if (!restored.current) {
+      restored.current = true;
+      let saved: string | null = null;
+      try {
+        saved = localStorage.getItem(LAST_KEY);
+      } catch {}
+      if (saved && notes.some((n) => n.id === saved)) {
+        setActiveId(saved);
+        return;
+      }
+    }
+    setActiveId(notes[0].id);
   }, [notes, activeId]);
+
+  // Remember the active tab per device.
+  const selectNote = (id: string) => {
+    setActiveId(id);
+    try {
+      localStorage.setItem(LAST_KEY, id);
+    } catch {}
+  };
+
+  const toggleExpanded = () => {
+    setExpanded((v) => {
+      try {
+        localStorage.setItem(EXPANDED_KEY, v ? "0" : "1");
+      } catch {}
+      return !v;
+    });
+  };
 
   // Load the active note into the editor when the selection changes.
   const active = notes.find((n) => n.id === activeId) ?? null;
@@ -49,7 +93,7 @@ export default function NotesWorkspace() {
     setError(null);
     try {
       const id = await createNote();
-      setActiveId(id);
+      selectNote(id);
       loadedFor.current = null;
     } catch (e) {
       const msg = e && typeof e === "object" ? (e as { message?: string }).message ?? "" : "";
@@ -96,7 +140,7 @@ export default function NotesWorkspace() {
             {notes.map((n) => (
               <button
                 key={n.id}
-                onClick={() => setActiveId(n.id)}
+                onClick={() => selectNote(n.id)}
                 className={`shrink-0 truncate rounded-lg px-3 py-2 text-left text-sm transition-colors md:w-full ${
                   n.id === activeId
                     ? "bg-[var(--panel-2)] font-medium text-fg"
@@ -125,7 +169,7 @@ export default function NotesWorkspace() {
               {status === "saving" ? "Saving…" : status === "saved" ? "Saved ✓" : ""}
             </span>
             <button
-              onClick={() => setExpanded((v) => !v)}
+              onClick={toggleExpanded}
               className="icon-btn text-muted hover:text-fg"
               title={expanded ? "Show note list" : "Expand editor"}
             >
