@@ -146,8 +146,8 @@
   }
 
   /* ── Download ──────────────────────────────────────────────── */
-  function download(text, name) {
-    var blob = new Blob([text], { type: 'application/json' });
+  function download(text, name, mime) {
+    var blob = new Blob([text], { type: mime || 'application/json' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
@@ -156,6 +156,150 @@
     a.click();
     document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  /* ── Offline full-tool bundle ──────────────────────────────────
+     Snapshots the WHOLE tool — every page, style, script, and the
+     current saved state — into one self-contained .html file that
+     runs in any browser with no internet and no server.
+
+     It re-fetches this app's own static files (same origin only)
+     and inlines them; no external service, no new dependency, just
+     fetch + DOMParser + Blob. This app has no runtime fetch/XHR and
+     no external fonts/CDN, so the inlined document is fully offline.
+     ────────────────────────────────────────────────────────────── */
+
+  // True only for this app's own relative asset paths.
+  function isLocalRef(url) {
+    if (!url) return false;
+    if (/^(https?:)?\/\//i.test(url)) return false;      // absolute / protocol-relative
+    if (/^(data:|blob:|mailto:|tel:|javascript:|#)/i.test(url)) return false;
+    return true;
+  }
+
+  function fetchText(url) {
+    return fetch(url, { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) throw new Error('Could not load ' + url + ' (' + r.status + ')');
+      return r.text();
+    });
+  }
+
+  function fetchDataURI(url) {
+    return fetch(url, { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) throw new Error('Could not load ' + url);
+      return r.blob();
+    }).then(function (blob) {
+      return new Promise(function (resolve, reject) {
+        var fr = new FileReader();
+        fr.onload = function () { resolve(String(fr.result)); };
+        fr.onerror = function () { reject(new Error('Could not encode ' + url)); };
+        fr.readAsDataURL(blob);
+      });
+    });
+  }
+
+  // A tiny bootstrap that restores the current state into the offline
+  // copy — once, on first open — without clobbering later in-copy work.
+  function seedScriptText() {
+    var json = JSON.stringify(collectData());
+    json = json.replace(/</g, '\\u003c');               // never break out of <script>
+    return '(function(){try{' +
+      'if(localStorage.getItem("iv:offline-seeded"))return;' +
+      'var d=' + json + ';' +
+      'for(var k in d){if(Object.prototype.hasOwnProperty.call(d,k)){' +
+      'try{localStorage.setItem(k,d[k]);}catch(e){}}}' +
+      'localStorage.setItem("iv:offline-seeded","1");' +
+      '}catch(e){}})();';
+  }
+
+  // Inline the favicon as a data URI; drop manifest / other icon links
+  // that would 404 next to a lone .html file.
+  function inlineIcons(doc) {
+    var fav = doc.querySelector('link[rel="icon"][sizes="32x32"]') ||
+              doc.querySelector('link[rel="icon"]');
+    var favHref = (fav && isLocalRef(fav.getAttribute('href'))) ? fav.getAttribute('href') : null;
+    var drop = doc.querySelectorAll('link[rel="manifest"], link[rel="apple-touch-icon"], link[rel="icon"]');
+    Array.prototype.forEach.call(drop, function (n) { if (n.parentNode) n.parentNode.removeChild(n); });
+    if (!favHref) return Promise.resolve();
+    return fetchDataURI(favHref).then(function (uri) {
+      var link = doc.createElement('link');
+      link.setAttribute('rel', 'icon');
+      link.setAttribute('type', 'image/png');
+      link.setAttribute('href', uri);
+      (doc.head || doc.getElementsByTagName('head')[0]).appendChild(link);
+    })['catch'](function () { /* favicon is cosmetic — ignore */ });
+  }
+
+  function buildOfflineDoc() {
+    return fetchText('index.html').then(function (html) {
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var head = doc.head || doc.getElementsByTagName('head')[0];
+
+      var links = Array.prototype.slice.call(doc.querySelectorAll('link[rel="stylesheet"][href]'))
+        .filter(function (l) { return isLocalRef(l.getAttribute('href')); });
+      var scripts = Array.prototype.slice.call(doc.querySelectorAll('script[src]'))
+        .filter(function (s) { return isLocalRef(s.getAttribute('src')); });
+
+      var cssJobs = links.map(function (l) {
+        return fetchText(l.getAttribute('href')).then(function (css) {
+          var style = doc.createElement('style');
+          if (l.getAttribute('media')) style.setAttribute('media', l.getAttribute('media'));
+          style.textContent = css;
+          l.parentNode.replaceChild(style, l);
+        });
+      });
+      var jsJobs = scripts.map(function (s) {
+        return fetchText(s.getAttribute('src')).then(function (js) { return { node: s, js: js }; });
+      });
+
+      return Promise.all(cssJobs)
+        .then(function () { return Promise.all(jsJobs); })
+        .then(function (results) {
+          results.forEach(function (r) {                 // preserve dependency order in place
+            var inline = doc.createElement('script');
+            inline.textContent = r.js;
+            r.node.parentNode.replaceChild(inline, r.node);
+          });
+          return inlineIcons(doc);
+        })
+        .then(function () {
+          var seed = doc.createElement('script');
+          seed.setAttribute('data-otf-seed', '1');
+          seed.textContent = seedScriptText();
+          var firstScript = head.querySelector('script');   // the no-flash script
+          if (firstScript) head.insertBefore(seed, firstScript);
+          else head.insertBefore(seed, head.firstChild);
+          doc.documentElement.setAttribute('data-otf-offline', '1');
+          return doc;
+        });
+    });
+  }
+
+  function offlineFileName() {
+    var d = new Date();
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return 'open-table-formats-offline-' +
+      d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '.html';
+  }
+
+  var offlineBusy = false;
+  function downloadOffline() {
+    if (location.protocol === 'file:') {
+      toast('You’re already running the offline copy — just duplicate this .html file to share it.', 'warn');
+      return;
+    }
+    if (offlineBusy) return;
+    offlineBusy = true;
+    toast('Packaging the whole tool… this can take a moment.', 'success');
+    buildOfflineDoc().then(function (doc) {
+      var out = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+      download(out, offlineFileName(), 'text/html');
+      stampExport();
+      refreshFooter();
+      toast('Offline copy downloaded — open it in any browser, no internet needed.', 'success');
+    })['catch'](function (err) {
+      toast((err && err.message) || 'Couldn’t build the offline copy.', 'error');
+    }).then(function () { offlineBusy = false; }, function () { offlineBusy = false; });
   }
 
   /* ── Modal construction ────────────────────────────────────── */
@@ -169,8 +313,8 @@
   function summaryLine() {
     var n = collectKeys().length;
     return n + (n === 1 ? ' item' : ' items') +
-      ' · theme, progress, quiz scores, panel sizes & preferences. ' +
-      'Nothing is uploaded — everything stays in this browser.';
+      ' · theme, progress, quiz scores, panel sizes & preferences — ' +
+      'included in both the offline copy and the data backup. Nothing is uploaded.';
   }
 
   function buildModal() {
@@ -189,21 +333,25 @@
         // ── Export ──
         '<div class="bk-section">' +
           '<div class="bk-section-title">Export</div>' +
-          '<p class="bk-desc">Save all your progress to a file you can move to another browser or device.</p>' +
+          '<p class="bk-desc"><strong>Download offline copy</strong> saves the entire tool — every page, animation, and your progress — as one <code class="bk-code">.html</code> file that runs in any browser with no internet. <strong>Data only</strong> saves just your saved state, for restoring into another copy.</p>' +
           '<div class="bk-actions">' +
-            '<button class="btn btn-primary" data-bk="download">' +
+            '<button class="btn btn-primary" data-bk="offline">' +
               icon('<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>') +
-              'Download backup</button>' +
+              'Download offline copy</button>' +
+            '<button class="btn btn-secondary" data-bk="download">' +
+              icon('<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>') +
+              'Data only (.json)</button>' +
             '<button class="btn btn-secondary" data-bk="copy">' +
               icon('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>') +
-              'Copy to clipboard</button>' +
+              'Copy data</button>' +
           '</div>' +
+          '<p class="bk-hint">The offline copy is fully self-contained — just open the file, no internet or server needed.</p>' +
         '</div>' +
 
         // ── Restore ──
         '<div class="bk-section">' +
           '<div class="bk-section-title">Restore</div>' +
-          '<p class="bk-desc">Bring progress back from a backup. <strong>Merge</strong> keeps what you have and overwrites matching items; <strong>Replace</strong> clears everything first.</p>' +
+          '<p class="bk-desc">Bring progress back from a <strong>data</strong> backup (<code class="bk-code">.json</code>). <strong>Merge</strong> keeps what you have and overwrites matching items; <strong>Replace</strong> clears everything first.</p>' +
           '<div class="bk-modes" role="radiogroup" aria-label="Restore mode">' +
             '<label class="bk-mode"><input type="radio" name="bk-mode" value="merge" checked /> Merge <span class="bk-mode-hint">(default, safe)</span></label>' +
             '<label class="bk-mode"><input type="radio" name="bk-mode" value="replace" /> Replace <span class="bk-mode-hint">(overwrite all)</span></label>' +
@@ -335,8 +483,11 @@
       if (!btn) return;
       var act = btn.getAttribute('data-bk');
 
-      if (act === 'download') {
-        try { download(backupJSON(), fileName()); stampExport(); refreshFooter(); toast('Backup downloaded.', 'success'); }
+      if (act === 'offline') {
+        downloadOffline();
+
+      } else if (act === 'download') {
+        try { download(backupJSON(), fileName()); stampExport(); refreshFooter(); toast('Data backup downloaded.', 'success'); }
         catch (err) { toast('Couldn’t create the backup file.', 'error'); }
 
       } else if (act === 'copy') {
@@ -431,9 +582,9 @@
     btn.id = 'bk-open';
     btn.className = 'btn-icon';
     btn.type = 'button';
-    btn.title = 'Backup & restore your progress';
-    btn.setAttribute('data-tooltip', 'Backup & restore');
-    btn.setAttribute('aria-label', 'Backup and restore your progress');
+    btn.title = 'Download offline copy · backup & restore';
+    btn.setAttribute('data-tooltip', 'Download offline copy · backup');
+    btn.setAttribute('aria-label', 'Download an offline copy of the whole tool, or back up and restore your progress');
     btn.innerHTML = icon(
       '<path d="M21 8v11a2 2 0 01-2 2H5a2 2 0 01-2-2V8"/>' +
       '<rect x="1" y="3" width="22" height="5" rx="1"/>' +

@@ -35,6 +35,22 @@
   margin: 0 0 12px;
 }
 .bk-desc strong { color: var(--text-primary); font-weight: 600; }
+.bk-code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--bg-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+/* One-line reassurance under the export actions */
+.bk-hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin: 10px 0 0;
+}
 
 /* Action rows */
 .bk-actions {
