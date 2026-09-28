@@ -128,10 +128,13 @@
     } catch (e) { console.error("Dock controls error:", e); }
     // Append the recurring e-commerce business example below concept
     // modules (no-op for modules without a lens entry).
-    if (AV.BusinessLens) {
+    // Concept deep dives render their own business lens + Quick Check inline
+    // (see modules/concept.js), so these router-level auto-appends only fire
+    // for legacy modules that expose an append() helper.
+    if (AV.BusinessLens && typeof AV.BusinessLens.append === "function") {
       try { AV.BusinessLens.append(c, mod.id); } catch (e) { console.error("BusinessLens error:", e); }
     }
-    if (AV.TestYourself) {
+    if (AV.TestYourself && typeof AV.TestYourself.append === "function") {
       try { AV.TestYourself.append(c, mod.id); } catch (e) { console.error("TestYourself error:", e); }
     }
     this.current = mod;

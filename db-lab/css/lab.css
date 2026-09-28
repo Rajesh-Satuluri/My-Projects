@@ -146,6 +146,69 @@
 .mastery-pct { color: var(--airflow-bright); font-weight: 700; font-variant-numeric: tabular-nums; }
 .mastery-meta { margin-top: 6px; font-size: 12px; color: var(--text-muted); }
 
+/* ── Authored deep-dive badge ────────────────────────────── */
+.ws-authored-badge {
+  display: inline-block; margin-top: 10px; padding: 3px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: .02em;
+  color: var(--airflow-bright); background: var(--airflow-subtle); border: 1px solid var(--airflow);
+}
+
+/* ── MVCC visualization (crisp HTML/CSS, DPR-independent) ─── */
+.mvcc-viz { display: flex; flex-direction: column; gap: 18px; padding: 8px 2px; min-height: 360px; }
+.mvcc-empty { color: var(--text-muted); font-size: 14px; padding: 48px 16px; text-align: center;
+  border: 1px dashed var(--border-muted); border-radius: 12px; line-height: 1.6; }
+
+.mvcc-txns { display: flex; flex-wrap: wrap; gap: 12px; }
+.mvcc-txns--empty { color: var(--text-muted); font-size: 13px; font-style: italic; padding: 8px 2px; }
+.mvcc-txn {
+  flex: 1 1 200px; min-width: 190px; border-radius: 12px; padding: 12px 14px;
+  background: var(--bg-1); border: 1px solid var(--border-default); border-left-width: 3px;
+}
+.mvcc-txn--reader { border-left-color: var(--cyan); }
+.mvcc-txn--writer { border-left-color: var(--airflow); }
+.mvcc-txn.committed { opacity: .95; }
+.mvcc-txn-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.mvcc-txn-id { font-weight: 800; font-size: 15px; color: var(--text-primary); }
+.mvcc-txn-role { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); font-weight: 700; }
+.mvcc-txn--reader .mvcc-txn-role { color: var(--cyan); }
+.mvcc-txn--writer .mvcc-txn-role { color: var(--airflow-bright); }
+.mvcc-txn-xid { margin-top: 4px; font-size: 12px; color: var(--text-secondary); }
+.mvcc-txn-xid code, .mvcc-ver-meta code { color: var(--text-primary); background: var(--bg-3); padding: 0 4px; border-radius: 4px; font-size: 11px; }
+.mvcc-txn-sees { margin-top: 8px; font-size: 13px; color: var(--text-primary); }
+.mvcc-txn-badge {
+  display: inline-block; margin-top: 8px; font-size: 10px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--green); background: var(--green-subtle, rgba(16,185,129,.12));
+  padding: 2px 8px; border-radius: 999px;
+}
+
+.mvcc-chain-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); font-weight: 700; }
+.mvcc-chain { display: flex; align-items: stretch; flex-wrap: wrap; gap: 10px; }
+.mvcc-chain-arrow { align-self: center; color: var(--text-muted); font-size: 18px; }
+.mvcc-ver {
+  flex: 0 1 168px; min-width: 150px; border-radius: 12px; padding: 12px 14px;
+  background: var(--bg-1); border: 1.5px solid var(--border-default);
+  transition: border-color .2s, transform .2s, opacity .2s, box-shadow .2s;
+}
+.mvcc-ver.hot { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+.mvcc-ver--live { border-color: var(--green); }
+.mvcc-ver--live.hot { box-shadow: 0 0 0 1px var(--green), 0 6px 20px rgba(0,0,0,.2); }
+.mvcc-ver--uncommitted { border-color: var(--orange); border-style: dashed; }
+.mvcc-ver--superseded { border-color: var(--border-muted); opacity: .85; }
+.mvcc-ver--dead-pending { border-color: var(--red, #EF4444); opacity: .7; }
+.mvcc-ver--reclaimed { border-color: var(--border-subtle); opacity: .4; }
+.mvcc-ver--reclaimed .mvcc-ver-val { text-decoration: line-through; }
+.mvcc-ver-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.mvcc-ver-name { font-weight: 800; font-size: 14px; color: var(--text-primary); }
+.mvcc-ver-state { font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); font-weight: 700; }
+.mvcc-ver--live .mvcc-ver-state { color: var(--green); }
+.mvcc-ver--uncommitted .mvcc-ver-state { color: var(--orange); }
+.mvcc-ver--dead-pending .mvcc-ver-state { color: var(--red, #EF4444); }
+.mvcc-ver-val { margin: 8px 0; font-size: 15px; color: var(--text-secondary); }
+.mvcc-ver-val b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.mvcc-ver-meta { display: flex; gap: 10px; font-size: 11px; color: var(--text-muted); }
+
+@media (max-width: 720px) { .mvcc-ver { flex-basis: 100%; } .mvcc-chain-arrow { transform: rotate(90deg); } }
+
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
 @media (max-width: 900px) {
