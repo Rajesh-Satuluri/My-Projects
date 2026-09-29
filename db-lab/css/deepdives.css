@@ -1,0 +1,262 @@
+/* ============================================================
+   deepdives.css — shared visualization kit for authored,
+   "airflow-grade" concept deep dives (js/deepdives/*.js).
+
+   Generalizes the MVCC aesthetic (lab.css) into reusable
+   primitives so every deep-dive viz reads as one system:
+     .dd-viz / .dd-section / .dd-row  → layout
+     .dd-actor                        → a transaction / process card
+     .dd-card                         → a record / state / version card
+     .dd-chip / .dd-badge             → status pills
+   plus per-concept blocks (ACID flags, WAL log, lock table,
+   wait-for graph, isolation matrix, recovery timeline).
+
+   Renders inside .arch-canvas (background: --bg-2), so cards
+   sit on --bg-1 for contrast, matching the MVCC flagship.
+   ============================================================ */
+
+/* ── Container & shared scaffolding ───────────────────────── */
+.dd-viz { display: flex; flex-direction: column; gap: 18px; padding: 8px 2px; min-height: 360px; }
+.dd-empty {
+  color: var(--text-muted); font-size: 14px; padding: 48px 16px; text-align: center;
+  border: 1px dashed var(--border-muted); border-radius: 12px; line-height: 1.6;
+}
+.dd-section { display: flex; flex-direction: column; gap: 10px; }
+.dd-section-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--text-muted); font-weight: 700;
+}
+.dd-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; }
+.dd-note { font-size: 12px; color: var(--text-muted); font-style: italic; }
+.dd-viz code {
+  color: var(--text-primary); background: var(--bg-3);
+  padding: 0 4px; border-radius: 4px; font-size: 11px; font-family: var(--font-mono);
+}
+
+/* ── Actor card (a transaction / session / process) ───────── */
+.dd-actor {
+  flex: 1 1 200px; min-width: 190px; border-radius: 12px; padding: 12px 14px;
+  background: var(--bg-1); border: 1px solid var(--border-default); border-left-width: 3px;
+  transition: border-color .2s, opacity .2s, box-shadow .2s, transform .2s;
+}
+.dd-actor--a { border-left-color: var(--cyan); }
+.dd-actor--b { border-left-color: var(--airflow); }
+.dd-actor--c { border-left-color: var(--purple); }
+.dd-actor.is-committed { border-left-color: var(--green); }
+.dd-actor.is-aborted { border-left-color: var(--red); opacity: .72; }
+.dd-actor.is-aborted .dd-actor-id { text-decoration: line-through; }
+.dd-actor.is-waiting { border-left-color: var(--orange); border-left-style: dashed; }
+.dd-actor.hot { box-shadow: 0 6px 20px rgba(0,0,0,.18); transform: translateY(-2px); }
+.dd-actor-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.dd-actor-id { font-weight: 800; font-size: 15px; color: var(--text-primary); }
+.dd-actor-tag { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); font-weight: 700; }
+.dd-actor--a .dd-actor-tag { color: var(--cyan); }
+.dd-actor--b .dd-actor-tag { color: var(--airflow-bright); }
+.dd-actor--c .dd-actor-tag { color: var(--purple); }
+.dd-actor-body { margin-top: 6px; font-size: 13px; color: var(--text-primary); line-height: 1.5; }
+.dd-actor-sub { margin-top: 4px; font-size: 12px; color: var(--text-secondary); }
+
+/* ── Generic state / record card ──────────────────────────── */
+.dd-card {
+  flex: 0 1 172px; min-width: 150px; border-radius: 12px; padding: 12px 14px;
+  background: var(--bg-1); border: 1.5px solid var(--border-default);
+  transition: border-color .2s, transform .2s, opacity .2s, box-shadow .2s;
+}
+.dd-card.hot { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+.dd-card--ok { border-color: var(--green); }
+.dd-card--ok.hot { box-shadow: 0 0 0 1px var(--green), 0 6px 20px rgba(0,0,0,.2); }
+.dd-card--pending { border-color: var(--orange); border-style: dashed; }
+.dd-card--bad { border-color: var(--red); opacity: .78; }
+.dd-card--muted { border-color: var(--border-muted); opacity: .7; }
+.dd-card--ghost { border-color: var(--border-subtle); opacity: .4; }
+.dd-card--ghost .dd-card-val { text-decoration: line-through; }
+.dd-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.dd-card-name { font-weight: 800; font-size: 14px; color: var(--text-primary); }
+.dd-card-state { font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); font-weight: 700; }
+.dd-card--ok .dd-card-state { color: var(--green); }
+.dd-card--pending .dd-card-state { color: var(--orange); }
+.dd-card--bad .dd-card-state { color: var(--red); }
+.dd-card-val { margin: 8px 0 6px; font-size: 15px; color: var(--text-secondary); }
+.dd-card-val b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.dd-card-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: var(--text-muted); }
+
+/* ── Chips, badges, arrows ────────────────────────────────── */
+.dd-chip {
+  display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; padding: 2px 8px; border-radius: 999px;
+  color: var(--text-secondary); background: var(--bg-3); border: 1px solid var(--border-muted);
+}
+.dd-chip--ok { color: var(--green); background: rgba(16,185,129,.12); border-color: transparent; }
+.dd-chip--warn { color: var(--orange); background: rgba(245,158,11,.12); border-color: transparent; }
+.dd-chip--bad { color: var(--red); background: rgba(239,68,68,.12); border-color: transparent; }
+.dd-chip--info { color: var(--cyan); background: rgba(34,211,238,.12); border-color: transparent; }
+.dd-chip--accent { color: var(--airflow-bright); background: var(--airflow-subtle); border-color: transparent; }
+.dd-badge {
+  display: inline-block; margin-top: 8px; font-size: 10px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--green); background: rgba(16,185,129,.12);
+  padding: 2px 8px; border-radius: 999px;
+}
+.dd-arrow { align-self: center; color: var(--text-muted); font-size: 18px; }
+
+/* ============================================================
+   ACID Transactions — operation ledger + ACID flags
+   ============================================================ */
+.dd-txn-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.dd-txn-state {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 8px;
+  color: var(--text-secondary); background: var(--bg-1); border: 1px solid var(--border-default);
+}
+.dd-txn-state.is-open { color: var(--cyan); border-color: var(--cyan); }
+.dd-txn-state.is-committed { color: var(--green); border-color: var(--green); }
+.dd-txn-state.is-aborted { color: var(--red); border-color: var(--red); }
+.dd-oplist { display: flex; flex-direction: column; gap: 8px; }
+.dd-op {
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px;
+  background: var(--bg-1); border: 1px solid var(--border-default); border-left-width: 3px;
+  border-left-color: var(--border-muted); transition: all .2s;
+}
+.dd-op.is-applied { border-left-color: var(--cyan); }
+.dd-op.is-committed { border-left-color: var(--green); }
+.dd-op.is-undone { border-left-color: var(--red); opacity: .6; }
+.dd-op.is-undone .dd-op-sql { text-decoration: line-through; }
+.dd-op.hot { box-shadow: 0 4px 16px rgba(0,0,0,.18); transform: translateX(2px); }
+.dd-op-icon { font-size: 16px; width: 22px; text-align: center; flex: none; }
+.dd-op-sql { font-family: var(--font-mono); font-size: 12.5px; color: var(--text-primary); flex: 1 1 auto; }
+.dd-op-status { flex: none; }
+.dd-flags { display: flex; flex-wrap: wrap; gap: 10px; }
+.dd-flag {
+  flex: 1 1 120px; min-width: 110px; display: flex; flex-direction: column; gap: 2px;
+  padding: 10px 12px; border-radius: 10px; background: var(--bg-1);
+  border: 1px solid var(--border-default); opacity: .5; transition: all .25s;
+}
+.dd-flag.on { opacity: 1; border-color: var(--green); box-shadow: 0 0 0 1px var(--green); }
+.dd-flag-letter { font-size: 16px; font-weight: 800; color: var(--text-primary); }
+.dd-flag.on .dd-flag-letter { color: var(--green); }
+.dd-flag-name { font-size: 11px; font-weight: 700; color: var(--text-secondary); }
+.dd-flag-note { font-size: 10.5px; color: var(--text-muted); line-height: 1.4; }
+
+/* ============================================================
+   WAL — append-only log tape + data page / disk state
+   ============================================================ */
+.dd-wal-log { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.dd-logrec {
+  flex: 0 1 120px; min-width: 104px; border-radius: 9px; padding: 8px 10px;
+  background: var(--bg-1); border: 1px solid var(--border-default); border-top-width: 3px;
+  border-top-color: var(--airflow); transition: all .2s;
+}
+.dd-logrec.is-commit { border-top-color: var(--green); }
+.dd-logrec.is-checkpoint { border-top-color: var(--purple); }
+.dd-logrec.is-fsynced { box-shadow: 0 0 0 1px var(--green); }
+.dd-logrec.hot { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.2); }
+.dd-logrec-lsn { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); font-weight: 700; }
+.dd-logrec-type { font-size: 12px; font-weight: 700; color: var(--text-primary); margin-top: 2px; }
+.dd-logrec-detail { font-size: 11px; color: var(--text-secondary); margin-top: 2px; font-family: var(--font-mono); }
+.dd-storage { display: flex; flex-wrap: wrap; gap: 12px; }
+.dd-store {
+  flex: 1 1 200px; min-width: 180px; border-radius: 12px; padding: 12px 14px;
+  background: var(--bg-1); border: 1px solid var(--border-default);
+}
+.dd-store-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); font-weight: 700; }
+.dd-store-val { margin-top: 8px; font-size: 20px; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.dd-store-val small { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.dd-store-flag { margin-top: 8px; }
+.dd-store.is-dirty { border-color: var(--orange); }
+.dd-store.is-durable { border-color: var(--green); }
+.dd-store.is-lost { border-color: var(--red); }
+
+/* ============================================================
+   Locking & Deadlocks — lock table + wait-for graph
+   ============================================================ */
+.dd-locktable { display: flex; flex-direction: column; gap: 8px; }
+.dd-lockrow {
+  display: grid; grid-template-columns: 92px 1fr auto; gap: 12px; align-items: center;
+  padding: 10px 14px; border-radius: 10px; background: var(--bg-1);
+  border: 1px solid var(--border-default); transition: all .2s;
+}
+.dd-lockrow.hot { box-shadow: 0 4px 16px rgba(0,0,0,.18); }
+.dd-lockrow.is-contended { border-color: var(--orange); }
+.dd-lock-res { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.dd-lock-holder { font-size: 12.5px; color: var(--text-secondary); }
+.dd-lock-holder b { color: var(--text-primary); }
+.dd-lock-wait { font-size: 11px; color: var(--orange); margin-top: 2px; }
+.dd-wfg {
+  display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
+  padding: 14px; border-radius: 12px; background: var(--bg-1); border: 1px solid var(--border-default);
+}
+.dd-wfg.is-deadlock { border-color: var(--red); box-shadow: 0 0 0 1px var(--red); }
+.dd-wfg-node {
+  font-weight: 800; font-size: 14px; color: var(--text-primary); padding: 10px 16px;
+  border-radius: 10px; background: var(--bg-3); border: 1.5px solid var(--border-default);
+}
+.dd-wfg-node.is-victim { border-color: var(--red); color: var(--red); text-decoration: line-through; opacity: .7; }
+.dd-wfg-node.is-survivor { border-color: var(--green); color: var(--green); }
+.dd-wfg-edge { color: var(--text-muted); font-size: 13px; font-weight: 700; letter-spacing: -.02em; }
+.dd-wfg.is-deadlock .dd-wfg-edge { color: var(--red); }
+.dd-wfg-label { width: 100%; text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.dd-wfg.is-deadlock .dd-wfg-label { color: var(--red); font-weight: 700; }
+
+/* ============================================================
+   Isolation Levels — anomaly matrix + scenario strip
+   ============================================================ */
+.dd-matrix-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border-default); }
+.dd-matrix { width: 100%; border-collapse: collapse; font-size: 12.5px; background: var(--bg-1); }
+.dd-matrix th, .dd-matrix td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border-subtle); }
+.dd-matrix thead th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); font-weight: 700; }
+.dd-matrix tbody th { text-align: left; font-weight: 700; color: var(--text-primary); white-space: nowrap; }
+.dd-matrix tr.is-current { background: var(--airflow-subtle); }
+.dd-matrix tr.is-current th { color: var(--airflow-bright); }
+.dd-matrix .cell-prevented { color: var(--green); font-weight: 800; }
+.dd-matrix .cell-allowed { color: var(--red); font-weight: 800; }
+.dd-scenario {
+  border-radius: 12px; padding: 12px 14px; background: var(--bg-1); border: 1px solid var(--border-default);
+}
+.dd-scenario-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+.dd-scenario-seq { display: flex; flex-direction: column; gap: 6px; }
+.dd-seq-line { display: flex; gap: 10px; align-items: baseline; font-size: 12.5px; }
+.dd-seq-who { font-weight: 800; flex: none; width: 34px; }
+.dd-seq-who.a { color: var(--cyan); }
+.dd-seq-who.b { color: var(--airflow-bright); }
+.dd-seq-act { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); }
+.dd-seq-act b { color: var(--text-primary); }
+.dd-scenario-verdict { margin-top: 10px; }
+
+/* ============================================================
+   Crash Recovery — WAL timeline + phase bar + txn outcomes
+   ============================================================ */
+.dd-phasebar { display: flex; gap: 8px; flex-wrap: wrap; }
+.dd-phase {
+  flex: 1 1 100px; text-align: center; padding: 8px 10px; border-radius: 10px;
+  font-size: 12px; font-weight: 700; color: var(--text-muted);
+  background: var(--bg-1); border: 1px solid var(--border-default); transition: all .2s;
+}
+.dd-phase.on { color: var(--airflow-bright); border-color: var(--airflow); background: var(--airflow-subtle); box-shadow: 0 0 0 1px var(--airflow); }
+.dd-phase.done { color: var(--green); border-color: var(--green); }
+.dd-timeline { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; }
+.dd-tl-rec {
+  flex: 0 1 96px; min-width: 84px; border-radius: 8px; padding: 7px 9px;
+  background: var(--bg-1); border: 1px solid var(--border-default); position: relative; transition: all .2s;
+}
+.dd-tl-rec.is-checkpoint { border-color: var(--purple); }
+.dd-tl-rec.is-crash { border: 1.5px dashed var(--red); background: rgba(239,68,68,.06); }
+.dd-tl-rec.scan { box-shadow: 0 0 0 2px var(--airflow); transform: translateY(-2px); }
+.dd-tl-rec.redo { box-shadow: 0 0 0 2px var(--cyan); }
+.dd-tl-rec.undo { box-shadow: 0 0 0 2px var(--orange); }
+.dd-tl-lsn { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-muted); font-weight: 700; }
+.dd-tl-body { font-size: 11px; color: var(--text-primary); margin-top: 2px; font-family: var(--font-mono); }
+.dd-txntable { display: flex; flex-wrap: wrap; gap: 10px; }
+.dd-txnrow {
+  flex: 1 1 160px; min-width: 150px; display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--bg-1);
+  border: 1px solid var(--border-default); border-left-width: 3px; border-left-color: var(--border-muted);
+}
+.dd-txnrow.is-winner { border-left-color: var(--green); }
+.dd-txnrow.is-loser { border-left-color: var(--red); }
+.dd-txnrow-id { font-weight: 800; font-size: 13px; color: var(--text-primary); }
+.dd-txnrow-fate { font-size: 11px; color: var(--text-muted); }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .dd-card, .dd-logrec, .dd-tl-rec { flex-basis: 100%; }
+  .dd-arrow { transform: rotate(90deg); }
+  .dd-lockrow { grid-template-columns: 1fr; gap: 4px; }
+}
