@@ -358,6 +358,36 @@
 .dd-bit-idx { font-size: 8px; color: var(--text-muted); }
 .dd-bloom-members { display: flex; flex-wrap: wrap; gap: 6px; }
 
+/* ============================================================
+   Query Processing — cost bars, candidate plans, access-path pages
+   (shared by query-optimization, cost-based-optimization,
+    index-scan, hash-join, query-execution)
+   ============================================================ */
+.dd-plan {
+  display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 10px;
+  background: var(--bg-1); border: 1px solid var(--border-default); transition: all .2s;
+}
+.dd-plan.win { border-color: var(--green); box-shadow: 0 0 0 1px var(--green); }
+.dd-plan.lose { opacity: .8; }
+.dd-plan-name { font-size: 12.5px; font-weight: 700; color: var(--text-primary); flex: 0 0 138px; }
+.dd-plan-name small { display: block; font-weight: 500; color: var(--text-muted); font-size: 10.5px; }
+.dd-costbar { position: relative; flex: 1 1 auto; height: 24px; border-radius: 6px; background: var(--bg-3); overflow: hidden; min-width: 90px; }
+.dd-costbar-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; background: var(--airflow); opacity: .55; transition: width .3s; }
+.dd-costbar-fill.win { background: var(--green); opacity: .8; }
+.dd-costbar-fill.lose { background: var(--orange); opacity: .7; }
+.dd-costbar-label { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--text-primary); }
+
+.dd-scanpages { display: flex; flex-wrap: wrap; gap: 5px; }
+.dd-pg {
+  width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 6px;
+  font-family: var(--font-mono); font-size: 10px; background: var(--bg-1); border: 1px solid var(--border-subtle);
+  color: var(--text-muted); transition: all .18s;
+}
+.dd-pg.seq { border-color: var(--cyan); color: var(--cyan); background: rgba(34,211,238,.10); }
+.dd-pg.fetch { border-color: var(--airflow); color: var(--airflow-bright); background: var(--airflow-subtle); }
+.dd-pg.match { box-shadow: 0 0 0 2px var(--green); }
+.dd-pathcol { display: flex; flex-direction: column; gap: 8px; }
+
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 720px) {
   .dd-card, .dd-logrec, .dd-tl-rec, .dd-sst { flex-basis: 100%; }
@@ -365,4 +395,5 @@
   .dd-lockrow { grid-template-columns: 1fr; gap: 4px; }
   .dd-bit { width: 30px; height: 30px; font-size: 12px; }
   .dd-node-key { font-size: 11px; padding: 3px 6px; }
+  .dd-plan-name { flex-basis: 100px; }
 }
