@@ -60,9 +60,9 @@ export function mount(container) {
         </div>
       </div>
       <div id="wm-timeline-wrap" style="margin:20px 0;overflow-x:auto"></div>
-      <div class="grid-2" style="gap:20px">
-        <div id="wm-event-list" class="card" style="padding:20px"></div>
-        <div id="wm-window-list" class="card" style="padding:20px"></div>
+      <div class="grid-2 gap-20">
+        <div id="wm-event-list" class="card p-20"></div>
+        <div id="wm-window-list" class="card p-20"></div>
       </div>
       <div class="wm-legend">
         <span><span class="wm-dot" style="background:#10b981"></span> On-time</span>
@@ -73,15 +73,15 @@ export function mount(container) {
     </div>
 
     <div class="tab-content" data-tab="concept">
-      <div class="grid-2" style="gap:20px">
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">The Watermark Formula</h3>
+      <div class="grid-2 gap-20">
+        <div class="card p-24">
+          <h3 class="mb-12">The Watermark Formula</h3>
           <div style="text-align:center;padding:20px;background:var(--surface2);border-radius:8px;font-size:18px;font-weight:700;color:var(--accent);font-family:var(--font-mono,monospace)">W(t) = max(eventTime) − Δ</div>
           <p style="color:var(--text-secondary);margin-top:16px;line-height:1.7">The watermark at any point is the maximum event time seen so far, minus the out-of-orderness bound Δ. A window <code>[a, b)</code> closes when the watermark exceeds <code>b</code>, meaning Flink is confident no event with event time in <code>[a, b)</code> will arrive anymore.</p>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Late Event Options</h3>
-          <div class="code-block" style="font-size:11px"><pre>stream
+        <div class="card p-24">
+          <h3 class="mb-12">Late Event Options</h3>
+          <div class="code-block fs-11"><pre>stream
   .keyBy(e -> e.driverId)
   .window(TumblingEventTimeWindows.of(Time.seconds(10)))
   // Option 1: keep window alive for 5 more seconds
@@ -94,18 +94,18 @@ export function mount(container) {
 DataStream&lt;GPSEvent&gt; lateStream =
     mainStream.getSideOutput(lateTag);</pre></div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Watermark Propagation (Multi-Source)</h3>
+        <div class="card p-24">
+          <h3 class="mb-12">Watermark Propagation (Multi-Source)</h3>
           <p style="color:var(--text-secondary);line-height:1.7;margin:0 0 12px">When multiple source partitions feed one operator, the downstream watermark is the <strong>minimum</strong> across all inputs. One idle partition blocks the watermark for all keys.</p>
-          <div class="code-block" style="font-size:11px"><pre>// Fix idle sources:
+          <div class="code-block fs-11"><pre>// Fix idle sources:
 WatermarkStrategy
   .&lt;GPSEvent&gt;forBoundedOutOfOrderness(Duration.ofSeconds(5))
   .withIdleness(Duration.ofSeconds(10));
 // After 10s idle, source is excluded from min-watermark</pre></div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Uber Tunnel Problem (Recap)</h3>
-          <p style="color:var(--text-secondary);line-height:1.7">A driver enters a tunnel at event time 10s. Their GPS buffers events. They exit at processing time 45s. The event arrives 35s late.</p>
+        <div class="card p-24">
+          <h3 class="mb-12">Uber Tunnel Problem (Recap)</h3>
+          <p class="prose">A driver enters a tunnel at event time 10s. Their GPS buffers events. They exit at processing time 45s. The event arrives 35s late.</p>
           <p style="color:var(--text-secondary);line-height:1.7;margin-top:8px">With Δ=5s, watermark when event arrives = max_seen − 5 = (say) 50−5 = 45s. The window [10s, 20s) closed at watermark=20s → event is <strong>late</strong>. With <code>allowedLateness(40s)</code>, the window stays open and the event is included — at the cost of 40s of result latency.</p>
         </div>
       </div>
@@ -284,7 +284,7 @@ function renderEventList(container, results) {
     ${results.map(r => `
       <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
         <span style="width:20px;height:20px;border-radius:50%;background:${evtColor(r.state)};display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;flex-shrink:0">${r.id}</span>
-        <div style="flex:1">
+        <div class="flex-1">
           <div style="font-size:13px;color:var(--text)">${r.label}</div>
           <div style="font-size:11px;color:var(--text-secondary)">WM at arrival: ${Math.max(r.wmAtArrival, 0).toFixed(0)}s</div>
         </div>

@@ -118,9 +118,9 @@ export function mount(container) {
       </div>
     </div>
     <div class="tab-content" data-tab="diagram">
-      <div class="card" style="padding:24px">
+      <div class="card p-24">
         <h3 style="margin:0 0 16px">Job Submission Flow</h3>
-        <div id="flow-diagram-wrap" style="overflow-x:auto"></div>
+        <div class="scroll-x" id="flow-diagram-wrap"></div>
       </div>
     </div>
     <div class="tab-content" data-tab="iq">

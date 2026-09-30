@@ -142,19 +142,19 @@ function buildSimTab() {
       <canvas id="stream-canvas" style="width:100%;height:200px;display:block"></canvas>
       <div style="padding:14px 20px;border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
         <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Events Processed</div>
+          <div class="form-hint">Events Processed</div>
           <div id="stat-processed" style="font-size:20px;font-weight:800;font-family:var(--font-mono);color:var(--accent-text)">0</div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Avg Latency</div>
+          <div class="form-hint">Avg Latency</div>
           <div id="stat-latency" style="font-size:20px;font-weight:800;font-family:var(--font-mono);color:var(--green)">—</div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Queue Depth</div>
+          <div class="form-hint">Queue Depth</div>
           <div id="stat-queue" style="font-size:20px;font-weight:800;font-family:var(--font-mono);color:var(--yellow)">0</div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Events/sec</div>
+          <div class="form-hint">Events/sec</div>
           <div id="stat-rate" style="font-size:20px;font-weight:800;font-family:var(--font-mono);color:var(--blue)">0</div>
         </div>
       </div>
@@ -187,7 +187,7 @@ function buildConceptTab() {
         <div class="card" style="border-color:${m.colorDim};background:linear-gradient(135deg,${m.colorDim},transparent)">
           <div style="display:flex;align-items:flex-start;gap:16px">
             <div style="font-size:36px;flex-shrink:0">${m.icon}</div>
-            <div style="flex:1">
+            <div class="flex-1">
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
                 <span style="font-size:18px;font-weight:800;letter-spacing:-0.3px">${m.name}</span>
                 <span style="font-size:11px;padding:3px 8px;border-radius:99px;background:${m.colorDim};color:${m.color};font-weight:600">${m.tag}</span>
@@ -224,23 +224,23 @@ function buildConceptTab() {
         <div class="section-title">The River of Events</div>
         <div class="section-desc">Think of streaming data like a river — you can't stop it to process it</div>
       </div>
-      <div class="card" style="margin-top:16px">
+      <div class="card mt-16">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
           <div>
             <div style="font-weight:700;margin-bottom:10px;color:var(--red)">❌ Batch thinking</div>
-            <p style="font-size:13.5px;color:var(--text-secondary);line-height:1.7">
+            <p class="prose-sm">
               You build a dam, wait for the river to fill the reservoir, then open the floodgate to process all water at once. The river keeps flowing while you process. Data is always stale.
             </p>
           </div>
           <div>
             <div style="font-weight:700;margin-bottom:10px;color:var(--green)">✅ Stream thinking</div>
-            <p style="font-size:13.5px;color:var(--text-secondary);line-height:1.7">
+            <p class="prose-sm">
               You stand at the river with a machine. Every drop of water is processed the moment it arrives. The river keeps flowing, you keep processing. Data is always fresh.
             </p>
           </div>
         </div>
         <div style="margin-top:16px;padding:14px;background:var(--bg-elevated);border-radius:8px;font-size:13.5px;color:var(--text-secondary);line-height:1.7">
-          🚗 <strong style="color:var(--text-primary)">Uber's river</strong>: 3 million active drivers each sending a GPS ping every second = 3M events/sec. You cannot dam this river. Flink stands at the river and processes each ping the instant it arrives.
+          🚗 <strong class="t-pri">Uber's river</strong>: 3 million active drivers each sending a GPS ping every second = 3M events/sec. You cannot dam this river. Flink stands at the river and processes each ping the instant it arrives.
         </div>
       </div>
     </div>
@@ -255,7 +255,7 @@ function buildCodeTab() {
       <div class="section-desc">Same GPS processing logic — three different processing models</div>
     </div>
 
-    <div style="margin-bottom:20px">
+    <div class="mb-20">
       <div style="font-size:13px;font-weight:700;color:var(--yellow);margin-bottom:10px">📦 Batch (Hadoop/Hive SQL)</div>
       <div class="code-block">
         <span class="lang-tag">HiveQL</span>
@@ -268,7 +268,7 @@ function buildCodeTab() {
       </div>
     </div>
 
-    <div style="margin-bottom:20px">
+    <div class="mb-20">
       <div style="font-size:13px;font-weight:700;color:var(--purple);margin-bottom:10px">⚡ Micro-Batch (Spark Streaming)</div>
       <div class="code-block">
         <span class="lang-tag">Scala</span>

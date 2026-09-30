@@ -128,9 +128,9 @@ export function mount(container) {
     </div>
 
     <div class="tab-content" data-tab="concept">
-      <div class="grid-2" style="gap:20px">
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Recovery Steps (Full Restart)</h3>
+      <div class="grid-2 gap-20">
+        <div class="card p-24">
+          <h3 class="mb-12">Recovery Steps (Full Restart)</h3>
           ${[
             ['1. Detect','JM detects heartbeat loss or task exception report'],
             ['2. Cancel','All tasks receive cancel() signal; operators flush buffers'],
@@ -147,10 +147,10 @@ export function mount(container) {
             </div>
           `).join('')}
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Region Failover (Partial Restart)</h3>
+        <div class="card p-24">
+          <h3 class="mb-12">Region Failover (Partial Restart)</h3>
           <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin-bottom:12px">With <code>RegionFailoverStrategy</code>, only the pipelined region containing the failed task restarts. Regions are sets of operators connected by pipelined (non-blocking) data exchanges.</p>
-          <div class="code-block" style="font-size:11px"><pre>// Enable region failover in flink-conf.yaml:
+          <div class="code-block fs-11"><pre>// Enable region failover in flink-conf.yaml:
 jobmanager.execution.failover-strategy: region
 
 // Or programmatically:
@@ -158,23 +158,23 @@ env.setRestartStrategy(...)
 // The failover strategy is set in config,
 // not per-job. Region failover + exponential
 // backoff = Uber's production setup.</pre></div>
-          <div class="lc-uber-box" style="margin-top:12px">
+          <div class="lc-uber-box mt-12">
             <div class="lc-uber-label">🚗 Uber Impact</div>
-            <p style="font-size:12px">If sink TM fails, only the sink region restarts — source and FraudDetector keep running, buffering output. Recovery time: 3s vs 12s for full restart.</p>
+            <p class="fs-12">If sink TM fails, only the sink region restarts — source and FraudDetector keep running, buffering output. Recovery time: 3s vs 12s for full restart.</p>
           </div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Task-Local State Recovery</h3>
+        <div class="card p-24">
+          <h3 class="mb-12">Task-Local State Recovery</h3>
           <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin-bottom:12px">RocksDB keeps a local copy of checkpoint SSTables on the TM disk. On same-TM restart (OOM, thread crash), state is restored from local disk — no S3 download needed.</p>
-          <div class="code-block" style="font-size:11px"><pre># flink-conf.yaml
+          <div class="code-block fs-11"><pre># flink-conf.yaml
 state.backend.local-recovery: true
 # Fallback to S3 if local files missing
 # (e.g., TM physically died and rescheduled)
 # Local recovery: ~1–2s
 # S3 recovery (600MB): ~8–12s</pre></div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Exactly-Once Through Recovery</h3>
+        <div class="card p-24">
+          <h3 class="mb-12">Exactly-Once Through Recovery</h3>
           ${[
             ['Source rewinds to','Checkpointed Kafka offset'],
             ['State restores to','Snapshot at checkpoint time'],
@@ -183,7 +183,7 @@ state.backend.local-recovery: true
             ['Uber GPS events lost','Zero (with exactly-once config)'],
           ].map(([k,v]) => `
             <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px">
-              <span style="color:var(--text-secondary)">${k}</span>
+              <span class="t-sec">${k}</span>
               <span style="color:var(--text);font-weight:600">${v}</span>
             </div>
           `).join('')}
@@ -237,7 +237,7 @@ state.backend.local-recovery: true
     detail.innerHTML = `
       <div class="card" style="padding:24px;border-left:4px solid ${s.color}">
         <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
-          <span style="font-size:28px">${s.icon}</span>
+          <span class="fs-28">${s.icon}</span>
           <div>
             <div style="font-size:18px;font-weight:700;color:${s.color}">${s.label} Strategy</div>
             <p style="color:var(--text-secondary);font-size:13px;margin:4px 0 0">${s.desc}</p>
@@ -246,15 +246,15 @@ state.backend.local-recovery: true
         <div class="grid-2" style="gap:16px;margin-top:16px">
           <div class="lc-uber-box">
             <div class="lc-uber-label">🚗 Uber Use Case</div>
-            <p style="font-size:12.5px">${s.uber}</p>
+            <p class="fs-125">${s.uber}</p>
           </div>
-          <div class="code-block" style="font-size:11px"><pre>${s.config}</pre></div>
+          <div class="code-block fs-11"><pre>${s.config}</pre></div>
         </div>
         ${s.recovery ? `
         <div style="display:flex;gap:20px;margin-top:14px;flex-wrap:wrap">
-          ${s.recovery.attempts != null ? `<div style="padding:8px 16px;background:var(--surface2);border-radius:8px;font-size:12px"><span style="color:var(--text-secondary)">Max attempts: </span><strong>${s.recovery.attempts}</strong></div>` : ''}
-          <div style="padding:8px 16px;background:var(--surface2);border-radius:8px;font-size:12px"><span style="color:var(--text-secondary)">Delay: </span><strong>${s.recovery.delay}</strong></div>
-          ${s.recovery.window ? `<div style="padding:8px 16px;background:var(--surface2);border-radius:8px;font-size:12px"><span style="color:var(--text-secondary)">Rate limit: </span><strong>${s.recovery.window}</strong></div>` : ''}
+          ${s.recovery.attempts != null ? `<div class="pill-box"><span class="t-sec">Max attempts: </span><strong>${s.recovery.attempts}</strong></div>` : ''}
+          <div class="pill-box"><span class="t-sec">Delay: </span><strong>${s.recovery.delay}</strong></div>
+          ${s.recovery.window ? `<div class="pill-box"><span class="t-sec">Rate limit: </span><strong>${s.recovery.window}</strong></div>` : ''}
         </div>` : ''}
       </div>
     `;

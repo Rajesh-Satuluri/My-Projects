@@ -448,9 +448,11 @@ function initDiagram(container) {
     });
   });
 
-  // Auto-open JobManager on load
+  // Auto-open JobManager on load. Dispatch a real click event rather than
+  // calling .click(): the target is an SVG <g>, which has no .click() method.
   setTimeout(() => {
-    container.querySelector('[data-comp="jobmanager"]')?.click();
+    container.querySelector('[data-comp="jobmanager"]')
+      ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   }, 600);
 }
 
@@ -495,7 +497,7 @@ function buildDetailPanel(comp) {
             <span style="flex:1;font-size:12.5px">${q.q}</span>
             <span class="q-chevron">▼</span>
           </div>
-          <div class="iq-answer" style="font-size:12px">${q.a}</div>
+          <div class="iq-answer fs-12">${q.a}</div>
         </div>
       `).join('')}
     </div>
@@ -542,7 +544,7 @@ function buildConceptTab() {
             <span style="font-size:24px">${s.icon}</span>
             <span style="font-size:16px;font-weight:700">${s.title}</span>
           </div>
-          <div style="font-size:13.5px;color:var(--text-secondary);line-height:1.7">${s.content}</div>
+          <div class="prose-sm">${s.content}</div>
         </div>
       `).join('')}
     </div>

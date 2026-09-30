@@ -60,11 +60,11 @@ export function mount(container) {
     </div>
 
     <div class="tab-content" data-tab="concept">
-      <div class="grid-2" style="gap:20px">
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Credit-Based Flow Control</h3>
+      <div class="grid-2 gap-20">
+        <div class="card p-24">
+          <h3 class="mb-12">Credit-Based Flow Control</h3>
           <p style="color:var(--text-secondary);line-height:1.7;margin:0 0 12px">Flink's network layer uses a <strong>credit system</strong>. Each InputGate tells its upstream ResultPartition how many buffer slots (credits) are available. The sender only transmits when credits > 0.</p>
-          <div class="code-block" style="font-size:11px"><pre>// Simplified credit flow:
+          <div class="code-block fs-11"><pre>// Simplified credit flow:
 // 1. Receiver announces N credits to sender
 // 2. Sender transmits 1 buffer per credit
 // 3. Credits drop to 0 → sender BLOCKS
@@ -75,8 +75,8 @@ export function mount(container) {
 // taskmanager.network.memory.buffers-per-channel: 2
 // taskmanager.network.memory.floating-buffers-per-gate: 8</pre></div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Backpressure Propagation</h3>
+        <div class="card p-24">
+          <h3 class="mb-12">Backpressure Propagation</h3>
           <div style="display:flex;flex-direction:column;gap:8px">
             ${[
               ['FraudDetector slows','Processing time > event rate'],
@@ -90,14 +90,14 @@ export function mount(container) {
             ].map(([t,d]) => `
               <div style="display:flex;gap:12px;font-size:12.5px">
                 <span style="color:var(--accent);font-weight:700;white-space:nowrap">→ ${t}</span>
-                <span style="color:var(--text-secondary)">${d}</span>
+                <span class="t-sec">${d}</span>
               </div>
             `).join('')}
           </div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Detecting Backpressure</h3>
-          <div class="code-block" style="font-size:11px"><pre>// Flink metrics to watch:
+        <div class="card p-24">
+          <h3 class="mb-12">Detecting Backpressure</h3>
+          <div class="code-block fs-11"><pre>// Flink metrics to watch:
 // outPoolUsage      — output buffer utilization (0–1)
 // inPoolUsage       — input buffer utilization (0–1)
 // backPressuredTimeMsPerSecond
@@ -108,13 +108,13 @@ export function mount(container) {
 flink_taskmanager_job_task_backPressuredTimeMsPerSecond
   / 1000
 // > 0.5 = sustained backpressure → alert</pre></div>
-          <div class="lc-uber-box" style="margin-top:12px">
+          <div class="lc-uber-box mt-12">
             <div class="lc-uber-label">🚗 Uber Alert Rule</div>
-            <p style="font-size:12px">Alert fires if any subtask has backPressuredTimeMsPerSecond > 700ms/s for 3 consecutive minutes. Auto-triggers parallelism scale-out via Adaptive Scheduler.</p>
+            <p class="fs-12">Alert fires if any subtask has backPressuredTimeMsPerSecond > 700ms/s for 3 consecutive minutes. Auto-triggers parallelism scale-out via Adaptive Scheduler.</p>
           </div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Fixing Backpressure</h3>
+        <div class="card p-24">
+          <h3 class="mb-12">Fixing Backpressure</h3>
           ${[
             ['Profile first','jstack / async-profiler on the bottleneck TM — CPU? GC? I/O?'],
             ['Scale out','Increase operator parallelism for the bottleneck'],
@@ -125,7 +125,7 @@ flink_taskmanager_job_task_backPressuredTimeMsPerSecond
           ].map(([t,d]) => `
             <div style="display:flex;gap:10px;margin-bottom:10px;font-size:12.5px">
               <span style="color:var(--accent);font-weight:700;min-width:120px">${t}</span>
-              <span style="color:var(--text-secondary)">${d}</span>
+              <span class="t-sec">${d}</span>
             </div>
           `).join('')}
         </div>
@@ -375,7 +375,7 @@ flink_taskmanager_job_task_backPressuredTimeMsPerSecond
             <div style="font-size:12px;font-weight:700;color:${op.color};margin-bottom:8px">${op.icon} ${op.label}</div>
             ${[['Backpressure', Math.round(s.bp*100)+'%', c],['Buffer',Math.round(s.buffer)+'%',bpColor(s.buffer/100)],['Credits',Math.round(s.credits)+'%','#10b981'],['Throughput',Math.round(s.throughput)+'%','var(--text)']].map(([k,v,vc]) => `
               <div style="display:flex;justify-content:space-between;font-size:11.5px;padding:3px 0;border-bottom:1px solid var(--border)">
-                <span style="color:var(--text-secondary)">${k}</span>
+                <span class="t-sec">${k}</span>
                 <span style="color:${vc};font-weight:600">${v}</span>
               </div>
             `).join('')}

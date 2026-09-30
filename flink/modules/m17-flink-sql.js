@@ -207,10 +207,10 @@ export function mount(container) {
 
   function renderDetail(p) {
     container.querySelector('#sql17-detail').innerHTML = `
-      <div class="grid-2" style="gap:20px">
-        <div class="card" style="padding:24px">
+      <div class="grid-2 gap-20">
+        <div class="card p-24">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            <span style="font-size:28px">${p.icon}</span>
+            <span class="fs-28">${p.icon}</span>
             <div>
               <div style="font-size:17px;font-weight:700;color:var(--text)">${p.label}</div>
               <span class="badge" style="font-size:10px">${p.category}</span>
@@ -219,7 +219,7 @@ export function mount(container) {
           <p style="color:var(--text-secondary);font-size:13.5px;line-height:1.7;margin:0 0 14px">${p.desc}</p>
           <div class="lc-uber-box">
             <div class="lc-uber-label">🚗 Uber Use Case</div>
-            <p style="font-size:12.5px">${p.uber}</p>
+            <p class="fs-125">${p.uber}</p>
           </div>
           <div style="margin-top:14px;padding:12px 14px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--accent)">
             <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--accent);margin-bottom:6px">How it works</div>
@@ -227,7 +227,7 @@ export function mount(container) {
           </div>
         </div>
         <div>
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-secondary);margin-bottom:8px">SQL / Code</div>
+          <div class="eyebrow">SQL / Code</div>
           <div class="code-block" style="font-size:11px;max-height:480px;overflow-y:auto"><pre>${p.sql}</pre></div>
         </div>
       </div>
