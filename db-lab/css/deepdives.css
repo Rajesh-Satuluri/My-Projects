@@ -484,6 +484,49 @@
 .dd-verdict.warn { border-color: var(--orange); }
 .dd-verdict b { color: var(--text-primary); }
 
+/* ============================================================
+   Distributed Systems II (B5) — hash ring, saga chain,
+   election timer, version-vector rows
+   (shared by consistent-hashing, leader-election,
+    two-phase-commit, distributed-transactions, eventual-consistency)
+   ============================================================ */
+/* Consistent-hashing ring (SVG) */
+.dd-ring-wrap { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; justify-content: center; }
+.dd-ring { display: block; flex: 0 0 auto; }
+.dd-ring .ring-base { fill: none; stroke: var(--border-default); stroke-width: 2; }
+.dd-ring .arc { fill: none; stroke-width: 7; opacity: .45; transition: opacity .2s; }
+.dd-ring .arc.moved { opacity: .95; }
+.dd-ring .node-dot { stroke: var(--bg-0); stroke-width: 2; }
+.dd-ring .node-dot.vnode { stroke-width: 1; }
+.dd-ring .node-lbl { fill: var(--text-primary); font-size: 11px; font-weight: 800; text-anchor: middle; }
+.dd-ring .key-dot { stroke: var(--bg-0); stroke-width: 1; transition: all .2s; }
+.dd-ring .key-dot.moved { stroke: var(--green); stroke-width: 2.5; }
+.dd-ring-legend { display: flex; flex-direction: column; gap: 7px; min-width: 130px; }
+.dd-ring-leg { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); }
+.dd-ring-swatch { width: 13px; height: 13px; border-radius: 4px; flex: none; }
+
+/* Saga chain (distributed transactions) */
+.dd-saga { display: flex; flex-wrap: wrap; gap: 5px; align-items: stretch; }
+.dd-saga-step {
+  flex: 1 1 116px; min-width: 104px; border-radius: 10px; padding: 9px 11px; background: var(--bg-1);
+  border: 1px solid var(--border-default); border-top: 3px solid var(--border-muted); transition: all .2s;
+}
+.dd-saga-step.done { border-top-color: var(--green); }
+.dd-saga-step.active { border-top-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan); transform: translateY(-2px); }
+.dd-saga-step.failed { border-top-color: var(--red); }
+.dd-saga-step.comp { border-top-color: var(--orange); border-style: dashed; }
+.dd-saga-step.undone { border-top-color: var(--orange); opacity: .85; }
+.dd-saga-step.pending { opacity: .45; }
+.dd-saga-name { font-size: 12.5px; font-weight: 700; color: var(--text-primary); }
+.dd-saga-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+.dd-saga-arrow { align-self: center; color: var(--text-muted); font-size: 15px; }
+.dd-saga-arrow.back { color: var(--orange); }
+
+/* Election countdown timer bar */
+.dd-timer { height: 5px; border-radius: 3px; background: var(--bg-3); overflow: hidden; margin-top: 4px; }
+.dd-timer-fill { height: 100%; background: var(--orange); border-radius: 3px; transition: width .3s; }
+.dd-timer-fill.fired { background: var(--airflow); }
+
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 720px) {
   .dd-card, .dd-logrec, .dd-tl-rec, .dd-sst { flex-basis: 100%; }
@@ -494,4 +537,6 @@
   .dd-plan-name { flex-basis: 100px; }
   .dd-dnode { flex-basis: 100%; max-width: none; }
   .dd-flow { transform: rotate(90deg); min-width: 0; }
+  .dd-saga-step { flex-basis: 100%; }
+  .dd-saga-arrow { transform: rotate(90deg); }
 }
