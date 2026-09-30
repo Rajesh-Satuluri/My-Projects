@@ -1,6 +1,16 @@
 # Deploy scripts
 
-## `deploy-project.sh` — additive gh-pages deploy
+> **Canonical deploy model (current):** GitHub Pages is published from the
+> **`main`** branch by `.github/workflows/deploy-pages.yml`. To deploy a
+> project, commit its top-level folder to `main` — the workflow assembles
+> the site and publishes it. Pages no longer serves the `gh-pages` branch,
+> so force-pushes to `gh-pages` cannot change the live site.
+>
+> The `deploy-project.sh` script below is the **legacy** additive path for
+> the old `gh-pages`-branch model. It is kept only for emergency restores of
+> the `gh-pages` branch; normal deploys should commit to `main`.
+
+## `deploy-project.sh` — additive gh-pages deploy (legacy)
 
 `gh-pages` in this repo is a **shared multi-project host**: each top-level
 folder (`snowflake/`, `iceberg/`, `db-lab/`, `interview-prep/`, …) is an
