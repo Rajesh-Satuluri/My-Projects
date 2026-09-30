@@ -1,9 +1,18 @@
 name: Deploy GitHub Pages
 
+# Single source of truth: GitHub Pages is published from `main` via this
+# Actions workflow — NOT from the `gh-pages` branch. This makes external
+# force-pushes to `gh-pages` harmless: they can no longer change the live
+# site. Every project lives as a top-level folder in `main` and is served
+# at /My-Projects/<project>/.
+#
+# To deploy a project: commit its folder to `main`. On push, this workflow
+# assembles a clean site (project folders + landing page) and publishes it.
+
 on:
   push:
     branches:
-      - gh-pages
+      - main
   workflow_dispatch:
 
 permissions:
@@ -19,18 +28,42 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout gh-pages content
+      - name: Checkout main
         uses: actions/checkout@v4
-        with:
-          ref: gh-pages
+
+      - name: Assemble site (project folders + landing page only)
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          # .nojekyll so folders like interview-prep/_next are served as-is.
+          cp -a .nojekyll _site/ 2>/dev/null || touch _site/.nojekyll
+          # Landing page.
+          [ -f index.html ] && cp -a index.html _site/
+          # Every top-level folder that is a static site (has an index.html),
+          # excluding repo tooling/source that should not be published.
+          for dir in */ ; do
+            name="${dir%/}"
+            case "$name" in
+              .github|scripts|docs|de-shorts|node_modules|_site) continue ;;
+            esac
+            if [ -f "${name}/index.html" ]; then
+              cp -a "$name" _site/
+              echo "published: ${name}/"
+            fi
+          done
+          echo "--- _site contents ---"
+          ls -1 _site
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          # Auto-enable Pages with build type = GitHub Actions if not already.
+          enablement: true
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_site'
 
   deploy:
     environment:
@@ -42,5 +75,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-        with:
-          timeout: 1200000
