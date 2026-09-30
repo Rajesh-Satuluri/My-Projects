@@ -26,7 +26,25 @@ export const MODULES = [
 ];
 
 // Synthetic entries that live in the sidebar but aren't numbered modules.
-const REVIEW = [{ id: 'study', title: 'Study Hub', icon: '📚', group: 'Review', num: '★' }];
+// They don't count toward course progress or the prev/next pager.
+export const EXTRAS = [
+  { id: 'master-map', title: 'Master Map',       icon: '🗺️', group: 'Reference', num: '' },
+  { id: 'comparison', title: 'Engine Comparison', icon: '⚖️', group: 'Reference', num: '' },
+  { id: 'glossary',   title: 'Glossary',          icon: '📖', group: 'Reference', num: '' },
+  { id: 'cheatsheet', title: 'Cheat Sheet',       icon: '📋', group: 'Reference', num: '' },
+  { id: 'study',      title: 'Study Hub',         icon: '📚', group: 'Review',    num: '★' },
+];
+const REVIEW = EXTRAS;
+
+// Home is not shown as a nav row (the sidebar brand links to it), but callers
+// still need its metadata for breadcrumbs.
+const HOME = { id: 'home', title: 'Home', icon: '🏠', group: 'Start', num: '' };
+
+// Look up any routable entry (numbered module, reference page, or home).
+export function getNavItem(id) {
+  return MODULES.find(m => m.id === id) || EXTRAS.find(e => e.id === id) ||
+         (id === 'home' ? HOME : null);
+}
 
 const COLLAPSE_KEY = 'flink_nav_collapsed';
 function loadCollapsed() {
@@ -40,7 +58,10 @@ function saveCollapsed(set) {
 function buildGroups() {
   const order = [...new Set(MODULES.map(m => m.group))];
   const groups = order.map(name => ({ name, items: MODULES.filter(m => m.group === name) }));
-  groups.push({ name: 'Review', items: REVIEW });
+  // Append synthetic groups (Reference, Review) preserving their declared order.
+  [...new Set(EXTRAS.map(e => e.group))].forEach(name => {
+    groups.push({ name, items: EXTRAS.filter(e => e.group === name) });
+  });
   return groups;
 }
 

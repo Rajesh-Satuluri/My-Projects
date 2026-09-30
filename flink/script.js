@@ -1,4 +1,4 @@
-import { MODULES, renderNav, updateProgress } from './components/nav.js';
+import { MODULES, EXTRAS, getNavItem, renderNav, updateProgress } from './components/nav.js';
 import { initCommandPalette } from './components/command-palette.js';
 import { renderPager } from './components/pager.js';
 import { toast } from './components/toast.js';
@@ -8,26 +8,32 @@ import { QUIZ_BANK } from './data/quiz-bank.js';
 
 // ── Module loaders (lazy) ─────────────────────────────────────────────────
 const LOADERS = {
+  home:  () => import('./modules/home.js'),
   m01: () => import('./modules/m01-intro.js'),
-  study: () => import('./modules/study.js'),
-  m02: () => import('./modules/m02-placeholder.js'),
-  m03: () => import('./modules/m03-placeholder.js'),
-  m04: () => import('./modules/m04-placeholder.js'),
-  m05: () => import('./modules/m05-placeholder.js'),
-  m06: () => import('./modules/m06-placeholder.js'),
-  m07: () => import('./modules/m07-placeholder.js'),
-  m08: () => import('./modules/m08-placeholder.js'),
-  m09: () => import('./modules/m09-placeholder.js'),
-  m10: () => import('./modules/m10-placeholder.js'),
-  m11: () => import('./modules/m11-placeholder.js'),
-  m12: () => import('./modules/m12-placeholder.js'),
-  m13: () => import('./modules/m13-placeholder.js'),
-  m14: () => import('./modules/m14-placeholder.js'),
-  m15: () => import('./modules/m15-placeholder.js'),
-  m16: () => import('./modules/m16-placeholder.js'),
-  m17: () => import('./modules/m17-placeholder.js'),
-  m18: () => import('./modules/m18-placeholder.js'),
-  m19: () => import('./modules/m19-placeholder.js'),
+  m02: () => import('./modules/m02-streaming-fundamentals.js'),
+  m03: () => import('./modules/m03-architecture.js'),
+  m04: () => import('./modules/m04-job-lifecycle.js'),
+  m05: () => import('./modules/m05-parallelism.js'),
+  m06: () => import('./modules/m06-data-flow.js'),
+  m07: () => import('./modules/m07-operators.js'),
+  m08: () => import('./modules/m08-time-concepts.js'),
+  m09: () => import('./modules/m09-watermarks.js'),
+  m10: () => import('./modules/m10-windows.js'),
+  m11: () => import('./modules/m11-state-management.js'),
+  m12: () => import('./modules/m12-checkpointing.js'),
+  m13: () => import('./modules/m13-savepoints.js'),
+  m14: () => import('./modules/m14-fault-tolerance.js'),
+  m15: () => import('./modules/m15-backpressure.js'),
+  m16: () => import('./modules/m16-connectors.js'),
+  m17: () => import('./modules/m17-flink-sql.js'),
+  m18: () => import('./modules/m18-performance.js'),
+  m19: () => import('./modules/m19-uber-pipeline.js'),
+  // Reference & review
+  'master-map': () => import('./modules/master-map.js'),
+  comparison:   () => import('./modules/comparison.js'),
+  glossary:     () => import('./modules/glossary.js'),
+  cheatsheet:   () => import('./modules/cheatsheet.js'),
+  study:        () => import('./modules/study.js'),
 };
 
 // ── State ─────────────────────────────────────────────────────────────────
@@ -47,13 +53,9 @@ async function navigate(id) {
   const canvas = document.getElementById('module-canvas');
   canvas.innerHTML = '<div class="welcome-screen"><div class="welcome-logo" style="font-size:48px;animation:glow-pulse 2s infinite">⚡</div></div>';
 
-  const mod = MODULES.find(m => m.id === id);
-  updateBreadcrumb(mod);
+  const mod = MODULES.find(m => m.id === id); // numbered module only (progress + pager)
+  updateBreadcrumb(getNavItem(id));
   renderNav(id, done);
-  if (id === 'study') {
-    const bc = document.getElementById('breadcrumb');
-    if (bc) bc.innerHTML = `<span class="breadcrumb-group">Review</span><span class="breadcrumb-sep">›</span><span class="breadcrumb-title">📚 Study Hub</span>`;
-  }
 
   try {
     const module = await LOADERS[id]();
@@ -63,6 +65,7 @@ async function navigate(id) {
 
     // Auto-inject the "Test Yourself" quiz (where a bank exists) + Prev/Next pager.
     enhanceModule(id);
+    injectCopyButtons(canvas);
 
     // Mark real modules done after 30s of viewing (Study Hub is excluded).
     if (mod && !done.has(id)) {
@@ -101,6 +104,34 @@ function enhanceModule(id) {
     }
   }
   renderPager(id);
+}
+
+// Add a copy button to every code block in the mounted module (non-invasive:
+// modules keep authoring plain .code-block markup).
+function injectCopyButtons(root) {
+  root.querySelectorAll('.code-block').forEach(block => {
+    if (block.querySelector('.code-copy-btn')) return;
+    const btn = document.createElement('button');
+    btn.className = 'code-copy-btn';
+    btn.type = 'button';
+    btn.textContent = 'Copy';
+    btn.addEventListener('click', async () => {
+      const src = block.querySelector('pre, code') || block;
+      const text = src.innerText.replace(/\bCopy\b\s*$/, '').trim();
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (e) {
+        const r = document.createRange(); r.selectNodeContents(src);
+        const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+        try { document.execCommand('copy'); } catch (_) {}
+        sel.removeAllRanges();
+      }
+      btn.textContent = 'Copied ✓';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1600);
+    });
+    block.appendChild(btn);
+  });
 }
 
 function updateBreadcrumb(mod) {
@@ -148,15 +179,27 @@ function renderWelcome() {
 
 // ── Hash routing ─────────────────────────────────────────────────────────
 function onHashChange() {
-  const id = window.location.hash.slice(1) || '';
-  if (id && LOADERS[id]) navigate(id);
-  else renderWelcome();
+  const id = window.location.hash.slice(1) || 'home';
+  navigate(LOADERS[id] ? id : 'home');
 }
 
 // ── Sidebar toggle ────────────────────────────────────────────────────────
 document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
   document.getElementById('sidebar')?.classList.toggle('collapsed');
 });
+
+// ── Brand → Home ────────────────────────────────────────────────────────────
+const brandEl = document.querySelector('.brand');
+if (brandEl) {
+  brandEl.style.cursor = 'pointer';
+  brandEl.setAttribute('role', 'button');
+  brandEl.setAttribute('tabindex', '0');
+  brandEl.setAttribute('title', 'Home');
+  brandEl.addEventListener('click', () => { window.location.hash = 'home'; });
+  brandEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.location.hash = 'home'; }
+  });
+}
 
 // ── Theme toggle ──────────────────────────────────────────────────────────
 const storedTheme = localStorage.getItem('flink_theme') || 'dark';
@@ -192,6 +235,7 @@ document.addEventListener('mouseout', e => {
 document.addEventListener('keydown', e => {
   if (!activeId) return;
   const idx = MODULES.findIndex(m => m.id === activeId);
+  if (idx === -1) return; // not a numbered module (home / reference pages)
   if (e.key === 'ArrowRight' && idx < MODULES.length - 1) window.location.hash = MODULES[idx+1].id;
   if (e.key === 'ArrowLeft'  && idx > 0)                  window.location.hash = MODULES[idx-1].id;
 });
