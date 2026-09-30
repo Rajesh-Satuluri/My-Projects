@@ -388,6 +388,102 @@
 .dd-pg.match { box-shadow: 0 0 0 2px var(--green); }
 .dd-pathcol { display: flex; flex-direction: column; gap: 8px; }
 
+/* ============================================================
+   Distributed Systems — node clusters, replication streams,
+   partition shards, CAP triangle + link, quorum overlap,
+   Raft replicated log
+   (shared by replication, partitioning, cap-theorem, quorum,
+    raft-consensus)
+   ============================================================ */
+.dd-cluster { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; justify-content: center; }
+.dd-cluster--left { justify-content: flex-start; }
+.dd-dnode {
+  flex: 1 1 150px; min-width: 138px; max-width: 240px; border-radius: 12px; padding: 11px 13px;
+  background: var(--bg-1); border: 1px solid var(--border-default); border-top-width: 3px;
+  border-top-color: var(--border-muted); transition: all .22s; display: flex; flex-direction: column; gap: 7px;
+}
+.dd-dnode.leader { border-top-color: var(--airflow); }
+.dd-dnode.follower { border-top-color: var(--cyan); }
+.dd-dnode.candidate { border-top-color: var(--orange); }
+.dd-dnode.new-leader { border-top-color: var(--green); box-shadow: 0 0 0 1px var(--green); }
+.dd-dnode.down { border-top-color: var(--red); border-style: dashed; opacity: .5; }
+.dd-dnode.stale { border-top-color: var(--orange); }
+.dd-dnode.hot { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.2); }
+.dd-dnode.overlap { box-shadow: 0 0 0 2px var(--green); }
+.dd-dnode-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.dd-dnode-id { font-weight: 800; font-size: 14px; color: var(--text-primary); }
+.dd-dnode-role { font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; color: var(--text-muted); }
+.dd-dnode.leader .dd-dnode-role { color: var(--airflow-bright); }
+.dd-dnode.follower .dd-dnode-role { color: var(--cyan); }
+.dd-dnode.candidate .dd-dnode-role { color: var(--orange); }
+.dd-dnode.new-leader .dd-dnode-role { color: var(--green); }
+.dd-dnode.down .dd-dnode-role { color: var(--red); }
+.dd-dnode-val { font-size: 13px; color: var(--text-secondary); line-height: 1.45; }
+.dd-dnode-val b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.dd-dnode-foot { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; }
+.dd-dnode-keys { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* labeled flow connector (replication stream, routing) */
+.dd-flow {
+  align-self: center; display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+  color: var(--text-muted); font-size: 10px; font-weight: 700; letter-spacing: .04em; min-width: 58px; text-align: center;
+}
+.dd-flow-arrow { font-size: 18px; line-height: 1; color: var(--airflow); }
+.dd-flow.lag .dd-flow-arrow { color: var(--orange); }
+
+/* connection link (CAP partition) */
+.dd-linkrow { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.dd-link {
+  flex: 0 0 auto; min-width: 96px; text-align: center; font-size: 10.5px; font-weight: 700; letter-spacing: .04em;
+  padding: 6px 12px; border-radius: 999px; color: var(--green); background: rgba(16,185,129,.12); border: 1px solid transparent;
+}
+.dd-link.cut { color: var(--red); background: rgba(239,68,68,.10); border: 1px dashed var(--red); }
+
+/* CAP triangle */
+.dd-cap-tri { display: block; margin: 0 auto; max-width: 260px; }
+.dd-cap-tri .edge { stroke: var(--border-muted); stroke-width: 2; fill: none; transition: all .25s; }
+.dd-cap-tri .edge.keep { stroke: var(--green); stroke-width: 3.5; }
+.dd-cap-tri .edge.drop { stroke: var(--red); stroke-dasharray: 5 5; opacity: .5; }
+.dd-cap-tri .vtx { fill: var(--bg-3); stroke: var(--border-default); stroke-width: 1.5; transition: all .25s; }
+.dd-cap-tri .vtx.keep { fill: var(--airflow-subtle); stroke: var(--airflow); }
+.dd-cap-tri .vtx.drop { opacity: .35; }
+.dd-cap-tri .vletter { fill: var(--text-primary); font-size: 15px; font-weight: 800; text-anchor: middle; }
+.dd-cap-tri .vname { fill: var(--text-muted); font-size: 8px; font-weight: 700; text-anchor: middle; text-transform: uppercase; letter-spacing: .04em; }
+
+/* replicated log (Raft) */
+.dd-rlog { display: flex; gap: 4px; flex-wrap: wrap; }
+.dd-rlog-cell {
+  min-width: 32px; padding: 4px 6px; border-radius: 6px; font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  text-align: center; background: var(--bg-3); color: var(--text-muted); border: 1px solid var(--border-subtle); transition: all .2s;
+}
+.dd-rlog-cell.filled { color: var(--text-primary); border-color: var(--border-default); background: var(--bg-1); }
+.dd-rlog-cell.committed { color: var(--green); border-color: var(--green); background: rgba(16,185,129,.10); }
+.dd-rlog-cell.uncommitted { color: var(--orange); border-color: var(--orange); border-style: dashed; }
+.dd-rlog-cell.hot { box-shadow: 0 0 0 2px var(--cyan); transform: translateY(-2px); }
+
+/* metric chips (W / R / N, term, lag) */
+.dd-metrics { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.dd-metric {
+  display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 5px 12px; border-radius: 10px;
+  background: var(--bg-1); border: 1px solid var(--border-default); min-width: 44px;
+}
+.dd-metric-val { font-size: 16px; font-weight: 800; color: var(--text-primary); font-family: var(--font-mono); line-height: 1.1; }
+.dd-metric-lbl { font-size: 8.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); font-weight: 700; }
+.dd-metric.good { border-color: var(--green); }
+.dd-metric.good .dd-metric-val { color: var(--green); }
+.dd-metric.bad { border-color: var(--red); }
+.dd-metric.bad .dd-metric-val { color: var(--red); }
+
+/* verdict banner (CAP / quorum outcome) */
+.dd-verdict {
+  display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 10px 14px; border-radius: 10px;
+  background: var(--bg-1); border: 1px solid var(--border-default); font-size: 12.5px; color: var(--text-secondary); line-height: 1.5;
+}
+.dd-verdict.ok { border-color: var(--green); }
+.dd-verdict.bad { border-color: var(--red); }
+.dd-verdict.warn { border-color: var(--orange); }
+.dd-verdict b { color: var(--text-primary); }
+
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 720px) {
   .dd-card, .dd-logrec, .dd-tl-rec, .dd-sst { flex-basis: 100%; }
@@ -396,4 +492,6 @@
   .dd-bit { width: 30px; height: 30px; font-size: 12px; }
   .dd-node-key { font-size: 11px; padding: 3px 6px; }
   .dd-plan-name { flex-basis: 100px; }
+  .dd-dnode { flex-basis: 100%; max-width: none; }
+  .dd-flow { transform: rotate(90deg); min-width: 0; }
 }
