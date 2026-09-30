@@ -86,8 +86,8 @@ function buildSimTab() {
         <div style="padding:14px;background:var(--bg-elevated);border-radius:10px;border:1px solid var(--border)">
           <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;font-weight:700">SCENARIO</div>
           <p style="font-size:13px;color:var(--text-secondary);line-height:1.6">
-            Driver A enters a tunnel at <strong style="color:var(--text-primary)">12:00:10</strong>.
-            Their GPS pings buffer in the phone and burst-transmit at <strong style="color:var(--text-primary)">12:00:45</strong>
+            Driver A enters a tunnel at <strong class="t-pri">12:00:10</strong>.
+            Their GPS pings buffer in the phone and burst-transmit at <strong class="t-pri">12:00:45</strong>
             when they exit the tunnel. Flink receives events 35 seconds after they happened.
           </p>
         </div>
@@ -95,20 +95,20 @@ function buildSimTab() {
           <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;font-weight:700">THE QUESTION</div>
           <p style="font-size:13px;color:var(--text-secondary);line-height:1.6">
             We have a 30-second fraud detection window. If the driver made a suspicious detour at 12:00:10,
-            does that event appear in the <strong style="color:var(--red)">12:00 window</strong> or the
+            does that event appear in the <strong class="t-red">12:00 window</strong> or the
             <strong style="color:var(--yellow)">12:00:45 window</strong>?
           </p>
         </div>
       </div>
 
       <div style="display:flex;gap:8px;margin-bottom:16px" id="time-mode-btns">
-        <button class="btn btn-secondary time-mode-btn active" data-tmode="processing" style="flex:1">
+        <button class="btn btn-secondary time-mode-btn active flex-1" data-tmode="processing">
           ⏰ Processing Time
         </button>
-        <button class="btn btn-secondary time-mode-btn" data-tmode="ingestion" style="flex:1">
+        <button class="btn btn-secondary time-mode-btn flex-1" data-tmode="ingestion">
           📥 Ingestion Time
         </button>
-        <button class="btn btn-secondary time-mode-btn" data-tmode="event" style="flex:1">
+        <button class="btn btn-secondary time-mode-btn flex-1" data-tmode="event">
           📡 Event Time
         </button>
       </div>
@@ -128,16 +128,16 @@ function buildSimTab() {
     <div style="background:var(--bg-elevated);border-radius:10px;padding:16px 20px">
       <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;letter-spacing:0.5px">LEGEND</div>
       <div style="display:flex;gap:20px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary)">
+        <div class="legend-row">
           <div style="width:12px;height:12px;border-radius:50%;background:#38BDF8"></div> Normal GPS event
         </div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary)">
+        <div class="legend-row">
           <div style="width:12px;height:12px;border-radius:50%;background:#F87171"></div> Tunnel / late event
         </div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary)">
+        <div class="legend-row">
           <div style="width:24px;height:3px;background:linear-gradient(90deg,#34D399,transparent)"></div> Watermark line
         </div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary)">
+        <div class="legend-row">
           <div style="width:24px;height:10px;background:rgba(255,107,53,0.15);border:1px solid rgba(255,107,53,0.3);border-radius:3px"></div> Window boundary
         </div>
       </div>
@@ -281,7 +281,7 @@ function initDemo(container) {
         <strong style="color:${correct?'var(--green)':'var(--red)'}">Window ${assignedW===0?'A (0–30s)':'B (30–60s)'}</strong>.
         ${correct
           ? '✅ <strong style="color:var(--green)">Correct!</strong> Event time puts the event in the right fraud window — Uber\'s 12:00 detour is caught.'
-          : '❌ <strong style="color:var(--red)">Wrong window!</strong> The detour at t=10s appears in Window B because Flink assigns it by when it <em>arrived</em> (t=45s), not when it <em>happened</em>. Fraud detection misses the spike in Window A.'
+          : '❌ <strong class="t-red">Wrong window!</strong> The detour at t=10s appears in Window B because Flink assigns it by when it <em>arrived</em> (t=45s), not when it <em>happened</em>. Fraud detection misses the spike in Window A.'
         }
       `;
     }
@@ -359,7 +359,7 @@ function buildConceptTab() {
       ].map(t => `
         <div class="card" style="border-color:${t.recommended?t.color+'44':'var(--border)'}">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            <span style="font-size:28px">${t.icon}</span>
+            <span class="fs-28">${t.icon}</span>
             <div>
               <div style="display:flex;align-items:center;gap:8px">
                 <span style="font-size:17px;font-weight:800">${t.name}</span>
@@ -370,7 +370,7 @@ function buildConceptTab() {
           </div>
           <p style="font-size:13.5px;color:var(--text-secondary);line-height:1.65;margin-bottom:12px">${t.what}</p>
           <div style="padding:10px 14px;background:var(--accent-dim);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;margin-bottom:12px;font-size:13px;color:var(--text-secondary)">
-            🚗 <strong style="color:var(--text-primary)">Uber:</strong> ${t.uber}
+            🚗 <strong class="t-pri">Uber:</strong> ${t.uber}
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>
@@ -379,7 +379,7 @@ function buildConceptTab() {
             </div>
             <div>
               <div style="font-size:11px;color:var(--red);font-weight:700;margin-bottom:6px">✗ CONS</div>
-              ${t.cons.map(c=>`<div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;display:flex;gap:6px"><span style="color:var(--red)">−</span>${c}</div>`).join('')}
+              ${t.cons.map(c=>`<div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;display:flex;gap:6px"><span class="t-red">−</span>${c}</div>`).join('')}
             </div>
           </div>
         </div>
@@ -396,7 +396,7 @@ function buildCodeTab() {
       <div class="section-desc">How to set up each time characteristic and watermark strategy in code</div>
     </div>
 
-    <div style="margin-bottom:20px">
+    <div class="mb-20">
       <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:10px">📡 Event Time (recommended for Uber GPS)</div>
       <div class="code-block"><span class="lang-tag">Java</span>
 <span class="ct">DataStream</span>&lt;<span class="ct">GPSEvent</span>&gt; gpsStream = env
@@ -415,7 +415,7 @@ function buildCodeTab() {
 </div>
     </div>
 
-    <div style="margin-bottom:20px">
+    <div class="mb-20">
       <div style="font-size:13px;font-weight:700;color:var(--yellow);margin-bottom:10px">⏰ Processing Time (internal metrics only)</div>
       <div class="code-block"><span class="lang-tag">Java</span>
 <span class="ct">DataStream</span>&lt;<span class="ct">GPSEvent</span>&gt; gpsStream = env
@@ -452,7 +452,7 @@ stream
     <div style="margin-top:20px;padding:16px;background:var(--green-dim);border-radius:10px;border:1px solid rgba(52,211,153,0.2)">
       <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px">💡 Uber Best Practice</div>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.65">
-        All Uber production Flink pipelines use <strong style="color:var(--text-primary)">event time with bounded out-of-orderness watermarks</strong>.
+        All Uber production Flink pipelines use <strong class="t-pri">event time with bounded out-of-orderness watermarks</strong>.
         The watermark lag is tuned per pipeline: GPS events use 60s (tunnel delay), payment events use 5s (near-instant),
         and surge pricing events use 120s (delayed mobile network in surge zones).
       </div>

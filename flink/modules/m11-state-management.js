@@ -74,9 +74,9 @@ export function mount(container) {
         <span style="font-size:12px;color:var(--text-secondary);margin-left:16px">Drag to simulate Uber scale (1M = 1000K entries)</span>
       </div>
       <div id="sb-metrics-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:20px 0"></div>
-      <div class="card" style="padding:24px">
+      <div class="card p-24">
         <h3 style="margin:0 0 16px">Feature Comparison</h3>
-        <div style="overflow-x:auto">
+        <div class="scroll-x">
           <table style="width:100%;border-collapse:collapse;font-size:13px">
             <thead>
               <tr>
@@ -96,9 +96,9 @@ export function mount(container) {
         </div>
       </div>
       <div class="grid-2" style="gap:20px;margin-top:20px">
-        <div class="card" style="padding:24px">
+        <div class="card p-24">
           <h4 style="margin:0 0 12px;color:#6366f1">HashMap Backend — Config</h4>
-          <div class="code-block" style="font-size:11px"><pre>// Default since Flink 1.13
+          <div class="code-block fs-11"><pre>// Default since Flink 1.13
 env.setStateBackend(
     new HashMapStateBackend());
 // Checkpoint storage separate:
@@ -106,9 +106,9 @@ env.getCheckpointConfig()
    .setCheckpointStorage(
        "s3://uber-checkpoints/fraud/");</pre></div>
         </div>
-        <div class="card" style="padding:24px">
+        <div class="card p-24">
           <h4 style="margin:0 0 12px;color:#FF6B35">RocksDB Backend — Config</h4>
-          <div class="code-block" style="font-size:11px"><pre>EmbeddedRocksDBStateBackend rdb =
+          <div class="code-block fs-11"><pre>EmbeddedRocksDBStateBackend rdb =
     new EmbeddedRocksDBStateBackend(
         true); // incremental=true
 env.setStateBackend(rdb);
@@ -175,9 +175,9 @@ env.getCheckpointConfig()
   function renderStateTypeDetail() {
     const t = selectedType;
     container.querySelector('#state-type-detail').innerHTML = `
-      <div class="card" style="padding:24px">
+      <div class="card p-24">
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
-          <span style="font-size:36px">${t.icon}</span>
+          <span class="fs-36">${t.icon}</span>
           <div>
             <div style="font-size:20px;font-weight:700;color:var(--text);font-family:var(--font-mono)">${t.label}</div>
             <div style="color:var(--text-secondary);font-size:13px;margin-top:4px">${t.desc}</div>
@@ -187,13 +187,13 @@ env.getCheckpointConfig()
           <div class="lc-uber-label">🚗 Uber Example</div>
           <p style="font-size:13px">${t.uber}</p>
         </div>
-        <div style="margin-top:16px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-secondary);margin-bottom:10px">Usage Pattern</div>
-          <div class="code-block" style="font-size:11px"><pre>${stateCodeFor(t.id)}</pre></div>
+        <div class="mt-16">
+          <div class="section-eyebrow">Usage Pattern</div>
+          <div class="code-block fs-11"><pre>${stateCodeFor(t.id)}</pre></div>
         </div>
         <div style="margin-top:16px;padding:14px;background:var(--surface2);border-radius:8px">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-secondary);margin-bottom:8px">State TTL (auto-expiry)</div>
-          <div class="code-block" style="font-size:11px"><pre>StateTtlConfig ttl = StateTtlConfig
+          <div class="code-block fs-11"><pre>StateTtlConfig ttl = StateTtlConfig
     .newBuilder(Time.hours(24))
     .setUpdateType(UpdateType.OnCreateAndWrite)
     .setStateVisibility(
