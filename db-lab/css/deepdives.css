@@ -568,9 +568,55 @@
 .dd-wseg-state { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); font-weight: 700; margin-top: 2px; }
 .dd-wseg-lsn { font-family: var(--font-mono); font-size: 10.5px; color: var(--airflow-bright); margin-top: 4px; }
 
+/* ============================================================
+   Foundations (B7) — DBMS service/architecture layer stack,
+   data-model comparison cards, relation anatomy
+   (shared by what-is-dbms, dbms-architecture, data-models,
+    relational-model)
+   ============================================================ */
+/* Layer stack (DBMS services + query-path architecture) */
+.dd-stack { display: flex; flex-direction: column; gap: 6px; }
+.dd-stack-layer {
+  border-radius: 10px; padding: 9px 13px; background: var(--bg-1);
+  border: 1px solid var(--border-default); border-left: 3px solid var(--border-muted); transition: all .2s;
+}
+.dd-stack-layer.active { border-left-color: var(--airflow); box-shadow: 0 0 0 1px var(--airflow); transform: translateX(3px); }
+.dd-stack-layer.done { border-left-color: var(--green); }
+.dd-stack-layer.muted { opacity: .5; }
+.dd-stack-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.dd-stack-name { font-size: 13.5px; font-weight: 800; color: var(--text-primary); }
+.dd-stack-tag { font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); font-weight: 700; white-space: nowrap; }
+.dd-stack-layer.active .dd-stack-tag { color: var(--airflow-bright); }
+.dd-stack-layer.done .dd-stack-tag { color: var(--green); }
+.dd-stack-sub { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.dd-stack-arrow { text-align: center; color: var(--text-muted); font-size: 12px; line-height: 1.2; }
+
+/* Data-model comparison cards */
+.dd-modelcard {
+  flex: 1 1 200px; min-width: 180px; border-radius: 12px; padding: 12px 14px;
+  background: var(--bg-1); border: 1px solid var(--border-default); border-top: 3px solid var(--purple); transition: all .2s;
+}
+.dd-modelcard.active { box-shadow: 0 6px 20px rgba(0,0,0,.22); transform: translateY(-2px); border-top-color: var(--airflow); }
+.dd-modelcard.muted { opacity: .45; }
+.dd-modelcard-name { font-size: 13.5px; font-weight: 800; color: var(--text-primary); }
+.dd-modelcard-tag { font-size: 10px; color: var(--text-muted); font-weight: 700; margin-top: 1px; }
+.dd-modelcode {
+  margin-top: 8px; font-family: var(--font-mono); font-size: 10.5px; color: var(--text-secondary);
+  white-space: pre-wrap; line-height: 1.5; background: var(--bg-2); border-radius: 8px; padding: 8px 10px;
+}
+.dd-modelcard-best { margin-top: 8px; font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+.dd-modelcard-bestlbl { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); font-weight: 700; margin-right: 4px; }
+
+/* Relation anatomy (relational model) — extends .dd-matrix */
+.dd-relrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.dd-relwrap { flex: 1 1 240px; min-width: 220px; }
+.dd-rel-name { font-family: var(--font-mono); font-size: 12px; font-weight: 800; color: var(--airflow-bright); margin-bottom: 5px; }
+.dd-matrix th.pk, .dd-matrix td.pk { color: var(--orange); font-weight: 800; }
+.dd-matrix th.fk, .dd-matrix td.fk { color: var(--purple); font-weight: 800; }
+
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 720px) {
-  .dd-card, .dd-logrec, .dd-tl-rec, .dd-sst, .dd-wseg { flex-basis: 100%; }
+  .dd-card, .dd-logrec, .dd-tl-rec, .dd-sst, .dd-wseg, .dd-modelcard, .dd-relwrap { flex-basis: 100%; }
   .dd-arrow { transform: rotate(90deg); }
   .dd-lockrow { grid-template-columns: 1fr; gap: 4px; }
   .dd-bit { width: 30px; height: 30px; font-size: 12px; }
