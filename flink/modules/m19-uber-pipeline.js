@@ -257,8 +257,8 @@ export function mount(container) {
     <div class="tab-content" data-tab="config">
       <div style="padding:28px">
         <div class="grid-2" style="gap:20px;margin-bottom:20px">
-          <div class="card" style="padding:24px">
-            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px">Checkpoint Configuration</div>
+          <div class="card p-24">
+            <div class="card-title">Checkpoint Configuration</div>
             <table style="width:100%;border-collapse:collapse">
               ${CHECKPOINTS.map(c => `
                 <tr style="border-bottom:1px solid var(--border)">
@@ -268,9 +268,9 @@ export function mount(container) {
                 </tr>`).join('')}
             </table>
           </div>
-          <div class="card" style="padding:24px">
-            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px">Job Resource Profile</div>
-            <div class="code-block" style="font-size:11px"><pre>// Flink Job configuration
+          <div class="card p-24">
+            <div class="card-title">Job Resource Profile</div>
+            <div class="code-block fs-11"><pre>// Flink Job configuration
 StreamExecutionEnvironment env =
   StreamExecutionEnvironment
     .getExecutionEnvironment();
@@ -307,8 +307,8 @@ env.setRestartStrategy(
     ));</pre></div>
           </div>
         </div>
-        <div class="card" style="padding:24px">
-          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px">Full Pipeline Assembly</div>
+        <div class="card p-24">
+          <div class="card-title">Full Pipeline Assembly</div>
           <div class="code-block" style="font-size:11px;max-height:420px;overflow-y:auto"><pre>// === UBER GPS FRAUD PIPELINE ===
 // 1. Ingest
 DataStream&lt;GPSEvent&gt; gps = env.fromSource(
@@ -402,10 +402,10 @@ env.execute("Uber-GPS-Fraud-Pipeline");</pre></div>
 
   function renderDetail(s) {
     container.querySelector('#p19-detail').innerHTML = `
-      <div class="grid-2" style="gap:20px">
+      <div class="grid-2 gap-20">
         <div class="card" style="padding:24px;border-left:4px solid ${s.color}">
           <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-            <span style="font-size:36px">${s.icon}</span>
+            <span class="fs-36">${s.icon}</span>
             <div>
               <div style="font-size:19px;font-weight:700;color:${s.color}">${s.label}</div>
               <div style="font-size:11px;color:var(--text-secondary);margin-top:3px">${s.tagline}</div>
@@ -414,7 +414,7 @@ env.execute("Uber-GPS-Fraud-Pipeline");</pre></div>
           <p style="color:var(--text-secondary);font-size:13.5px;line-height:1.7;margin:0 0 14px">${s.desc}</p>
           <div class="lc-uber-box">
             <div class="lc-uber-label">🚗 Uber Production Reality</div>
-            <p style="font-size:12.5px">${s.uber}</p>
+            <p class="fs-125">${s.uber}</p>
           </div>
           <div style="margin-top:16px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px" id="p19-metrics">
             ${Object.entries(s.metrics).map(([k, v]) => `
@@ -425,7 +425,7 @@ env.execute("Uber-GPS-Fraud-Pipeline");</pre></div>
           </div>
         </div>
         <div>
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-secondary);margin-bottom:8px">Production Code</div>
+          <div class="eyebrow">Production Code</div>
           <div class="code-block" style="font-size:11px;max-height:520px;overflow-y:auto"><pre>${s.code}</pre></div>
         </div>
       </div>

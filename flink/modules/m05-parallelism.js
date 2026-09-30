@@ -59,35 +59,35 @@ export function mount(container) {
     </div>
 
     <div class="tab-content" data-tab="concept">
-      <div class="grid-2" style="gap:20px">
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">What is Parallelism?</h3>
-          <p style="color:var(--text-secondary);line-height:1.7">Each Flink operator is a logical unit. When you set <code>parallelism=4</code>, Flink creates <strong>4 parallel subtasks</strong>, each processing a slice of the data. Together they process 4× as much data per second as a single instance.</p>
-          <div class="lc-uber-box" style="margin-top:16px">
+      <div class="grid-2 gap-20">
+        <div class="card p-24">
+          <h3 class="mb-12">What is Parallelism?</h3>
+          <p class="prose">Each Flink operator is a logical unit. When you set <code>parallelism=4</code>, Flink creates <strong>4 parallel subtasks</strong>, each processing a slice of the data. Together they process 4× as much data per second as a single instance.</p>
+          <div class="lc-uber-box mt-16">
             <div class="lc-uber-label">🚗 Uber Example</div>
             <p>1M GPS events/sec ÷ 4 subtasks = 250K events/sec per FraudDetector instance. Each instance handles drivers whose <code>driverId % 4</code> matches its slot index.</p>
           </div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">What is Slot Sharing?</h3>
-          <p style="color:var(--text-secondary);line-height:1.7">By default, all operators in a job share the same slot group. One slot holds <strong>one subtask from each operator</strong> — the entire pipeline slice runs in a single JVM thread group.</p>
-          <div class="lc-uber-box" style="margin-top:16px">
+        <div class="card p-24">
+          <h3 class="mb-12">What is Slot Sharing?</h3>
+          <p class="prose">By default, all operators in a job share the same slot group. One slot holds <strong>one subtask from each operator</strong> — the entire pipeline slice runs in a single JVM thread group.</p>
+          <div class="lc-uber-box mt-16">
             <div class="lc-uber-label">🚗 Uber Impact</div>
             <p>4 operators × parallelism 4 = 16 subtasks. With slot sharing: only <strong>4 slots needed</strong>. Without: 16 slots. Uber saves 75% of their TaskManager count.</p>
           </div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Operator Chaining</h3>
-          <p style="color:var(--text-secondary);line-height:1.7">Flink automatically chains consecutive operators with the same parallelism and a FORWARD edge into a single <strong>task thread</strong>. Data flows between chained operators as Java objects — no serialization, no network.</p>
-          <div class="code-block" style="margin-top:12px"><pre>// These three chain into one thread:
+        <div class="card p-24">
+          <h3 class="mb-12">Operator Chaining</h3>
+          <p class="prose">Flink automatically chains consecutive operators with the same parallelism and a FORWARD edge into a single <strong>task thread</strong>. Data flows between chained operators as Java objects — no serialization, no network.</p>
+          <div class="code-block mt-12"><pre>// These three chain into one thread:
 source → map(parseGPS) → filter(speed > 0)
 // Chained task: SourceOperator+MapOperator+FilterOperator
 // No Netty hops between them</pre></div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Heterogeneous Parallelism</h3>
-          <p style="color:var(--text-secondary);line-height:1.7">Different operators can run at different parallelisms. Flink inserts a <strong>data redistribution</strong> (shuffle or keyBy) at the boundary.</p>
-          <div class="code-block" style="margin-top:12px"><pre>source.setParallelism(4)         // 4 Kafka partitions
+        <div class="card p-24">
+          <h3 class="mb-12">Heterogeneous Parallelism</h3>
+          <p class="prose">Different operators can run at different parallelisms. Flink inserts a <strong>data redistribution</strong> (shuffle or keyBy) at the boundary.</p>
+          <div class="code-block mt-12"><pre>source.setParallelism(4)         // 4 Kafka partitions
   .keyBy(e -> e.driverId)        // shuffle → hash
   .process(fraudDetector)
     .setParallelism(8)           // 8× parallel detection
@@ -241,9 +241,9 @@ function renderDiagram(container, parallelism, numTMs, slotSharing) {
 
   // Subtask table
   tableWrap.innerHTML = `
-    <div class="card" style="padding:20px">
-      <h4 style="margin:0 0 12px">Subtask Assignment</h4>
-      <div style="overflow-x:auto">
+    <div class="card p-20">
+      <h4 class="mb-12">Subtask Assignment</h4>
+      <div class="scroll-x">
         <table style="width:100%;border-collapse:collapse;font-size:12.5px">
           <thead>
             <tr>${['Operator','Subtask Index','Assigned TM','Slot Key'].map(h => `<th style="text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text-secondary)">${h}</th>`).join('')}</tr>

@@ -65,9 +65,9 @@ export function mount(container) {
           <div id="ckpt-step-text" style="font-size:13px;color:var(--text-secondary);flex:1;min-width:200px"></div>
         </div>
       </div>
-      <div class="grid-2" style="gap:20px">
-        <div class="card" style="padding:20px">
-          <h4 style="margin:0 0 12px">Checkpoint Phases</h4>
+      <div class="grid-2 gap-20">
+        <div class="card p-20">
+          <h4 class="mb-12">Checkpoint Phases</h4>
           ${PHASES.map(p => `
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
               <span style="width:12px;height:12px;border-radius:50%;background:${p.color};flex-shrink:0;display:inline-block"></span>
@@ -75,8 +75,8 @@ export function mount(container) {
             </div>
           `).join('')}
         </div>
-        <div class="card" style="padding:20px">
-          <h4 style="margin:0 0 12px">Uber Scale Numbers</h4>
+        <div class="card p-20">
+          <h4 class="mb-12">Uber Scale Numbers</h4>
           ${[
             ['Checkpoint interval','30 seconds'],
             ['FraudDetector state','~600 MB (3M drivers)'],
@@ -85,7 +85,7 @@ export function mount(container) {
             ['Kafka offset snapshot','<1 KB per partition'],
           ].map(([k,v]) => `
             <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12.5px">
-              <span style="color:var(--text-secondary)">${k}</span>
+              <span class="t-sec">${k}</span>
               <span style="color:var(--text);font-weight:600">${v}</span>
             </div>
           `).join('')}
@@ -94,9 +94,9 @@ export function mount(container) {
     </div>
 
     <div class="tab-content" data-tab="concept">
-      <div class="grid-2" style="gap:20px">
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Aligned vs Unaligned Checkpoints</h3>
+      <div class="grid-2 gap-20">
+        <div class="card p-24">
+          <h3 class="mb-12">Aligned vs Unaligned Checkpoints</h3>
           <div style="margin-bottom:12px">
             <div style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px">Aligned (Classic)</div>
             <p style="color:var(--text-secondary);font-size:13px;line-height:1.6">Wait for barriers from ALL inputs before snapshotting. Buffer records from fast channels during wait. Zero checkpoint size overhead. Best for low-latency pipelines.</p>
@@ -111,9 +111,9 @@ env.getCheckpointConfig()
 // Or per-job config:
 // execution.checkpointing.unaligned: true</pre></div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Checkpoint Configuration</h3>
-          <div class="code-block" style="font-size:11px"><pre>CheckpointConfig cfg =
+        <div class="card p-24">
+          <h3 class="mb-12">Checkpoint Configuration</h3>
+          <div class="code-block fs-11"><pre>CheckpointConfig cfg =
     env.getCheckpointConfig();
 
 // Interval between checkpoint starts
@@ -136,8 +136,8 @@ cfg.setExternalizedCheckpointCleanup(
 cfg.setCheckpointStorage(
     "s3://uber-checkpoints/fraud/ckpt");</pre></div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Savepoints vs Checkpoints</h3>
+        <div class="card p-24">
+          <h3 class="mb-12">Savepoints vs Checkpoints</h3>
           ${[
             ['Trigger','Automatic (periodic)','Manual (operator request)'],
             ['Purpose','Failure recovery','Job upgrades, migrations, A/B'],
@@ -146,7 +146,7 @@ cfg.setCheckpointStorage(
             ['Uber use','Every 30s auto','Before every code deploy'],
           ].map(([f,c,s]) => `
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11.5px">
-              <span style="color:var(--text-secondary)">${f}</span>
+              <span class="t-sec">${f}</span>
               <span style="color:#6366f1">${c}</span>
               <span style="color:#FF6B35">${s}</span>
             </div>
@@ -155,9 +155,9 @@ cfg.setCheckpointStorage(
             <span></span><span>CHECKPOINT</span><span>SAVEPOINT</span>
           </div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Restoring from a Savepoint</h3>
-          <div class="code-block" style="font-size:11px"><pre># Trigger savepoint before upgrade:
+        <div class="card p-24">
+          <h3 class="mb-12">Restoring from a Savepoint</h3>
+          <div class="code-block fs-11"><pre># Trigger savepoint before upgrade:
 flink savepoint &lt;jobId&gt; s3://uber/savepoints/
 
 # Deploy new version, restore from savepoint:

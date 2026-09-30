@@ -279,9 +279,9 @@ export function mount(container) {
             <div class="op-box-desc">${op.desc}</div>
           </div>
           <div class="code-block" style="margin-top:12px;font-size:11px;max-height:180px;overflow-y:auto"><pre>${op.code}</pre></div>
-          <div class="lc-uber-box" style="margin-top:12px">
+          <div class="lc-uber-box mt-12">
             <div class="lc-uber-label">🚗 Uber</div>
-            <p style="font-size:12px">${op.uber}</p>
+            <p class="fs-12">${op.uber}</p>
           </div>
         </div>
         <div class="op-col">

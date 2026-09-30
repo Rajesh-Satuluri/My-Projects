@@ -209,7 +209,7 @@ export function mount(container) {
   const picker = container.querySelector('#conn16-picker');
   picker.innerHTML = CONNECTORS.map(c => `
     <button class="conn16-card${c.id === selected.id ? ' active' : ''}" data-cid="${c.id}" style="border-color:${c.id === selected.id ? c.color : 'var(--border)'}">
-      <span style="font-size:28px">${c.icon}</span>
+      <span class="fs-28">${c.icon}</span>
       <div style="font-size:12px;font-weight:600;color:var(--text);margin-top:6px">${c.label}</div>
       <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${c.color}22;color:${c.color};margin-top:4px;display:inline-block">${c.badge}</span>
     </button>
@@ -220,7 +220,7 @@ export function mount(container) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
         <div class="card" style="padding:24px;border-left:4px solid ${c.color}">
           <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-            <span style="font-size:36px">${c.icon}</span>
+            <span class="fs-36">${c.icon}</span>
             <div>
               <div style="font-size:19px;font-weight:700;color:${c.color}">${c.label}</div>
               <div style="font-size:11px;margin-top:4px"><span class="badge" style="background:${c.color}22;color:${c.color};border:1px solid ${c.color}44">${c.badge}</span> &nbsp; <span class="badge" style="background:var(--surface2)">${c.guarantee}</span></div>
@@ -229,13 +229,13 @@ export function mount(container) {
           <p style="color:var(--text-secondary);font-size:13.5px;line-height:1.7;margin:0 0 14px">${c.desc}</p>
           <div class="lc-uber-box">
             <div class="lc-uber-label">🚗 Uber Use Case</div>
-            <p style="font-size:12.5px">${c.uber}</p>
+            <p class="fs-125">${c.uber}</p>
           </div>
         </div>
         <div>
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-secondary);margin-bottom:8px">SQL / DDL Config</div>
+          <div class="eyebrow">SQL / DDL Config</div>
           <div class="code-block" style="font-size:11px;margin-bottom:16px"><pre>${c.config}</pre></div>
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-secondary);margin-bottom:8px">Java / SQL Code</div>
+          <div class="eyebrow">Java / SQL Code</div>
           <div class="code-block" style="font-size:11px;max-height:280px;overflow-y:auto"><pre>${c.code}</pre></div>
         </div>
       </div>

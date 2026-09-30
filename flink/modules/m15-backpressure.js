@@ -209,10 +209,10 @@ export function mount(container) {
     </div>
 
     <div class="tab-content" data-tab="setup">
-      <div class="grid-2" style="gap:20px">
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Table DDL — GPS Events Source</h3>
-          <div class="code-block" style="font-size:11px"><pre>CREATE TABLE gps_events (
+      <div class="grid-2 gap-20">
+        <div class="card p-24">
+          <h3 class="mb-12">Table DDL — GPS Events Source</h3>
+          <div class="code-block fs-11"><pre>CREATE TABLE gps_events (
   driver_id   STRING,
   lat         DOUBLE,
   lon         DOUBLE,
@@ -229,9 +229,9 @@ export function mount(container) {
   'scan.startup.mode' = 'latest-offset'
 );</pre></div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Table DDL — Fraud Alerts Sink</h3>
-          <div class="code-block" style="font-size:11px"><pre>CREATE TABLE fraud_alerts (
+        <div class="card p-24">
+          <h3 class="mb-12">Table DDL — Fraud Alerts Sink</h3>
+          <div class="code-block fs-11"><pre>CREATE TABLE fraud_alerts (
   driver_id   STRING,
   alert_type  STRING,
   speed_kmh   INT,
@@ -249,9 +249,9 @@ SELECT driver_id, 'SPEEDING', speed_kmh, event_time
 FROM gps_events
 WHERE speed_kmh > 80;</pre></div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">TableEnvironment Setup</h3>
-          <div class="code-block" style="font-size:11px"><pre>StreamExecutionEnvironment env =
+        <div class="card p-24">
+          <h3 class="mb-12">TableEnvironment Setup</h3>
+          <div class="code-block fs-11"><pre>StreamExecutionEnvironment env =
     StreamExecutionEnvironment.getExecutionEnvironment();
 env.setParallelism(4);
 
@@ -275,8 +275,8 @@ Table result = tableEnv.sqlQuery(
 DataStream&lt;Row&gt; out = tableEnv.toDataStream(result);
 env.execute("Uber GPS SQL Pipeline");</pre></div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Table API vs DataStream Comparison</h3>
+        <div class="card p-24">
+          <h3 class="mb-12">Table API vs DataStream Comparison</h3>
           ${[
             ['Abstraction level','High (declarative)','Low (imperative)'],
             ['Optimization','Query planner (Blink)','Manual'],
@@ -287,7 +287,7 @@ env.execute("Uber GPS SQL Pipeline");</pre></div>
             ['Uber use','Aggregations, ETL','FraudDetector core'],
           ].map(([f,ta,ds]) => `
             <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;padding:6px 0;border-bottom:1px solid var(--border);font-size:11.5px">
-              <span style="color:var(--text-secondary)">${f}</span>
+              <span class="t-sec">${f}</span>
               <span style="color:#6366f1">${ta}</span>
               <span style="color:#FF6B35">${ds}</span>
             </div>
@@ -343,9 +343,9 @@ env.execute("Uber GPS SQL Pipeline");</pre></div>
     const cols = q.results.length ? Object.keys(q.results[0]) : [];
     detail.innerHTML = `
       <div class="sql-detail-grid">
-        <div class="card" style="padding:24px">
+        <div class="card p-24">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            <span style="font-size:28px">${q.icon}</span>
+            <span class="fs-28">${q.icon}</span>
             <div>
               <div style="font-size:17px;font-weight:700;color:var(--text)">${q.label}</div>
               <span class="badge" style="font-size:10px">${q.category}</span>
@@ -354,20 +354,20 @@ env.execute("Uber GPS SQL Pipeline");</pre></div>
           <p style="color:var(--text-secondary);font-size:13.5px;line-height:1.7;margin:0 0 12px">${q.desc}</p>
           <div class="lc-uber-box">
             <div class="lc-uber-label">🚗 Uber Use Case</div>
-            <p style="font-size:12.5px">${q.uber}</p>
+            <p class="fs-125">${q.uber}</p>
           </div>
         </div>
         <div>
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-secondary);margin:0 0 8px;padding:0 4px">SQL Query</div>
+          <div class="eyebrow-flow">SQL Query</div>
           <div class="code-block" style="font-size:11.5px;max-height:280px;overflow-y:auto"><pre>${q.sql}</pre></div>
         </div>
         <div>
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-secondary);margin:0 0 8px;padding:0 4px">Table API / DataStream Plan</div>
+          <div class="eyebrow-flow">Table API / DataStream Plan</div>
           <div class="code-block" style="font-size:11px;max-height:280px;overflow-y:auto"><pre>${q.plan}</pre></div>
         </div>
         <div>
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-secondary);margin:0 0 8px;padding:0 4px">Result Rows (sample)</div>
-          <div style="overflow-x:auto">
+          <div class="eyebrow-flow">Result Rows (sample)</div>
+          <div class="scroll-x">
             <table style="width:100%;border-collapse:collapse;font-size:12px">
               <thead>
                 <tr>${cols.map(c => `<th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);color:var(--text-secondary);white-space:nowrap">${c}</th>`).join('')}</tr>

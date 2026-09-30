@@ -185,14 +185,14 @@ export function mount(container) {
       <div class="card" style="padding:24px;margin-bottom:20px">
         <h3 style="margin:0 0 8px">Kafka Source — Partition Assignment</h3>
         <p style="color:var(--text-secondary);margin:0 0 20px;font-size:14px">Each Flink source subtask owns a set of Kafka partitions. Events within a partition arrive in order; across partitions, watermarks align the streams.</p>
-        <div id="kafka-svg-wrap" style="overflow-x:auto"></div>
+        <div class="scroll-x" id="kafka-svg-wrap"></div>
         <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap" id="kafka-anim-controls">
           <button class="btn btn-primary" id="kafka-play">▶ Animate Events</button>
           <button class="btn btn-secondary" id="kafka-reset">↺ Reset</button>
         </div>
       </div>
-      <div class="card" style="padding:24px">
-        <h3 style="margin:0 0 12px">Exactly-Once Offset Protocol</h3>
+      <div class="card p-24">
+        <h3 class="mb-12">Exactly-Once Offset Protocol</h3>
         <div class="timeline-steps" id="eo-steps"></div>
       </div>
     </div>
@@ -256,13 +256,13 @@ export function mount(container) {
               <div class="lc-uber-label">🚗 Uber Example</div>
               <p style="font-size:13px">${c.uber}</p>
             </div>
-            <div style="margin-top:16px">
-              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-secondary);margin-bottom:10px">Exactly-Once Protocol</div>
+            <div class="mt-16">
+              <div class="section-eyebrow">Exactly-Once Protocol</div>
               ${c.exactly.map((s, i) => `<div style="display:flex;gap:10px;margin-bottom:8px;font-size:13px;color:var(--text-secondary)"><span style="color:${c.color};font-weight:700;flex-shrink:0">${i + 1}.</span><span>${s}</span></div>`).join('')}
             </div>
           </div>
           <div>
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-secondary);margin-bottom:10px">Configuration</div>
+            <div class="section-eyebrow">Configuration</div>
             <div class="conn-props-table">
               ${c.props.map(p => `
                 <div class="conn-prop-row">

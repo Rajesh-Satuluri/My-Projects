@@ -111,49 +111,49 @@ export function mount(container) {
     </div>
 
     <div class="tab-content" data-tab="concept">
-      <div class="grid-2" style="gap:20px">
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">⬜ Tumbling Window</h3>
-          <p style="color:var(--text-secondary);line-height:1.7">Fixed size, no overlap. Each event falls in exactly one window. Simple, deterministic. Use for period aggregates.</p>
+      <div class="grid-2 gap-20">
+        <div class="card p-24">
+          <h3 class="mb-12">⬜ Tumbling Window</h3>
+          <p class="prose">Fixed size, no overlap. Each event falls in exactly one window. Simple, deterministic. Use for period aggregates.</p>
           <div class="code-block" style="margin-top:12px;font-size:11px"><pre>stream.keyBy(e -> e.driverId)
   .window(TumblingEventTimeWindows
       .of(Time.seconds(10)))
   .aggregate(new SpeedAvgAgg());
 // Windows: [0,10), [10,20), [20,30)...</pre></div>
-          <div class="lc-uber-box" style="margin-top:12px">
+          <div class="lc-uber-box mt-12">
             <div class="lc-uber-label">🚗 Uber</div>
-            <p style="font-size:12px">Count trips completed per driver per 10-minute window for surge pricing calculation.</p>
+            <p class="fs-12">Count trips completed per driver per 10-minute window for surge pricing calculation.</p>
           </div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">🔲 Sliding Window</h3>
-          <p style="color:var(--text-secondary);line-height:1.7">Fixed size, overlapping. Slide interval &lt; window size means events appear in multiple windows. Good for rolling metrics.</p>
+        <div class="card p-24">
+          <h3 class="mb-12">🔲 Sliding Window</h3>
+          <p class="prose">Fixed size, overlapping. Slide interval &lt; window size means events appear in multiple windows. Good for rolling metrics.</p>
           <div class="code-block" style="margin-top:12px;font-size:11px"><pre>stream.keyBy(e -> e.driverId)
   .window(SlidingEventTimeWindows.of(
       Time.seconds(15), // size
       Time.seconds(5))) // slide
   .aggregate(new MaxSpeedAgg());
 // [0,15), [5,20), [10,25)...</pre></div>
-          <div class="lc-uber-box" style="margin-top:12px">
+          <div class="lc-uber-box mt-12">
             <div class="lc-uber-label">🚗 Uber</div>
-            <p style="font-size:12px">Rolling 15-min max speed per driver, updated every 5 min — feeds the speeding alert model.</p>
+            <p class="fs-12">Rolling 15-min max speed per driver, updated every 5 min — feeds the speeding alert model.</p>
           </div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">💬 Session Window</h3>
-          <p style="color:var(--text-secondary);line-height:1.7">Opens on first event; closes after a gap of inactivity. Variable length. Perfect for user sessions or trip boundaries.</p>
+        <div class="card p-24">
+          <h3 class="mb-12">💬 Session Window</h3>
+          <p class="prose">Opens on first event; closes after a gap of inactivity. Variable length. Perfect for user sessions or trip boundaries.</p>
           <div class="code-block" style="margin-top:12px;font-size:11px"><pre>stream.keyBy(e -> e.driverId)
   .window(EventTimeSessionWindows
       .withGap(Time.minutes(2)))
   .aggregate(new TripStatsAgg());
 // Each continuous GPS burst = 1 session</pre></div>
-          <div class="lc-uber-box" style="margin-top:12px">
+          <div class="lc-uber-box mt-12">
             <div class="lc-uber-label">🚗 Uber</div>
-            <p style="font-size:12px">A trip session: window opens on trip-start GPS, closes 2 min after last ping. Computes per-trip distance, duration, avg speed.</p>
+            <p class="fs-12">A trip session: window opens on trip-start GPS, closes 2 min after last ping. Computes per-trip distance, duration, avg speed.</p>
           </div>
         </div>
-        <div class="card" style="padding:24px">
-          <h3 style="margin:0 0 12px">Window Lifecycle</h3>
+        <div class="card p-24">
+          <h3 class="mb-12">Window Lifecycle</h3>
           <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:12px">Every window goes through four phases:</p>
           ${[['Assign','Event arrives, WindowAssigner places it in one or more windows'],['Accumulate','WindowFunction/AggregateFunction accumulates the event into window state'],['Trigger','Trigger evaluates whether to fire. EventTimeTrigger fires when watermark ≥ window end'],['Purge','After firing (and any allowedLateness period), window state is cleared from the state backend']].map(([t,d]) => `<div style="display:flex;gap:10px;margin-bottom:8px"><span style="color:var(--accent);font-weight:700;width:80px;flex-shrink:0">${t}</span><span style="color:var(--text-secondary);font-size:13px">${d}</span></div>`).join('')}
         </div>

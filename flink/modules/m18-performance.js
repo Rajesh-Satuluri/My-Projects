@@ -223,7 +223,7 @@ export function mount(container) {
                 </div>
                 <div class="lc-uber-box">
                   <div class="lc-uber-label">🚗 Uber Impact</div>
-                  <p style="font-size:12.5px">${item.uber}</p>
+                  <p class="fs-125">${item.uber}</p>
                 </div>
               </div>
             ` : ''}
