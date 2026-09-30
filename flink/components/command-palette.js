@@ -1,5 +1,5 @@
-// Command palette (Cmd/Ctrl-K) — fuzzy search over modules + the Study Hub.
-import { MODULES } from './nav.js';
+// Command palette (Cmd/Ctrl-K) — fuzzy search over modules, reference pages & home.
+import { MODULES, EXTRAS } from './nav.js';
 
 // Lightweight subsequence fuzzy score: lower is better; null = no match.
 function fuzzyScore(query, text) {
@@ -17,12 +17,10 @@ function fuzzyScore(query, text) {
   return qi === query.length ? score : null;
 }
 
-const EXTRA = [
-  { id: 'study', title: 'Study Hub', icon: '📚', group: 'Review', num: '★' },
-];
+const HOME = [{ id: 'home', title: 'Home', icon: '🏠', group: 'Start', num: '' }];
 
 export function initCommandPalette() {
-  const ITEMS = [...MODULES, ...EXTRA];
+  const ITEMS = [...HOME, ...MODULES, ...EXTRAS];
 
   const overlay = document.createElement('div');
   overlay.className = 'cmdk-overlay';
