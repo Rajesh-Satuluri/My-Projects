@@ -978,15 +978,30 @@
     "group": "Transactions",
     "domain": "Transactions & Concurrency",
     "simFile": "sims/modules/m50-vacuum.js",
-    "authored": false,
-    "why": "",
-    "intuition": "",
-    "internals": "",
-    "prerequisites": [],
-    "related": [],
+    "authored": true,
+    "why": "MVCC never overwrites a row — it leaves the old version behind as a dead tuple. VACUUM reclaims that space and freezes old transaction IDs; without it, tables bloat without bound and the database can eventually refuse writes.",
+    "intuition": "Every UPDATE/DELETE leaves a corpse on the page. VACUUM is the janitor that clears the corpses no open snapshot still needs — but a single long-running transaction pins the horizon and blocks it everywhere.",
+    "internals": "A dead tuple is removable only when its deleting XID is committed and below the xmin horizon (the oldest snapshot any live txn needs). VACUUM frees that space into the free-space map for reuse (it does NOT shrink the file), removes matching index entries, updates the visibility map, and freezes aged tuples to dodge 32-bit XID wraparound. Autovacuum runs it per table when n_dead_tup crosses a threshold.",
+    "prerequisites": [
+      "m48"
+    ],
+    "related": [
+      "m67",
+      "m48",
+      "m54"
+    ],
     "engineeringApp": null,
-    "failureModes": "",
-    "interviewQs": []
+    "failureModes": "A long-open or idle-in-transaction session pins the xmin horizon so VACUUM reclaims nothing → runaway bloat. Autovacuum throttled or behind on hot tables. XID wraparound emergency if freezing falls behind → forced non-cancelable anti-wraparound vacuum, then write refusal at the limit.",
+    "interviewQs": [
+      {
+        "q": "Why can one idle transaction bloat every table in the database?",
+        "a": "VACUUM can only remove tuples older than the xmin horizon — the oldest snapshot any live transaction still needs. One long-open (even idle-in-transaction) session pins that horizon globally, so dead tuples can't be reclaimed in any table until it ends."
+      },
+      {
+        "q": "Does plain VACUUM return disk space to the OS?",
+        "a": "No. Plain VACUUM frees dead-tuple space for reuse within the table (via the free-space map); the file stays the same size. VACUUM FULL (or pg_repack) rewrites and shrinks the file, but takes an AccessExclusiveLock."
+      }
+    ]
   },
   {
     "id": "m51",
@@ -1050,15 +1065,30 @@
     "group": "Transactions",
     "domain": "Transactions & Concurrency",
     "simFile": "sims/modules/m54-checkpoints.js",
-    "authored": false,
-    "why": "",
-    "intuition": "",
-    "internals": "",
-    "prerequisites": [],
-    "related": [],
+    "authored": true,
+    "why": "Between checkpoints, committed changes live only in the WAL while their data pages sit dirty in memory. A checkpoint flushes those pages and marks a safe redo point — bounding how much WAL a crash must replay, which is your restart time.",
+    "intuition": "A checkpoint is what lets recovery start in the middle of the log instead of the beginning. Checkpoint often for a fast restart (more I/O), rarely for cheaper steady state (slower recovery).",
+    "internals": "Triggered by time (checkpoint_timeout) or WAL volume (max_wal_size), the checkpointer flushes all dirty buffers, fsyncs the data files, then writes a checkpoint record with the new redo LSN. WAL before that point becomes recyclable. checkpoint_completion_target spreads the flush to avoid an I/O spike; frequent checkpoints inflate WAL via full-page writes.",
+    "prerequisites": [
+      "m47"
+    ],
+    "related": [
+      "m50",
+      "m53",
+      "m67"
+    ],
     "engineeringApp": null,
-    "failureModes": "",
-    "interviewQs": []
+    "failureModes": "Sparse checkpoints + high WAL rate → long recovery (RTO blowout). Low completion target → periodic I/O spikes that stall queries. Undersized max_wal_size → volume-triggered checkpoint thrash and full-page-write churn. WAL disk fills if archiving or a replication slot pins old segments.",
+    "interviewQs": [
+      {
+        "q": "What bounds how long crash recovery takes, and how do you tune it?",
+        "a": "The volume of WAL written since the last checkpoint — recovery replays from the redo point forward. Checkpoint more often (smaller max_wal_size / timeout) for a faster restart at the cost of more steady-state flush and full-page-write I/O; balance it against your RTO and test it."
+      },
+      {
+        "q": "Why can very frequent checkpoints increase WAL volume?",
+        "a": "Full-page writes: the first change to each page after a checkpoint logs the whole 8 KB page for torn-page safety. More checkpoints mean more of these first-touches, so more full-page images — inflating WAL rather than reducing it."
+      }
+    ]
   },
   {
     "id": "m55",
@@ -1280,19 +1310,34 @@
     "id": "m67",
     "slug": "wal-internals",
     "title": "WAL Internals",
-    "icon": "📝",
+    "icon": "🔬",
     "group": "Transactions",
     "domain": "Transactions & Concurrency",
     "simFile": "sims/modules/m67-wal-internals.js",
-    "authored": false,
-    "why": "",
-    "intuition": "",
-    "internals": "",
-    "prerequisites": [],
-    "related": [],
+    "authored": true,
+    "why": "Knowing WAL exists is the concept; the internals — LSNs, record layout, the write-vs-fsync boundary, full-page writes, page LSN — are what let you reason about commit latency, torn-page safety, and why a lagging replica can fill the WAL disk.",
+    "intuition": "The WAL is one giant byte stream and an LSN is a position in it. A commit is durable only once the stream is fsynced past its commit record — not merely written to the OS cache.",
+    "internals": "insertLSN (memory) ≥ writtenLSN (OS) ≥ flushedLSN (stable storage); COMMIT waits for flushedLSN to pass its commit record. Records are header + payload, CRC-checked, chained by prev-LSN. Full-page writes log a whole 8 KB page on its first change after a checkpoint (torn-page safety). Each page stores its page LSN so redo skips already-applied records (idempotent). The stream is stored as 16 MB segments, recycled after the redo point.",
+    "prerequisites": [
+      "m47"
+    ],
+    "related": [
+      "m54",
+      "m53",
+      "m48"
+    ],
     "engineeringApp": null,
-    "failureModes": "",
-    "interviewQs": []
+    "failureModes": "fsync lies / fsync=off → silent durability loss; full_page_writes=off → torn pages. Slow WAL storage → commit-latency spikes. Over-frequent checkpoints → full-page-write volume explosion. Stalled archive_command or a lagging replication slot → WAL disk fills and writes stop.",
+    "interviewQs": [
+      {
+        "q": "What exactly does COMMIT wait for?",
+        "a": "For the WAL to be flushed (fsynced) up to its commit record's LSN — flushedLSN ≥ commit LSN. Not merely written to the OS page cache (that's writtenLSN), and not the data pages. Group commit lets one fsync satisfy many concurrent commits."
+      },
+      {
+        "q": "How is redo made idempotent so recovery can restart safely?",
+        "a": "Each data page stores the LSN of the last change applied to it (page LSN). During redo, recovery skips any WAL record whose LSN is ≤ the page LSN, so replaying the log twice is a no-op — which lets recovery re-run after a crash during recovery."
+      }
+    ]
   },
   {
     "id": "m68",
