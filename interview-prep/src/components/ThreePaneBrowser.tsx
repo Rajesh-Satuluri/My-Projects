@@ -36,6 +36,71 @@ export default function ThreePaneBrowser({
   const [mobileView, setMobileView] = useState<MobileView>("topics");
   const restored = useRef(false);
 
+  // ---- resizable pane widths (desktop only) ----
+  const W1_KEY = "browse:w1";
+  const W2_KEY = "browse:w2";
+  const W1_MIN = 180;
+  const W2_MIN = 240;
+  const [w1, setW1] = useState(256); // P1 topics
+  const [w2, setW2] = useState(360); // P2 questions
+  const [isDesktop, setIsDesktop] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const drag = useRef<null | { pane: 1 | 2; startX: number; startW: number }>(null);
+
+  useEffect(() => {
+    try {
+      const a = Number(localStorage.getItem(W1_KEY));
+      const b = Number(localStorage.getItem(W2_KEY));
+      if (a >= W1_MIN) setW1(a);
+      if (b >= W2_MIN) setW2(b);
+    } catch {}
+    const mq = window.matchMedia("(min-width: 768px)");
+    const sync = () => setIsDesktop(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const d = drag.current;
+      if (!d) return;
+      const dx = e.clientX - d.startX;
+      const rootW = rootRef.current?.clientWidth ?? 1200;
+      if (d.pane === 1) {
+        // leave room for P2 + a minimum P3
+        const max = rootW - w2 - 320;
+        setW1(Math.max(W1_MIN, Math.min(d.startW + dx, Math.max(W1_MIN, max))));
+      } else {
+        const max = rootW - w1 - 320;
+        setW2(Math.max(W2_MIN, Math.min(d.startW + dx, Math.max(W2_MIN, max))));
+      }
+    };
+    const onUp = () => {
+      if (!drag.current) return;
+      drag.current = null;
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+      try {
+        localStorage.setItem(W1_KEY, String(Math.round(w1)));
+        localStorage.setItem(W2_KEY, String(Math.round(w2)));
+      } catch {}
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, [w1, w2]);
+
+  const startDrag = (pane: 1 | 2) => (e: React.PointerEvent) => {
+    e.preventDefault();
+    drag.current = { pane, startX: e.clientX, startW: pane === 1 ? w1 : w2 };
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "col-resize";
+  };
+
   // ---- restore saved selection + URL params once on mount ----
   useEffect(() => {
     if (restored.current) return;
@@ -368,16 +433,39 @@ export default function ThreePaneBrowser({
   // Mobile: one pane at a time (drill-down) controlled by mobileView.
   const show = (v: MobileView) => (mobileView === v ? "flex" : "hidden");
 
+  // A thin draggable grip that only appears on desktop.
+  const Resizer = ({ pane }: { pane: 1 | 2 }) => (
+    <div
+      onPointerDown={startDrag(pane)}
+      role="separator"
+      aria-orientation="vertical"
+      title="Drag to resize"
+      className="group hidden shrink-0 cursor-col-resize items-stretch px-1.5 md:flex"
+    >
+      <div className="w-px bg-[var(--border)] transition-colors group-hover:bg-[var(--accent)]" />
+    </div>
+  );
+
   return (
-    <div className="h-[calc(100vh-11rem)] min-h-[520px] md:flex md:gap-4">
+    <div ref={rootRef} className="h-[calc(100vh-11rem)] min-h-[520px] md:flex">
       {/* P1 */}
-      <div className={`${show("topics")} w-full shrink-0 md:flex md:w-60 lg:w-64`}>{P1}</div>
-      <div className="hidden w-px shrink-0 bg-[var(--border)] md:block" />
+      <div
+        className={`${show("topics")} w-full shrink-0 md:flex`}
+        style={isDesktop ? { width: w1 } : undefined}
+      >
+        {P1}
+      </div>
+      <Resizer pane={1} />
       {/* P2 */}
-      <div className={`${show("questions")} w-full shrink-0 md:flex md:w-80 lg:w-96`}>{P2}</div>
-      <div className="hidden w-px shrink-0 bg-[var(--border)] md:block" />
+      <div
+        className={`${show("questions")} w-full shrink-0 md:flex`}
+        style={isDesktop ? { width: w2 } : undefined}
+      >
+        {P2}
+      </div>
+      <Resizer pane={2} />
       {/* P3 */}
-      <div className={`${show("answer")} card w-full min-w-0 flex-1 p-5 md:flex`}>{P3}</div>
+      <div className={`${show("answer")} card w-full min-w-0 flex-1 p-5 md:flex md:ml-1`}>{P3}</div>
     </div>
   );
 }
