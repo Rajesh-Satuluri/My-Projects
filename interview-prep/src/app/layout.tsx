@@ -48,7 +48,7 @@ export default function RootLayout({
             <div className="flex min-h-screen flex-col">
               <TopNav />
               <main className="flex-1 px-5 py-6 md:px-8 md:py-8">
-                <div className="mx-auto w-full max-w-[1600px]">{children}</div>
+                <div className="fade-in mx-auto w-full max-w-[1600px]">{children}</div>
               </main>
             </div>
           </AuthGate>

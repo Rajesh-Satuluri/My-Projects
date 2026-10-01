@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useData } from "@/components/DataProvider";
-import { PageHeader } from "@/components/ui";
+import { PageHeader, CardGridSkeleton } from "@/components/ui";
 
 export default function CategoriesPage() {
   const { categories, questions, loading, createCategory, updateCategory, deleteCategory } = useData();
@@ -116,7 +116,7 @@ export default function CategoriesPage() {
       )}
 
       {loading ? (
-        <p className="text-sm text-muted">Loading…</p>
+        <CardGridSkeleton />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {categories.map((c) =>

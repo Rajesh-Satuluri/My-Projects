@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import type { Session } from "@supabase/supabase-js";
@@ -82,19 +83,34 @@ export default function DataProvider({ children }: { children: React.ReactNode }
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const currentUserId = useRef<string | null>(null);
+  const hasLoaded = useRef(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
+      currentUserId.current = data.session?.user?.id ?? null;
       setSession(data.session);
       setAuthReady(true);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    // Only react to a genuine change of signed-in user. Supabase also fires
+    // this on token refresh and on tab re-focus with a fresh session object;
+    // reacting to those would needlessly refetch and flash the loading state.
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      const uid = s?.user?.id ?? null;
+      if (uid !== currentUserId.current) {
+        currentUserId.current = uid;
+        hasLoaded.current = false;
+        setSession(s);
+      }
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
 
   const reload = useCallback(async () => {
     if (!session) return;
-    setLoading(true);
+    // Only show the blocking loading state before the first successful load;
+    // later refreshes update data in place without blanking the UI.
+    if (!hasLoaded.current) setLoading(true);
     setError(null);
     try {
       const [cats, qs, ns] = await Promise.all([
@@ -105,11 +121,14 @@ export default function DataProvider({ children }: { children: React.ReactNode }
       setCategories(cats);
       setQuestions(qs);
       setNotes(ns);
+      hasLoaded.current = true;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load data");
     } finally {
       setLoading(false);
     }
+    // session identity is now stable across token refreshes (see above), so
+    // this only re-creates when the signed-in user actually changes.
   }, [session]);
 
   useEffect(() => {

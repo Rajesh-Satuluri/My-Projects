@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { useData } from "@/components/DataProvider";
-import { PageHeader } from "@/components/ui";
+import { PageHeader, BrowserSkeleton } from "@/components/ui";
 import ThreePaneBrowser from "@/components/ThreePaneBrowser";
 
 function QuestionsInner() {
@@ -21,7 +21,7 @@ function QuestionsInner() {
         }
       />
       {loading ? (
-        <p className="text-sm text-muted">Loading…</p>
+        <BrowserSkeleton />
       ) : (
         <ThreePaneBrowser questions={questions} categories={categories} />
       )}

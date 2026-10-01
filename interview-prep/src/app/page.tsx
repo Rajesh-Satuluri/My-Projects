@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useData } from "@/components/DataProvider";
-import { Card, PageHeader, StatTile } from "@/components/ui";
+import { Card, PageHeader, StatTile, Skeleton } from "@/components/ui";
 import { loadStarterData } from "@/lib/seedRemote";
 import { isDue } from "@/lib/review";
 
@@ -65,11 +65,19 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatTile label="Questions" value={questions.length} />
-        <StatTile label="Prepared" value={prepared} accent="success" />
-        <StatTile label="To review" value={questions.length - prepared} accent="warning" />
-      </div>
+      {loading ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Skeleton className="h-[88px] w-full" />
+          <Skeleton className="h-[88px] w-full" />
+          <Skeleton className="h-[88px] w-full" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <StatTile label="Questions" value={questions.length} />
+          <StatTile label="Prepared" value={prepared} accent="success" />
+          <StatTile label="To review" value={questions.length - prepared} accent="warning" />
+        </div>
+      )}
 
       {questions.length > 0 && (
         <Card className="mt-4">

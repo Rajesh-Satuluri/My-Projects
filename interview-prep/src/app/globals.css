@@ -124,6 +124,57 @@ select {
     box-shadow: var(--shadow);
   }
 
+  /* Subtle fade/slide-in for route content and panels. */
+  .fade-in {
+    animation: fade-in 0.18s ease-out both;
+  }
+
+  /* Skeleton placeholder blocks shown while data loads. */
+  .skeleton {
+    background: var(--panel-2);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--fg) 7%, transparent),
+      transparent
+    );
+    animation: shimmer 1.3s infinite;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fade-in {
+      animation: none;
+    }
+    .skeleton::after {
+      animation: none;
+    }
+  }
+
   .btn {
     @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors;
     white-space: nowrap;

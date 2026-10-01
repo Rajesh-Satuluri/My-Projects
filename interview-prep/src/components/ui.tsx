@@ -20,6 +20,46 @@ export function PageHeader({
   );
 }
 
+export function Skeleton({ className = "" }: { className?: string }) {
+  return <div className={`skeleton ${className}`} />;
+}
+
+// Loading placeholder for the 3-pane Questions view.
+export function BrowserSkeleton() {
+  return (
+    <div className="flex h-[calc(100vh-11rem)] min-h-[520px] gap-4">
+      <div className="hidden w-60 shrink-0 flex-col gap-2 md:flex">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-9 w-full" />
+        ))}
+      </div>
+      <div className="hidden w-80 shrink-0 flex-col gap-2 md:flex">
+        <Skeleton className="h-9 w-full" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full" />
+        ))}
+      </div>
+      <div className="card flex flex-1 flex-col gap-3 p-5">
+        <Skeleton className="h-6 w-2/3" />
+        <Skeleton className="h-4 w-1/3" />
+        <Skeleton className="mt-3 h-28 w-full" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    </div>
+  );
+}
+
+// Loading placeholder for simple card grids (categories, dashboard tiles).
+export function CardGridSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {Array.from({ length: count }).map((_, i) => (
+        <Skeleton key={i} className="h-20 w-full" />
+      ))}
+    </div>
+  );
+}
+
 export function Card({
   children,
   className = "",
