@@ -335,16 +335,27 @@ export default function ThreePaneBrowser({
       </button>
       {active ? (
         <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
             <div className="min-w-0">
               <div className="mb-1 text-xs text-muted">{categoryName(active.categoryId)}</div>
               <h2 className="text-xl font-semibold leading-snug tracking-[-0.01em]">{active.question}</h2>
-              <div className="mt-2 flex items-center gap-2">
-                <DifficultyBadge difficulty={active.difficulty} />
-                <StatusBadge status={active.status} />
-              </div>
             </div>
-            <div className="flex shrink-0 items-center gap-1">
+            {/* All status + actions, top-right */}
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              <DifficultyBadge difficulty={active.difficulty} />
+              <StatusBadge status={active.status} />
+              <button
+                onClick={() =>
+                  setStatus(active.id, active.status === "Prepared" ? "Not Prepared" : "Prepared")
+                }
+                className="btn btn-outline px-3 py-1.5 text-xs"
+              >
+                {active.status === "Prepared" ? "Mark to review" : "Mark prepared"}
+              </button>
+              <button onClick={() => markReviewed(active.id)} className="btn btn-ghost px-3 py-1.5 text-xs">
+                Mark reviewed
+              </button>
+              <span className="mx-1 h-5 w-px bg-[var(--border)]" />
               <button
                 onClick={() => setPinned(active.id, !active.pinned)}
                 title={active.pinned ? "Unpin" : "Pin to top"}
@@ -364,20 +375,6 @@ export default function ThreePaneBrowser({
                 Delete
               </button>
             </div>
-          </div>
-
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <button
-              onClick={() =>
-                setStatus(active.id, active.status === "Prepared" ? "Not Prepared" : "Prepared")
-              }
-              className="btn btn-outline px-3 py-1.5 text-xs"
-            >
-              {active.status === "Prepared" ? "Mark to review" : "Mark prepared"}
-            </button>
-            <button onClick={() => markReviewed(active.id)} className="btn btn-ghost px-3 py-1.5 text-xs">
-              Mark reviewed
-            </button>
           </div>
 
           <div className="mb-5">
