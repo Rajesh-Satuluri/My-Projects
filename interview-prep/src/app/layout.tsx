@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
+import TopNav from "@/components/TopNav";
 import DataProvider from "@/components/DataProvider";
 import AuthGate from "@/components/AuthGate";
 
@@ -45,9 +45,9 @@ export default function RootLayout({
       <body className="min-h-screen antialiased">
         <DataProvider>
           <AuthGate>
-            <div className="flex min-h-screen flex-col md:flex-row">
-              <Sidebar />
-              <main className="flex-1 px-5 py-8 md:px-10 md:py-10">
+            <div className="flex min-h-screen flex-col">
+              <TopNav />
+              <main className="flex-1 px-5 py-6 md:px-8 md:py-8">
                 <div className="mx-auto w-full max-w-[1600px]">{children}</div>
               </main>
             </div>
