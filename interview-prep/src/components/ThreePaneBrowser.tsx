@@ -26,7 +26,7 @@ export default function ThreePaneBrowser({
   questions: Question[];
   categories: Category[];
 }) {
-  const { setStatus, setPinned, deleteQuestion, markReviewed } = useData();
+  const { setStatus, setPinned, deleteQuestion, markReviewed, createQuestion } = useData();
 
   // Selection state. topicId is a VirtualTopic or a category id.
   const [topicId, setTopicId] = useState<string>("all");
@@ -35,6 +35,12 @@ export default function ThreePaneBrowser({
   const [difficulty, setDifficulty] = useState("");
   const [mobileView, setMobileView] = useState<MobileView>("topics");
   const restored = useRef(false);
+
+  // Quick-add a question to the current topic (from P2).
+  const [addingQ, setAddingQ] = useState(false);
+  const [newQ, setNewQ] = useState("");
+  const [addBusy, setAddBusy] = useState(false);
+  const [addErr, setAddErr] = useState<string | null>(null);
 
   // ---- resizable pane widths (desktop only) ----
   const W1_KEY = "browse:w1";
@@ -221,6 +227,38 @@ export default function ThreePaneBrowser({
     }
   };
 
+  const isVirtual = (id: string) => id === "all" || id === "pinned" || id === "review";
+
+  const submitAddQ = async () => {
+    const text = newQ.trim();
+    if (!text) return;
+    setAddBusy(true);
+    setAddErr(null);
+    try {
+      const id = await createQuestion({
+        categoryId: isVirtual(topicId) ? "" : topicId,
+        question: text,
+        difficulty: "Medium",
+        status: "Not Prepared",
+        keyPoints: [],
+        followUps: [],
+        tags: [],
+      });
+      setNewQ("");
+      setAddingQ(false);
+      pickQuestion(id);
+    } catch (e) {
+      setAddErr((e as { message?: string })?.message ?? "Couldn't add the question.");
+    } finally {
+      setAddBusy(false);
+    }
+  };
+
+  const openAdd = () => {
+    setAddingQ(true);
+    setAddErr(null);
+  };
+
   // Topic rows for P1.
   const virtualTopics: { id: VirtualTopic; label: string; icon: string; count: number }[] = [
     { id: "all", label: "All questions", icon: "▤", count: counts.all },
@@ -280,7 +318,16 @@ export default function ThreePaneBrowser({
         <span className="min-w-0 truncate text-xs font-semibold uppercase tracking-wide text-muted">
           {activeTopicLabel}
         </span>
-        <span className="shrink-0 text-xs text-muted">{paneQuestions.length}</span>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="text-xs text-muted">{paneQuestions.length}</span>
+          <button
+            onClick={openAdd}
+            title={isVirtual(topicId) ? "Add question" : `Add question to ${activeTopicLabel}`}
+            className="icon-btn text-muted hover:text-fg"
+          >
+            +
+          </button>
+        </div>
       </div>
       <div className="mb-2 flex items-center gap-2">
         <div className="relative flex-1">
@@ -305,6 +352,52 @@ export default function ThreePaneBrowser({
           ))}
         </select>
       </div>
+      {addingQ && (
+        <div className="mb-2 rounded-lg border border-[var(--accent)] bg-[var(--panel-2)] p-2.5">
+          <textarea
+            autoFocus
+            rows={2}
+            value={newQ}
+            onChange={(e) => setNewQ(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                submitAddQ();
+              }
+              if (e.key === "Escape") {
+                setAddingQ(false);
+                setNewQ("");
+              }
+            }}
+            placeholder={
+              isVirtual(topicId)
+                ? "New question (uncategorized)…"
+                : `New question in ${activeTopicLabel}…`
+            }
+            className="input resize-y text-sm"
+          />
+          {addErr && <p className="mt-1 text-xs text-[var(--danger)]">{addErr}</p>}
+          <div className="mt-2 flex items-center gap-2">
+            <button
+              onClick={submitAddQ}
+              disabled={addBusy || !newQ.trim()}
+              className="btn btn-primary px-3 py-1.5 text-xs"
+            >
+              {addBusy ? "Adding…" : "Add"}
+            </button>
+            <button
+              onClick={() => {
+                setAddingQ(false);
+                setNewQ("");
+              }}
+              className="btn btn-ghost px-3 py-1.5 text-xs"
+            >
+              Cancel
+            </button>
+            <span className="ml-auto text-[11px] text-muted">Enter to add · Esc to cancel</span>
+          </div>
+        </div>
+      )}
       <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-1">
         {paneQuestions.map((q) => {
           const activeRow = q.id === questionId;
