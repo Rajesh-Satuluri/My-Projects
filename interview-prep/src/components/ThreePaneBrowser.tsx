@@ -221,7 +221,7 @@ export default function ThreePaneBrowser({
 
   // ---- Panes ----
   const P1 = (
-    <aside className="flex min-h-0 flex-col">
+    <aside className="flex min-h-0 w-full flex-col">
       <div className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-muted">Topics</div>
       <div className="min-h-0 flex-1 space-y-0.5 overflow-y-auto pr-1">
         {virtualTopics.map((t) => (
@@ -252,7 +252,7 @@ export default function ThreePaneBrowser({
     virtualTopics.find((t) => t.id === topicId)?.label ?? categoryName(topicId);
 
   const P2 = (
-    <section className="flex min-h-0 flex-col">
+    <section className="flex min-h-0 w-full flex-col">
       {/* Mobile: back to topics */}
       <button
         onClick={() => setMobileView("topics")}
@@ -325,7 +325,7 @@ export default function ThreePaneBrowser({
   );
 
   const P3 = (
-    <section className="flex min-h-0 flex-col">
+    <section className="flex min-h-0 w-full flex-1 flex-col">
       {/* Mobile: back to questions */}
       <button
         onClick={() => setMobileView("questions")}
