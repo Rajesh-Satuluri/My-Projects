@@ -44,6 +44,7 @@ export default function ThreePaneBrowser({
   const [w1, setW1] = useState(256); // P1 topics
   const [w2, setW2] = useState(360); // P2 questions
   const [isDesktop, setIsDesktop] = useState(false);
+  const [paneHeight, setPaneHeight] = useState<number | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const drag = useRef<null | { pane: 1 | 2; startX: number; startW: number }>(null);
 
@@ -58,7 +59,22 @@ export default function ThreePaneBrowser({
     const sync = () => setIsDesktop(mq.matches);
     sync();
     mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
+
+    // Size the workspace to exactly the space left below it, so the page
+    // itself never scrolls and each pane keeps its own scrollbar.
+    const measure = () => {
+      const top = rootRef.current?.getBoundingClientRect().top ?? 0;
+      setPaneHeight(Math.max(360, window.innerHeight - top - 16));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    // Re-measure once after fonts/layout settle.
+    const t = setTimeout(measure, 100);
+    return () => {
+      mq.removeEventListener("change", sync);
+      window.removeEventListener("resize", measure);
+      clearTimeout(t);
+    };
   }, []);
 
   useEffect(() => {
@@ -444,10 +460,14 @@ export default function ThreePaneBrowser({
   );
 
   return (
-    <div ref={rootRef} className="h-[calc(100vh-11rem)] min-h-[520px] md:flex">
+    <div
+      ref={rootRef}
+      className="flex flex-col overflow-hidden md:flex-row"
+      style={{ height: paneHeight ?? "calc(100vh - 12rem)" }}
+    >
       {/* P1 */}
       <div
-        className={`${show("topics")} w-full shrink-0 md:flex`}
+        className={`${show("topics")} w-full min-h-0 shrink-0 max-md:flex-1 md:flex`}
         style={isDesktop ? { width: w1 } : undefined}
       >
         {P1}
@@ -455,14 +475,16 @@ export default function ThreePaneBrowser({
       <Resizer pane={1} />
       {/* P2 */}
       <div
-        className={`${show("questions")} w-full shrink-0 md:flex`}
+        className={`${show("questions")} w-full min-h-0 shrink-0 max-md:flex-1 md:flex`}
         style={isDesktop ? { width: w2 } : undefined}
       >
         {P2}
       </div>
       <Resizer pane={2} />
       {/* P3 */}
-      <div className={`${show("answer")} card w-full min-w-0 flex-1 p-5 md:flex md:ml-1`}>{P3}</div>
+      <div className={`${show("answer")} card min-h-0 w-full min-w-0 flex-1 p-5 md:flex md:ml-1`}>
+        {P3}
+      </div>
     </div>
   );
 }
