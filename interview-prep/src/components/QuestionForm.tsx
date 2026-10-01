@@ -91,14 +91,13 @@ export default function QuestionForm({ existing }: { existing?: Question }) {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className={label}>
-            Category
+            Category <span className="text-muted">(optional)</span>
             <select
-              required
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
               className={field}
             >
-              <option value="">Select…</option>
+              <option value="">Uncategorized</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
