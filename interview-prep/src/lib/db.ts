@@ -63,6 +63,41 @@ export async function fetchCategories(): Promise<Category[]> {
   }));
 }
 
+export async function createCategory(
+  name: string,
+  description: string,
+  sortOrder: number
+): Promise<Category> {
+  const { data, error } = await supabase
+    .from("categories")
+    .insert({ name, description: description || null, sort_order: sortOrder })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return {
+    id: data.id,
+    name: data.name,
+    description: data.description ?? undefined,
+    sortOrder: data.sort_order,
+  };
+}
+
+export async function updateCategory(
+  id: string,
+  patch: { name?: string; description?: string }
+): Promise<void> {
+  const row: { name?: string; description?: string | null } = {};
+  if (patch.name !== undefined) row.name = patch.name;
+  if (patch.description !== undefined) row.description = patch.description || null;
+  const { error } = await supabase.from("categories").update(row).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  const { error } = await supabase.from("categories").delete().eq("id", id);
+  if (error) throw error;
+}
+
 // ---- Notes ----------------------------------------------------------------
 
 function toNote(r: { id: string; title: string; body: string; sort_order: number; updated_at: string }): Note {

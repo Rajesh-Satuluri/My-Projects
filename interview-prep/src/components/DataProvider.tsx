@@ -13,6 +13,9 @@ import { supabase } from "@/lib/supabase";
 import type { Category, Note, Question } from "@/lib/types";
 import {
   fetchCategories,
+  createCategory as dbCreateCategory,
+  updateCategory as dbUpdateCategory,
+  deleteCategory as dbDeleteCategory,
   fetchQuestions,
   fetchQuestion,
   fetchNotes,
@@ -42,6 +45,9 @@ interface DataContextValue {
   questions: Question[];
   notes: Note[];
   reload: () => Promise<void>;
+  createCategory: (name: string, description?: string) => Promise<string>;
+  updateCategory: (id: string, patch: { name?: string; description?: string }) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
   createNote: () => Promise<string>;
   updateNote: (id: string, patch: { title?: string; body?: string }) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
@@ -149,6 +155,24 @@ export default function DataProvider({ children }: { children: React.ReactNode }
         await dbDeleteNote(id);
       },
       reload,
+      createCategory: async (name, description = "") => {
+        const maxSort = categories.reduce((m, c) => Math.max(m, c.sortOrder), -1);
+        const cat = await dbCreateCategory(name, description, maxSort + 1);
+        setCategories((prev) => [...prev, cat].sort((a, b) => a.sortOrder - b.sortOrder));
+        return cat.id;
+      },
+      updateCategory: async (id, patch) => {
+        setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c))); // optimistic
+        await dbUpdateCategory(id, patch);
+      },
+      deleteCategory: async (id) => {
+        setCategories((prev) => prev.filter((c) => c.id !== id)); // optimistic
+        // Questions in this category become uncategorized (FK on delete set null).
+        setQuestions((prev) =>
+          prev.map((q) => (q.categoryId === id ? { ...q, categoryId: "" } : q))
+        );
+        await dbDeleteCategory(id);
+      },
       signIn,
       signOut,
       createQuestion: async (input) => {
