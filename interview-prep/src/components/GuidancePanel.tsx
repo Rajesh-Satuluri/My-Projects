@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useData } from "./DataProvider";
+import Markdown from "./Markdown";
 import type { Question } from "@/lib/types";
 
 // "What the interviewer is looking for" — read by default, editable inline.
@@ -59,7 +60,7 @@ export default function GuidancePanel({ question }: { question: Question }) {
           </div>
         </div>
       ) : question.guidance ? (
-        <p className="whitespace-pre-wrap text-sm leading-6 text-fgSoft">{question.guidance}</p>
+        <Markdown>{question.guidance}</Markdown>
       ) : (
         <p className="text-sm italic text-muted">
           No brief yet — click Edit to add what the interviewer expects.

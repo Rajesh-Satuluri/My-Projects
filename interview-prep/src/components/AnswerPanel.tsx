@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useData } from "./DataProvider";
+import Markdown from "./Markdown";
 import type { Question } from "@/lib/types";
 
 // Answers open in READ mode by default; click Edit to make changes.
@@ -65,7 +66,7 @@ export default function AnswerPanel({ question }: { question: Question }) {
     return (
       <div className="rounded-xl border bg-[var(--panel-2)]/40 p-4">
         {question.answer ? (
-          <p className="whitespace-pre-wrap text-[15px] leading-7 text-fgSoft">{question.answer}</p>
+          <Markdown>{question.answer}</Markdown>
         ) : (
           <p className="text-sm italic text-muted">No answer written yet — click Edit to add one.</p>
         )}
@@ -95,8 +96,8 @@ export default function AnswerPanel({ question }: { question: Question }) {
             done(false);
           }
         }}
-        placeholder="Write your answer…  (autosaves; ⌘/Ctrl+S to save)"
-        className="input resize-y text-[15px] leading-7"
+        placeholder="Write your answer in Markdown…  (tables, ```code```, lists; autosaves; ⌘/Ctrl+S to save)"
+        className="input resize-y font-mono text-[13px] leading-6"
         autoFocus
       />
       <div className="mt-3 flex flex-wrap items-center gap-2">

@@ -10,6 +10,7 @@ const nav = [
   { href: "/", label: "Dashboard", icon: "▤" },
   { href: "/questions", label: "Questions", icon: "❯" },
   { href: "/categories", label: "Categories", icon: "▦" },
+  { href: "/import", label: "Import", icon: "⇪" },
   { href: "/practice", label: "Practice", icon: "◐" },
   { href: "/notes", label: "Notes", icon: "✎" },
   { href: "/checklists", label: "Checklists", icon: "☑" },
