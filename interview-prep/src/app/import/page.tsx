@@ -60,7 +60,7 @@ export default function ImportPage() {
   let parseError: string | null = null;
   if (text.trim()) {
     try {
-      const groups = normalize(JSON.parse(text));
+      const groups = normalize(JSON.parse(text.trim().replace(/^\uFEFF/, "")));
       const total = groups.reduce((n, g) => n + (g.questions?.length ?? 0), 0);
       preview = { groups, total };
     } catch (e) {
@@ -79,7 +79,7 @@ export default function ImportPage() {
       setLog([...out]);
     };
     try {
-      const groups = normalize(JSON.parse(text));
+      const groups = normalize(JSON.parse(text.trim().replace(/^\uFEFF/, "")));
       // Resolve categories by name, creating any that don't exist yet.
       const byName = new Map(categories.map((c) => [c.name.toLowerCase(), c.id]));
       let created = 0;
@@ -152,7 +152,32 @@ export default function ImportPage() {
       />
 
       <div className="card p-5">
-        <label className="label">Paste JSON</label>
+        <div className="mb-3 flex items-center gap-2">
+          <label className="btn btn-outline cursor-pointer">
+            Choose .json file…
+            <input
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                  setText(typeof reader.result === "string" ? reader.result : "");
+                  setLog([]);
+                  setDone(false);
+                  setError(null);
+                };
+                reader.readAsText(file);
+                e.target.value = ""; // allow re-selecting the same file
+              }}
+            />
+          </label>
+          <span className="text-xs text-muted">or paste below</span>
+        </div>
+
+        <label className="label">JSON</label>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
