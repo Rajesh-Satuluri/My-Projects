@@ -12,7 +12,6 @@ import KeyPointChecklist from "./KeyPointChecklist";
 // Virtual topics shown above real categories in P1.
 type VirtualTopic = "all" | "pinned" | "review";
 const DIFFICULTIES = ["Easy", "Medium", "Hard"] as const;
-const DIFF_ORDER: Record<string, number> = { Easy: 0, Medium: 1, Hard: 2 };
 
 const TOPIC_KEY = "browse:topic";
 const QUESTION_KEY = "browse:question";
@@ -193,11 +192,12 @@ export default function ThreePaneBrowser({
       }
       return true;
     });
-    // Pinned float to top, then A–Z within.
+    // Pinned float to top, then preserve import order (created_at ascending)
+    // with a stable tiebreak on id so the sequence never shuffles.
     return out.sort((a, b) => {
       if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-      const d = DIFF_ORDER[a.difficulty] - DIFF_ORDER[b.difficulty];
-      return d !== 0 ? 0 : a.question.localeCompare(b.question);
+      const d = (a.createdAt ?? "").localeCompare(b.createdAt ?? "");
+      return d !== 0 ? d : a.id.localeCompare(b.id);
     });
   }, [questions, topicId, difficulty, search]);
 
