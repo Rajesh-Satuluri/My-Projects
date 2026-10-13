@@ -20,3 +20,6 @@
    - [8.1 Case 1 — Forecast Wrong Data](#s8-1)
    - [8.2 Case 2 — Weekly Batch Failure](#s8-2)
 9. [Key Tables Reference](#s9)
+10. [Additional Incoming Fields — Upstream Tables](#s10)
+    - [10.1 In_Fact_StockTransferAgreementLine_P2](#s10-1)
+    - [10.2 In_Fact_DemandForecastHeader](#s10-2)
