@@ -118,23 +118,69 @@
     ).join('') + `</div>`;
   }
 
+  /* "Test yourself" — the interview Q&A as flip-to-reveal flashcards with a
+     self-grade, so the page drives active recall instead of passive reading. */
   function interviewHTML(qa) {
     if (!qa || !qa.length) return '';
-    const items = qa.map((x, i) => `
-      <div class="sd-iq" data-iq="${i}">
-        <button class="sd-iq-q" type="button" aria-expanded="false">
-          <span class="sd-iq-mark">Q</span>
-          <span class="sd-iq-text">${esc(x.q)}</span>
-          <span class="sd-iq-chev">▾</span>
-        </button>
-        <div class="sd-iq-a"><p>${esc(x.a)}</p></div>
+    const cards = qa.map((x, i) => `
+      <div class="sd-fc" data-fc="${i}">
+        <div class="sd-fc-q"><span class="sd-fc-num">${i + 1}</span><span class="sd-fc-qt">${esc(x.q)}</span></div>
+        <button class="sd-fc-reveal" type="button" aria-expanded="false">Reveal answer ▾</button>
+        <div class="sd-fc-a" hidden>
+          <p>${esc(x.a)}</p>
+          <div class="sd-fc-grade">
+            <button class="sd-fc-g sd-fc-g--good" type="button" data-g="good">✓ I knew it</button>
+            <button class="sd-fc-g sd-fc-g--again" type="button" data-g="again">↻ Review again</button>
+          </div>
+        </div>
       </div>`).join('');
     return `
-      <section class="sd-section" data-accent="interview">
-        <div class="sd-kicker">Interview Q&amp;A</div>
-        <p class="sd-lead">The questions an interviewer actually asks about this service. Tap to reveal a model answer.</p>
-        <div class="sd-iqs">${items}</div>
+      <section class="sd-section sd-recall" data-accent="interview">
+        <h2 class="sd-recall-h">🎯 Test yourself</h2>
+        <p class="sd-recall-sub">Active recall beats re-reading — try to answer out loud before you reveal.</p>
+        <div class="sd-fcs">${cards}</div>
       </section>`;
+  }
+
+  /* ── Learned-state (persisted; read by the sidebar + Overview ring) ── */
+  function learnedKey(format) { return 'cde-' + format + '-learned'; }
+  function getLearnedSet(format) {
+    try { return new Set(JSON.parse(TV.ls.get(learnedKey(format)) || '[]')); }
+    catch (e) { return new Set(); }
+  }
+  function isLearned(format, id) { return getLearnedSet(format).has(id); }
+  function setLearned(format, id, on) {
+    const s = getLearnedSet(format);
+    if (on) s.add(id); else s.delete(id);
+    try { TV.ls.set(learnedKey(format), JSON.stringify(Array.from(s))); } catch (e) {}
+    return s;
+  }
+
+  /* The next service in reading order (within, then across categories). */
+  function nextService(format, svc) {
+    const flat = [];
+    categoriesFor(format).forEach(c => c.items.forEach(s => flat.push({ cat: c.label, svc: s })));
+    const idx = flat.findIndex(x => x.svc.id === svc.id);
+    if (idx < 0 || idx + 1 >= flat.length) return null;
+    return flat[idx + 1];
+  }
+
+  /* Momentum footer — mark-as-learned (persists) + next-up link. */
+  function footerHTML(format, svc) {
+    const learned = isLearned(format, svc.id);
+    const nx = nextService(format, svc);
+    const nextLink = nx ? `<a class="sd-next" href="#${format}/${nx.svc.id}">
+        <span class="sd-next-lbl">Next up in ${esc(nx.cat)} →</span>
+        <span class="sd-next-nm">${esc(nx.svc.name)}</span>
+      </a>` : '';
+    return `
+      <div class="sd-foot">
+        <button class="sd-foot-mark${learned ? ' is-learned' : ''}" type="button" data-learn-btn aria-pressed="${learned}">
+          <span class="sd-foot-mark-ico" aria-hidden="true">${learned ? '✓' : '＋'}</span>
+          <span class="sd-foot-mark-txt">${learned ? 'Learned' : 'Mark ' + esc(svc.name) + ' as learned'}</span>
+        </button>
+        ${nextLink}
+      </div>`;
   }
 
   function styleTag() {
@@ -245,6 +291,36 @@
 .sd-goal { display:flex; align-items:flex-start; gap:11px; font-size:13.5px; color:var(--text-secondary); line-height:1.5; }
 .sd-goal .sd-goal-box { flex-shrink:0; width:18px; height:18px; border:2px solid var(--border-muted); border-radius:5px; margin-top:1px; display:flex; align-items:center; justify-content:center; transition:background .12s, border-color .12s; }
 @media (max-width:720px){ .sd-master-grid { grid-template-columns:1fr; } }
+/* Test yourself — flashcards */
+.sd-recall { background:linear-gradient(180deg,var(--bg-1),var(--bg-2)); }
+.sd-recall-h { font-size:19px; font-weight:800; color:var(--text-primary); margin:0 0 4px; display:flex; align-items:center; gap:9px; }
+.sd-recall-sub { font-size:13px; color:var(--text-muted); margin:0 0 18px; }
+.sd-fcs { display:grid; gap:12px; }
+.sd-fc { background:var(--bg-1); border:1px solid var(--border-subtle); border-radius:12px; padding:16px 18px; box-shadow:var(--card-shadow); transition:border-color .12s; }
+.sd-fc-q { display:flex; gap:11px; align-items:flex-start; font-size:14.5px; font-weight:700; color:var(--text-primary); line-height:1.5; }
+.sd-fc-num { flex-shrink:0; width:22px; height:22px; border-radius:6px; background:var(--purple); color:#fff; font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center; margin-top:1px; }
+.sd-fc-qt { flex:1; }
+.sd-fc-reveal { margin:14px 0 0 33px; font-size:12.5px; font-weight:700; color:var(--purple); background:var(--purple-subtle); border:1px dashed var(--purple); border-radius:8px; padding:9px 14px; cursor:pointer; }
+.sd-fc-reveal:hover { filter:brightness(1.06); }
+.sd-fc-a { margin-left:33px; }
+.sd-fc-a > p { margin:14px 0 0; font-size:13.5px; color:var(--text-secondary); line-height:1.7; padding:13px 16px; background:var(--bg-2); border-radius:9px; border-left:3px solid var(--purple); }
+.sd-fc-grade { display:flex; gap:9px; margin-top:12px; }
+.sd-fc-g { font-size:12px; font-weight:700; border-radius:8px; padding:6px 13px; cursor:pointer; border:1px solid var(--border-muted); background:var(--bg-2); color:var(--text-secondary); }
+.sd-fc-g--good:hover, .sd-fc[data-grade="good"] .sd-fc-g--good { color:var(--green); border-color:var(--green); background:var(--green-subtle); }
+.sd-fc-g--again:hover, .sd-fc[data-grade="again"] .sd-fc-g--again { color:var(--orange); border-color:var(--orange); background:var(--orange-subtle); }
+.sd-fc[data-grade="good"] { border-color:var(--green); }
+.sd-fc[data-grade="again"] { border-color:var(--orange); }
+/* Momentum footer */
+.sd-foot { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-top:30px; padding-top:24px; border-top:1px solid var(--border-subtle); }
+.sd-foot-mark { display:inline-flex; align-items:center; gap:9px; font-size:14px; font-weight:800; color:#10151f; background:var(--brand); border-radius:11px; padding:12px 22px; cursor:pointer; box-shadow:var(--card-shadow); transition:transform .12s, filter .12s; }
+.sd-foot-mark:hover { transform:translateY(-1px); filter:brightness(1.05); }
+.sd-foot-mark.is-learned { background:var(--green); color:#fff; }
+.sd-foot-mark-ico { font-size:15px; line-height:1; }
+.sd-next { display:inline-flex; flex-direction:column; align-items:flex-end; text-decoration:none; }
+.sd-next:hover { text-decoration:none; }
+.sd-next-lbl { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+.sd-next-nm { font-size:15px; font-weight:700; color:var(--brand); }
+.sd-next:hover .sd-next-nm { text-decoration:underline; }
 </style>`;
   }
 
@@ -354,16 +430,44 @@
     ${integrationsHTML(format, svc.integrations)}
     ${sectionHTML('Runtime behavior', 'runtime', svc.runtime)}
     ${interviewHTML(svc.interview)}
+    ${footerHTML(format, svc)}
   </div>
 </div>`;
-    // Wire interview accordions
-    container.querySelectorAll('.sd-iq-q').forEach(btn => {
+    // Flashcards: reveal answer, then self-grade
+    container.querySelectorAll('.sd-fc-reveal').forEach(btn => {
       btn.addEventListener('click', () => {
-        const row = btn.closest('.sd-iq');
-        const open = row.classList.toggle('open');
-        btn.setAttribute('aria-expanded', String(open));
+        const card = btn.closest('.sd-fc');
+        const ans = card.querySelector('.sd-fc-a');
+        if (ans) ans.hidden = false;
+        btn.setAttribute('aria-expanded', 'true');
+        btn.style.display = 'none';
       });
     });
+    container.querySelectorAll('.sd-fc-g').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const card = btn.closest('.sd-fc');
+        if (card) card.setAttribute('data-grade', btn.getAttribute('data-g'));
+      });
+    });
+    // Mark as learned — persists; sidebar + Overview ring read this state
+    const markBtn = container.querySelector('[data-learn-btn]');
+    if (markBtn) {
+      markBtn.addEventListener('click', () => {
+        const now = !isLearned(format, svc.id);
+        setLearned(format, svc.id, now);
+        markBtn.classList.toggle('is-learned', now);
+        markBtn.setAttribute('aria-pressed', String(now));
+        const ico = markBtn.querySelector('.sd-foot-mark-ico');
+        const txt = markBtn.querySelector('.sd-foot-mark-txt');
+        if (ico) ico.textContent = now ? '✓' : '＋';
+        if (txt) txt.textContent = now ? 'Learned' : 'Mark ' + svc.name + ' as learned';
+        if (window.IcebergViz && window.IcebergViz.toast) {
+          window.IcebergViz.toast(now ? svc.name + ' marked as learned' : svc.name + ' unmarked',
+            { type: now ? 'success' : undefined, icon: now ? '✓' : undefined, duration: 1800 });
+        }
+        document.dispatchEvent(new CustomEvent('cde:learned-changed', { detail: { format, id: svc.id, learned: now } }));
+      });
+    }
   }
 
   /* ── Overview / home page for a format ───────────────────── */
@@ -435,5 +539,6 @@
     return groups;
   }
 
-  TV.ServiceDetail = { registerAll, registerHome, categoriesFor, navGroupsFor, CATEGORIES };
+  TV.ServiceDetail = { registerAll, registerHome, categoriesFor, navGroupsFor, CATEGORIES,
+                       isLearned, getLearnedSet, setLearned };
 })();
