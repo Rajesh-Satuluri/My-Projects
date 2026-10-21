@@ -227,6 +227,24 @@
 .sd-home-stat { background:var(--bg-1); border:1px solid var(--border-subtle); border-radius:14px; padding:13px 20px; box-shadow:var(--card-shadow); }
 .sd-home-stat b { display:block; font-size:24px; font-weight:800; color:var(--brand); }
 .sd-home-stat span { font-size:11.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; }
+/* Study header — meta chips */
+.sd-essence { font-size:16px; color:var(--text-secondary); line-height:1.6; margin:2px 0 0; max-width:680px; font-style:italic; }
+.sd-meta { display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 18px; }
+.sd-mchip { display:inline-flex; align-items:center; gap:7px; background:var(--bg-1); border:1px solid var(--border-subtle); border-radius:999px; padding:7px 13px; font-size:12.5px; font-weight:600; color:var(--text-secondary); box-shadow:var(--card-shadow); }
+.sd-mchip b { color:var(--text-primary); font-weight:800; }
+.sd-mchip .sd-mchip-ico { font-size:13px; line-height:1; }
+.sd-mchip-lvl { display:inline-flex; align-items:center; gap:7px; }
+.sd-mchip-lvl .dot { width:8px; height:8px; border-radius:50%; background:var(--text-muted); }
+.sd-mchip-lvl[data-lvl="foundational"] { color:var(--green); } .sd-mchip-lvl[data-lvl="foundational"] .dot { background:var(--green); }
+.sd-mchip-lvl[data-lvl="core"] { color:var(--yellow); } .sd-mchip-lvl[data-lvl="core"] .dot { background:var(--yellow); }
+.sd-mchip-lvl[data-lvl="advanced"] { color:var(--red); } .sd-mchip-lvl[data-lvl="advanced"] .dot { background:var(--red); }
+/* What you'll master */
+.sd-master { background:linear-gradient(180deg,var(--bg-1),var(--bg-2)); border:1px solid var(--border-subtle); border-radius:16px; padding:20px 24px; margin:0 0 28px; box-shadow:var(--card-shadow-lg); }
+.sd-master-h { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--text-muted); margin:0 0 14px; display:flex; align-items:center; gap:8px; }
+.sd-master-grid { display:grid; grid-template-columns:1fr 1fr; gap:11px 28px; }
+.sd-goal { display:flex; align-items:flex-start; gap:11px; font-size:13.5px; color:var(--text-secondary); line-height:1.5; }
+.sd-goal .sd-goal-box { flex-shrink:0; width:18px; height:18px; border:2px solid var(--border-muted); border-radius:5px; margin-top:1px; display:flex; align-items:center; justify-content:center; transition:background .12s, border-color .12s; }
+@media (max-width:720px){ .sd-master-grid { grid-template-columns:1fr; } }
 </style>`;
   }
 
@@ -241,20 +259,94 @@
       .sort((a, b) => a.order - b.order);
   }
 
+  /* Sections that carry teachable depth, in study order. */
+  const DEPTH_KEYS = ['what', 'why', 'how', 'deUseCase', 'runtime'];
+
+  function countWords(str) {
+    if (!str) return 0;
+    return String(str).trim().split(/\s+/).filter(Boolean).length;
+  }
+
+  /* Count teachable concepts = total bullets across the depth sections. */
+  function conceptCount(svc) {
+    let n = 0;
+    DEPTH_KEYS.forEach(k => {
+      const s = normSection(svc[k]);
+      if (s && s.bullets) n += s.bullets.length;
+    });
+    return n;
+  }
+
+  /* Honest ~study-time estimate from the real prose (~200 wpm). */
+  function studyMinutes(svc) {
+    let w = countWords(svc.aka) + countWords(svc.tagline);
+    DEPTH_KEYS.forEach(k => {
+      const s = normSection(svc[k]);
+      if (!s) return;
+      w += countWords(s.lead);
+      (s.bullets || []).forEach(b => { w += countWords(b.h) + countWords(b.d); });
+    });
+    (svc.interview || []).forEach(x => { w += countWords(x.q) + countWords(x.a); });
+    return Math.min(20, Math.max(2, Math.round(w / 200)));
+  }
+
+  /* Computed, honest meta chips. Level chip only shows when authored. */
+  function studyMetaHTML(svc) {
+    const chips = [];
+    const lvl = svc.level && ['foundational', 'core', 'advanced'].includes(svc.level) ? svc.level : null;
+    if (lvl) {
+      const label = lvl.charAt(0).toUpperCase() + lvl.slice(1);
+      chips.push(`<span class="sd-mchip sd-mchip-lvl" data-lvl="${lvl}"><span class="dot"></span>${label}</span>`);
+    }
+    chips.push(`<span class="sd-mchip"><span class="sd-mchip-ico">⏱</span><b>~${studyMinutes(svc)} min</b> study</span>`);
+    const concepts = conceptCount(svc);
+    if (concepts) chips.push(`<span class="sd-mchip"><span class="sd-mchip-ico">📚</span><b>${concepts}</b> concept${concepts === 1 ? '' : 's'}</span>`);
+    const iq = (svc.interview || []).length;
+    if (iq) chips.push(`<span class="sd-mchip"><span class="sd-mchip-ico">🎯</span><b>${iq}</b> interview Q${iq === 1 ? '' : 's'}</span>`);
+    const ints = (svc.integrations || []).length;
+    if (ints) chips.push(`<span class="sd-mchip"><span class="sd-mchip-ico">🔗</span><b>${ints}</b> integration${ints === 1 ? '' : 's'}</span>`);
+    return `<div class="sd-meta">${chips.join('')}</div>`;
+  }
+
+  /* "What you'll master" — authored svc.goals if present, else the lead
+     concept from each depth section (a real spread of the page's content). */
+  function masterGoals(svc) {
+    if (Array.isArray(svc.goals) && svc.goals.length) return svc.goals.slice(0, 6);
+    const goals = [];
+    DEPTH_KEYS.forEach(k => {
+      const s = normSection(svc[k]);
+      if (s && s.bullets && s.bullets[0] && s.bullets[0].h) goals.push(s.bullets[0].h);
+    });
+    return goals.slice(0, 6);
+  }
+
+  function masterHTML(svc) {
+    const goals = masterGoals(svc);
+    if (goals.length < 2) return '';
+    const items = goals.map(g =>
+      `<div class="sd-goal"><span class="sd-goal-box"></span><span>${esc(g)}</span></div>`).join('');
+    return `
+      <div class="sd-master">
+        <div class="sd-master-h">🎓 What you'll master here</div>
+        <div class="sd-master-grid">${items}</div>
+      </div>`;
+  }
+
   /* ── Detail page for one service ─────────────────────────── */
   function renderDetail(container, format, svc) {
     container.className = '';
     let styles = document.getElementById('sd-styles') ? '' : styleTag();
-    const aka = svc.aka ? `<p class="sd-aka">${esc(svc.aka)}</p>` : '';
     const catLabel = (CATEGORIES[svc.category] || {}).label || svc.category || '';
     container.innerHTML = `${styles}
 <div class="sd page-enter">
   <div class="sd-wrap">
     <div class="sd-eyebrow">${esc(catLabel)}</div>
     <h1 class="sd-h1">${esc(svc.name)}</h1>
-    ${aka}
+    ${svc.aka ? `<p class="sd-essence">${esc(svc.aka)}</p>` : ''}
+    ${studyMetaHTML(svc)}
     <p class="sd-tagline">${esc(svc.tagline || '')}</p>
     ${keyFactsHTML(svc.keyFacts)}
+    ${masterHTML(svc)}
     ${sectionHTML('What it is', 'what', svc.what)}
     ${sectionHTML('Why it exists', 'why', svc.why)}
     ${sectionHTML('How it works', 'how', svc.how)}
