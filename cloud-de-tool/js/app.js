@@ -206,11 +206,14 @@
       group.items.forEach(item => {
         const a = document.createElement('a');
         a.href = item.available ? '#' + fmt() + '/' + item.id : 'javascript:void(0)';
-        a.className = 'nav-item' + (item.available ? '' : ' coming-soon');
+        const learned = item.available && TV.ServiceDetail && TV.ServiceDetail.isLearned &&
+          TV.ServiceDetail.isLearned(fmt(), item.id);
+        a.className = 'nav-item' + (item.available ? '' : ' coming-soon') + (learned ? ' learned' : '');
         a.dataset.navId = item.id;
         a.innerHTML = `
           <span class="nav-icon">${_navIcon(item.icon)}</span>
           <span class="nav-label">${item.label}</span>
+          ${learned ? '<span class="nav-check" aria-label="Learned">✓</span>' : ''}
           ${!item.available ? '<span class="nav-badge">soon</span>' : ''}
         `;
         if (!item.available) {
@@ -226,6 +229,27 @@
 
     _updateCollapseAllBtn();
   }
+
+  /* Live-update the sidebar when a service is marked learned / unlearned. */
+  document.addEventListener('cde:learned-changed', (e) => {
+    const d = e.detail || {};
+    if (d.format !== fmt()) return;
+    const sel = 'a.nav-item[data-nav-id="' + (window.CSS && CSS.escape ? CSS.escape(d.id) : d.id) + '"]';
+    const a = document.querySelector(sel);
+    if (!a) return;
+    a.classList.toggle('learned', !!d.learned);
+    let chk = a.querySelector('.nav-check');
+    if (d.learned && !chk) {
+      chk = document.createElement('span');
+      chk.className = 'nav-check';
+      chk.setAttribute('aria-label', 'Learned');
+      chk.textContent = '✓';
+      const label = a.querySelector('.nav-label');
+      if (label) label.insertAdjacentElement('afterend', chk); else a.appendChild(chk);
+    } else if (!d.learned && chk) {
+      chk.remove();
+    }
+  });
 
   /* ── Active nav highlight ────────────────────────────────── */
   function _setActiveNav(id) {

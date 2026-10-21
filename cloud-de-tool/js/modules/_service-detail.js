@@ -156,6 +156,36 @@
     return s;
   }
 
+  /* ── Per-service goal progress (micro-progress; drives the header ring) ── */
+  function goalsKey(format, id) { return 'cde-' + format + '-goals-' + id; }
+  function getCheckedGoals(format, id) {
+    try { return new Set(JSON.parse(TV.ls.get(goalsKey(format, id)) || '[]')); }
+    catch (e) { return new Set(); }
+  }
+  function setCheckedGoals(format, id, set) {
+    try { TV.ls.set(goalsKey(format, id), JSON.stringify(Array.from(set))); } catch (e) {}
+  }
+
+  /* An SVG progress ring. pct in 0..1. */
+  function ringHTML(pct, sub) {
+    const r = 30, C = 2 * Math.PI * r;
+    const off = Math.max(0, Math.min(C, C * (1 - pct)));
+    const label = Math.round(pct * 100) + '%';
+    return `
+      <div class="sd-ringwrap">
+        <div class="sd-ring" data-circ="${C.toFixed(1)}">
+          <svg width="72" height="72" viewBox="0 0 72 72" aria-hidden="true">
+            <circle cx="36" cy="36" r="${r}" fill="none" stroke="var(--bg-4)" stroke-width="7"/>
+            <circle class="sd-ring-fg" cx="36" cy="36" r="${r}" fill="none" stroke="var(--brand)" stroke-width="7"
+              stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
+              transform="rotate(-90 36 36)"/>
+          </svg>
+          <div class="sd-ring-txt">${label}</div>
+        </div>
+        <span class="sd-ring-sub">${esc(sub)}</span>
+      </div>`;
+  }
+
   /* The next service in reading order (within, then across categories). */
   function nextService(format, svc) {
     const flat = [];
@@ -287,10 +317,30 @@
 /* What you'll master */
 .sd-master { background:linear-gradient(180deg,var(--bg-1),var(--bg-2)); border:1px solid var(--border-subtle); border-radius:16px; padding:20px 24px; margin:0 0 28px; box-shadow:var(--card-shadow-lg); }
 .sd-master-h { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--text-muted); margin:0 0 14px; display:flex; align-items:center; gap:8px; }
+.sd-master-h .sd-master-hint { margin-left:auto; font-size:10px; font-weight:600; text-transform:none; letter-spacing:0; color:var(--text-disabled); }
 .sd-master-grid { display:grid; grid-template-columns:1fr 1fr; gap:11px 28px; }
-.sd-goal { display:flex; align-items:flex-start; gap:11px; font-size:13.5px; color:var(--text-secondary); line-height:1.5; }
+.sd-goal { display:flex; align-items:flex-start; gap:11px; width:100%; text-align:left; background:none; border:none; font:inherit; padding:0; cursor:pointer; font-size:13.5px; color:var(--text-secondary); line-height:1.5; }
 .sd-goal .sd-goal-box { flex-shrink:0; width:18px; height:18px; border:2px solid var(--border-muted); border-radius:5px; margin-top:1px; display:flex; align-items:center; justify-content:center; transition:background .12s, border-color .12s; }
+.sd-goal:hover .sd-goal-box { border-color:var(--brand); }
+.sd-goal.done .sd-goal-box { background:var(--green); border-color:var(--green); }
+.sd-goal.done .sd-goal-box::after { content:'✓'; color:#fff; font-size:11px; font-weight:800; line-height:1; }
+.sd-goal.done .sd-goal-txt { color:var(--text-muted); text-decoration:line-through; text-decoration-color:var(--border-muted); }
 @media (max-width:720px){ .sd-master-grid { grid-template-columns:1fr; } }
+/* Header row + per-service progress ring */
+.sd-headrow { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap; }
+.sd-headmain { flex:1; min-width:0; }
+.sd-ringwrap { display:flex; flex-direction:column; align-items:center; gap:7px; flex-shrink:0; }
+.sd-ring { position:relative; width:72px; height:72px; }
+.sd-ring-fg { transition:stroke-dashoffset .4s ease; }
+.sd-ring-txt { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:var(--brand); }
+.sd-ring-sub { font-size:11px; color:var(--text-muted); white-space:nowrap; }
+/* Overview mastery + per-category progress */
+.sd-hero-row { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap; }
+.sd-hero-main { flex:1; min-width:0; }
+.sd-home-cat-h .sd-cat-prog { font-size:11px; font-weight:800; color:var(--text-muted); background:var(--bg-3); border-radius:999px; padding:2px 9px; margin-left:8px; vertical-align:middle; letter-spacing:0; text-transform:none; }
+.sd-home-cat-h .sd-cat-prog.complete { color:var(--green); background:var(--green-subtle); }
+.sd-card.is-learned { border-left-color:var(--green); }
+.sd-card-check { color:var(--green); font-weight:800; }
 /* Test yourself — flashcards */
 .sd-recall { background:linear-gradient(180deg,var(--bg-1),var(--bg-2)); }
 .sd-recall-h { font-size:19px; font-weight:800; color:var(--text-primary); margin:0 0 4px; display:flex; align-items:center; gap:9px; }
@@ -396,14 +446,19 @@
     return goals.slice(0, 6);
   }
 
-  function masterHTML(svc) {
+  function masterHTML(format, svc) {
     const goals = masterGoals(svc);
     if (goals.length < 2) return '';
-    const items = goals.map(g =>
-      `<div class="sd-goal"><span class="sd-goal-box"></span><span>${esc(g)}</span></div>`).join('');
+    const checked = getCheckedGoals(format, svc.id);
+    const items = goals.map((g, i) => {
+      const done = checked.has(i);
+      return `<button class="sd-goal${done ? ' done' : ''}" type="button" data-goal="${i}" aria-pressed="${done}">
+          <span class="sd-goal-box"></span><span class="sd-goal-txt">${esc(g)}</span>
+        </button>`;
+    }).join('');
     return `
       <div class="sd-master">
-        <div class="sd-master-h">🎓 What you'll master here</div>
+        <div class="sd-master-h">🎓 What you'll master here <span class="sd-master-hint">tap to check off</span></div>
         <div class="sd-master-grid">${items}</div>
       </div>`;
   }
@@ -413,16 +468,25 @@
     container.className = '';
     let styles = document.getElementById('sd-styles') ? '' : styleTag();
     const catLabel = (CATEGORIES[svc.category] || {}).label || svc.category || '';
+    const goals = masterGoals(svc);
+    const hasGoals = goals.length >= 2;
+    const checkedNow = getCheckedGoals(format, svc.id);
+    const ring = hasGoals ? ringHTML(checkedNow.size / goals.length, checkedNow.size + ' / ' + goals.length + ' goals') : '';
     container.innerHTML = `${styles}
 <div class="sd page-enter">
   <div class="sd-wrap">
     <div class="sd-eyebrow">${esc(catLabel)}</div>
-    <h1 class="sd-h1">${esc(svc.name)}</h1>
-    ${svc.aka ? `<p class="sd-essence">${esc(svc.aka)}</p>` : ''}
-    ${studyMetaHTML(svc)}
+    <div class="sd-headrow">
+      <div class="sd-headmain">
+        <h1 class="sd-h1">${esc(svc.name)}</h1>
+        ${svc.aka ? `<p class="sd-essence">${esc(svc.aka)}</p>` : ''}
+        ${studyMetaHTML(svc)}
+      </div>
+      ${ring}
+    </div>
     <p class="sd-tagline">${esc(svc.tagline || '')}</p>
     ${keyFactsHTML(svc.keyFacts)}
-    ${masterHTML(svc)}
+    ${masterHTML(format, svc)}
     ${sectionHTML('What it is', 'what', svc.what)}
     ${sectionHTML('Why it exists', 'why', svc.why)}
     ${sectionHTML('How it works', 'how', svc.how)}
@@ -433,6 +497,35 @@
     ${footerHTML(format, svc)}
   </div>
 </div>`;
+    // Goal checklist → persist + update the header progress ring
+    const ringEl = container.querySelector('.sd-ring');
+    const ringFg = container.querySelector('.sd-ring-fg');
+    const ringTxt = container.querySelector('.sd-ring-txt');
+    const ringSub = container.querySelector('.sd-ring-sub');
+    function refreshRing() {
+      const total = goals.length;
+      const set = getCheckedGoals(format, svc.id);
+      const pct = total ? set.size / total : 0;
+      if (ringEl && ringFg) {
+        const C = parseFloat(ringEl.getAttribute('data-circ')) || (2 * Math.PI * 30);
+        ringFg.setAttribute('stroke-dashoffset', (C * (1 - pct)).toFixed(1));
+      }
+      if (ringTxt) ringTxt.textContent = Math.round(pct * 100) + '%';
+      if (ringSub) ringSub.textContent = set.size + ' / ' + total + ' goals';
+    }
+    container.querySelectorAll('.sd-goal[data-goal]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = parseInt(btn.getAttribute('data-goal'), 10);
+        const set = getCheckedGoals(format, svc.id);
+        const now = !set.has(i);
+        if (now) set.add(i); else set.delete(i);
+        setCheckedGoals(format, svc.id, set);
+        btn.classList.toggle('done', now);
+        btn.setAttribute('aria-pressed', String(now));
+        refreshRing();
+      });
+    });
+
     // Flashcards: reveal answer, then self-grade
     container.querySelectorAll('.sd-fc-reveal').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -476,25 +569,39 @@
     let styles = document.getElementById('sd-styles') ? '' : styleTag();
     const cats = categoriesFor(format);
     const total = cats.reduce((n, c) => n + c.items.length, 0);
-    const catBlocks = cats.map(c => `
+    const learned = getLearnedSet(format);
+    const learnedCount = cats.reduce((n, c) => n + c.items.filter(s => learned.has(s.id)).length, 0);
+    const masteryPct = total ? learnedCount / total : 0;
+    const catBlocks = cats.map(c => {
+      const done = c.items.filter(s => learned.has(s.id)).length;
+      const complete = done === c.items.length && c.items.length > 0;
+      return `
       <div class="sd-home-cat">
-        <h2 class="sd-home-cat-h">${esc(c.label)}</h2>
-        <div class="sd-grid">${c.items.map(s =>
-          `<a class="sd-card" href="#${format}/${s.id}">
-             <div class="sd-card-name">${esc(s.name)}</div>
+        <h2 class="sd-home-cat-h">${esc(c.label)} <span class="sd-cat-prog${complete ? ' complete' : ''}">${done}/${c.items.length}</span></h2>
+        <div class="sd-grid">${c.items.map(s => {
+          const isL = learned.has(s.id);
+          return `<a class="sd-card${isL ? ' is-learned' : ''}" href="#${format}/${s.id}">
+             <div class="sd-card-name">${isL ? '<span class="sd-card-check" aria-label="Learned">✓</span> ' : ''}${esc(s.name)}</div>
              <div class="sd-card-tag">${esc(s.tagline || '')}</div>
-           </a>`).join('')}</div>
-      </div>`).join('');
+           </a>`;
+        }).join('')}</div>
+      </div>`;
+    }).join('');
     container.innerHTML = `${styles}
 <div class="sd-home page-enter">
   <div class="sd-home-wrap">
     <div class="sd-home-hero">
-      <h1>${esc(meta.title)}</h1>
-      <p>${esc(meta.subtitle)}</p>
-      <div class="sd-home-stats">
-        <div class="sd-home-stat"><b>${total}</b><span>services</span></div>
-        <div class="sd-home-stat"><b>${cats.length}</b><span>categories</span></div>
-        <div class="sd-home-stat"><b>6</b><span>depth levels each</span></div>
+      <div class="sd-hero-row">
+        <div class="sd-hero-main">
+          <h1>${esc(meta.title)}</h1>
+          <p>${esc(meta.subtitle)}</p>
+          <div class="sd-home-stats">
+            <div class="sd-home-stat"><b>${total}</b><span>services</span></div>
+            <div class="sd-home-stat"><b>${cats.length}</b><span>categories</span></div>
+            <div class="sd-home-stat"><b>6</b><span>depth levels each</span></div>
+          </div>
+        </div>
+        ${ringHTML(masteryPct, learnedCount + ' / ' + total + ' studied')}
       </div>
     </div>
     ${catBlocks}
